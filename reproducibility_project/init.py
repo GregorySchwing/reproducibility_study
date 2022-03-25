@@ -16,12 +16,13 @@ def dict_product(dd):
 
 
 molecules = [
-    "methaneUA",
-    "pentaneUA-flexible_bonds",
-    "pentaneUA-constrain_bonds",
-    "benzeneUA",
+    "waterTIP3P",
     "waterSPCE",
-    "ethanolAA",
+    "waterTI4PEW",
+    "waterTI4P2005",
+    "waterTI4PD",
+    "waterA99SBdisp",
+    "waterOPC",
 ]
 replicas = range(16)
 simulation_engines = [
@@ -54,90 +55,106 @@ for key in molecules:
         r_cuts[key] = 10 * u.angstrom
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 masses = {
-    "methaneUA": [16.04] * u.amu,
-    "pentaneUA-flexible_bonds": [72.15] * u.amu,
-    "pentaneUA-constrain_bonds": [72.15] * u.amu,
-    "benzeneUA": [78.1118] * u.amu,
+    "waterTIP3P": [18.0153] * u.amu,
     "waterSPCE": [18.0153] * u.amu,
-    "ethanolAA": [46.0684] * u.amu,
+    "waterTI4PEW": [18.0153] * u.amu,
+    "waterTI4P2005": [18.0153] * u.amu,
+    "waterTI4PD": [18.0153] * u.amu,
+    "waterA99SBdisp": [18.0153] * u.amu,
+    "waterOPC": [18.0153] * u.amu,
 }
 init_density_liq = {
-    "methaneUA": [0.3752] * g_per_cm3,
-    "pentaneUA-flexible_bonds": [0.5390] * g_per_cm3,
-    "pentaneUA-constrain_bonds": [0.5390] * g_per_cm3,
-    "benzeneUA": [0.692] * g_per_cm3,
-    "waterSPCE": [0.998] * g_per_cm3,
-    "ethanolAA": [0.7893] * g_per_cm3,
+    "waterTIP3P": [0.98] * g_per_cm3,
+    "waterSPCE": [0.993] * g_per_cm3,
+    "waterTI4PEW": [0.996] * g_per_cm3,
+    "waterTI4P2005": [0.997] * g_per_cm3,
+    "waterTI4PD": [0.993] * g_per_cm3,
+    "waterA99SBdisp": [0.996] * g_per_cm3,
+    "waterOPC": [0.997] * g_per_cm3,
 }
 init_density_vap = {
-    "methaneUA": [0.0117] * g_per_cm3,
-    "pentaneUA-flexible_bonds": [0.019] * g_per_cm3,
-    "pentaneUA-constrain_bonds": [0.019] * g_per_cm3,
-    "benzeneUA": [None],
+    "waterTIP3P": [None],
     "waterSPCE": [None],
-    "ethanolAA": [None],
+    "waterTI4PEW": [None],
+    "waterTI4P2005": [None],
+    "waterTI4PD": [None],
+    "waterA99SBdisp": [None],
+    "waterOPC": [None],
 }
 temperatures = {
-    "methaneUA": [140.0] * u.K,
-    "pentaneUA-flexible_bonds": [372.0] * u.K,
-    "pentaneUA-constrain_bonds": [372.0] * u.K,
-    "benzeneUA": [450.0] * u.K,
+    "waterTIP3P": [280.0, 300.0, 320.0] * u.K,
     "waterSPCE": [280.0, 300.0, 320.0] * u.K,
-    "ethanolAA": [280.0, 300.0, 320.0] * u.K,
+    "waterTI4PEW": [280.0, 300.0, 320.0] * u.K,
+    "waterTI4P2005": [280.0, 300.0, 320.0] * u.K,
+    "waterTI4PD": [280.0, 300.0, 320.0] * u.K,
+    "waterA99SBdisp": [280.0, 300.0, 320.0] * u.K,
+    "waterOPC": [280.0, 300.0, 320.0] * u.K,
 }
 
 pressures = {
-    "methaneUA": [1318.0] * u.kPa,
-    "pentaneUA-flexible_bonds": [1402.0] * u.kPa,
-    "pentaneUA-constrain_bonds": [1402.0] * u.kPa,
-    "benzeneUA": [2260.0] * u.kPa,
+    "waterTIP3P": [101.325, 101.325, 101.325] * u.kPa,
     "waterSPCE": [101.325, 101.325, 101.325] * u.kPa,
-    "ethanolAA": [101.325, 101.325, 101.325] * u.kPa,
+    "waterTI4PEW": [101.325, 101.325, 101.325] * u.kPa,
+    "waterTI4P2005": [101.325, 101.325, 101.325] * u.kPa,
+    "waterTI4PD": [101.325, 101.325, 101.325] * u.kPa,
+    "waterA99SBdisp": [101.325, 101.325, 101.325] * u.kPa,
+    "waterOPC": [101.325, 101.325, 101.325] * u.kPa,
 }
 
 N_liq_molecules = {
-    "methaneUA": [900],
-    "pentaneUA-flexible_bonds": [300],
-    "pentaneUA-constrain_bonds": [300],
-    "benzeneUA": [400],
     "waterSPCE": [1100, 1100, 1100],
-    "ethanolAA": [500, 500, 500],
+    "waterTIP3P": [1100, 1100, 1100],
+    "waterSPCE": [1100, 1100, 1100],
+    "waterTI4PEW": [1100, 1100, 1100],
+    "waterTI4P2005": [1100, 1100, 1100],
+    "waterTI4PD": [1100, 1100, 1100],
+    "waterA99SBdisp": [1100, 1100, 1100],
+    "waterOPC": [1100, 1100, 1100],
 }
 
 N_vap_molecules = {
-    "methaneUA": [100],
-    "pentaneUA-flexible_bonds": [100],
-    "pentaneUA-constrain_bonds": [100],
-    "benzeneUA": [None],
     "waterSPCE": [None],
-    "ethanolAA": [None],
+    "waterTIP3P": [None],
+    "waterSPCE": [None],
+    "waterTI4PEW": [None],
+    "waterTI4P2005": [None],
+    "waterTI4PD": [None],
+    "waterA99SBdisp": [None],
+    "waterOPC": [None],
 }
 
 liq_box_lengths = {
-    "methaneUA": [39.98] * u.angstrom,
-    "pentaneUA-flexible_bonds": [40.55] * u.angstrom,
-    "pentaneUA-constrain_bonds": [40.55] * u.angstrom,
-    "benzeneUA": [42.17] * u.angstrom,
+    "waterTIP3P": [32.07] * u.angstrom,
     "waterSPCE": [32.07] * u.angstrom,
-    "ethanolAA": [36.46] * u.angstrom,
+    "waterTI4PEW": [32.07] * u.angstrom,
+    "waterTI4P2005": [32.07] * u.angstrom,
+    "waterTI4PD": [32.07] * u.angstrom,
+    "waterA99SBdisp": [32.07] * u.angstrom,
+    "waterOPC": [32.07] * u.angstrom,
+}
 }
 
 vap_box_lengths = {
-    "methaneUA": [61.06] * u.angstrom,
-    "pentaneUA-flexible_bonds": [85.75] * u.angstrom,
-    "pentaneUA-constrain_bonds": [85.75] * u.angstrom,
-    "benzeneUA": [None],
     "waterSPCE": [None],
-    "ethanolAA": [None],
+    "waterTIP3P": [None],
+    "waterSPCE": [None],
+    "waterTI4PEW": [None],
+    "waterTI4P2005": [None],
+    "waterTI4PD": [None],
+    "waterA99SBdisp": [None],
+    "waterOPC": [None],
 }
 
 ensembles = {
-    "methaneUA": ["NPT", "GEMC-NVT"],
-    "pentaneUA-flexible_bonds": ["NPT", "GEMC-NVT"],
-    "pentaneUA-constrain_bonds": ["NPT", "GEMC-NVT"],
-    "benzeneUA": ["NPT", None],
     "waterSPCE": ["NPT", None],
-    "ethanolAA": ["NPT", None],
+    "waterSPCE": ["NPT", None],
+    "waterTIP3P": ["NPT", None],
+    "waterSPCE": ["NPT", None],
+    "waterTI4PEW": ["NPT", None],
+    "waterTI4P2005": ["NPT", None],
+    "waterTI4PD": ["NPT", None],
+    "waterA99SBdisp": ["NPT", None],
+    "waterOPC": ["NPT", None],
 }
 
 
