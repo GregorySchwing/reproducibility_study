@@ -51,6 +51,7 @@ def load_ff(
 
 def get_ff_path(
     name: str = None,
+    molname: str = None,
 ):
     """Based on a forcefield name, return a foyer.Forcefield object.
 
@@ -75,6 +76,14 @@ def get_ff_path(
         from reproducibility_project.src import xmls
 
         ff_name = "benzene_trappe-ua.xml"
+        ff_path = (
+            str(os.path.dirname(os.path.abspath(xmls.__file__))) + "/" + ff_name
+        )
+        return ff_path
+    elif name == "custom":
+        from reproducibility_project.src import xmls
+
+        ff_name = molname+".xml"
         ff_path = (
             str(os.path.dirname(os.path.abspath(xmls.__file__))) + "/" + ff_name
         )

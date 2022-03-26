@@ -28,13 +28,11 @@ molecules = [
 
 moleculeNameAsXML = True
 
-replicas = range(16)
+replicas = range(1)
 simulation_engines = [
-    "cassandra",
-    "namd",
     "gomc",
 ]
-md_engines = ["gromacs", "hoomd", "lammps-VU", "lammps-UD"]
+md_engines = ["gromacs", "hoomd", "lammps-VU", "lammps-UD", "namd"]
 mc_engines = ["cassandra", "mcccs", "gomc"]
 forcefields = {}
 r_cuts = {}
@@ -51,7 +49,10 @@ for key in molecules:
     elif "SPCE" in key:
         forcefields[key] = "spce"
         r_cuts[key] = 9 * u.angstrom
-    elif and not moleculeNameAsXML:
+    elif moleculeNameAsXML:
+        forcefields[key] = "custom"
+        r_cuts[key] = 9 * u.angstrom
+    else :
         forcefields[key] = "oplsaa"
         r_cuts[key] = 10 * u.angstrom
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)

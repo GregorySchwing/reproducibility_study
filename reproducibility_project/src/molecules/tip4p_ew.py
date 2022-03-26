@@ -1,6 +1,10 @@
-"""Create united-atom representation of water."""
+"""Create atomistic representation of ethanol."""
+import os
 
 import mbuild as mb
+
+from reproducibility_project.src import molecules
+
 
 
 class tip4p_ew(mb.Compound):
