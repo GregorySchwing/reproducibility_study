@@ -7,6 +7,8 @@ from reproducibility_project.src.molecules.ethanol_aa import EthanolAA
 from reproducibility_project.src.molecules.methane_ua import MethaneUA
 from reproducibility_project.src.molecules.pentane_ua import PentaneUA
 
+from reproducibility_project.src.molecules.pentane_ua import tip3p
+from reproducibility_project.src.molecules.pentane_ua import opc3
 from reproducibility_project.src.molecules.pentane_ua import a99SB_disp
 from reproducibility_project.src.molecules.pentane_ua import opc
 from reproducibility_project.src.molecules.pentane_ua import tip4p_2005
@@ -143,6 +145,14 @@ def get_molecule(sp):
         "benzeneUA": BenzeneUA(),
         "waterSPCE": WaterSPC(),
         "ethanolAA": EthanolAA(),
+        "spce": WaterSPC(),
+        "tip3p": tip3p(),
+        "opc3": opc3(),
+        "tip4p_ew": tip4p_ew(),
+        "tip4p_2005": tip4p_2005(),
+        "tip4p_d": tip4p_d(),
+        "a99SB_disp": a99SB_disp(),
+        "opc": opc(),
     }
     molecule = molecule_dict[sp["molecule"]]
     molecule.name = sp["molecule"]
