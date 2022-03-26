@@ -28,12 +28,8 @@ molecules = [
 replicas = range(16)
 simulation_engines = [
     "cassandra",
-    "mcccs",
+    "namd",
     "gomc",
-    "gromacs",
-    "hoomd",
-    "lammps-VU",
-    "lammps-UD",
 ]
 md_engines = ["gromacs", "hoomd", "lammps-VU", "lammps-UD"]
 mc_engines = ["cassandra", "mcccs", "gomc"]
