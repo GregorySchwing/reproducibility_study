@@ -7,6 +7,12 @@ from reproducibility_project.src.molecules.ethanol_aa import EthanolAA
 from reproducibility_project.src.molecules.methane_ua import MethaneUA
 from reproducibility_project.src.molecules.pentane_ua import PentaneUA
 
+from reproducibility_project.src.molecules.pentane_ua import a99SB_disp
+from reproducibility_project.src.molecules.pentane_ua import opc
+from reproducibility_project.src.molecules.pentane_ua import tip4p_2005
+from reproducibility_project.src.molecules.pentane_ua import tip4p_d
+from reproducibility_project.src.molecules.pentane_ua import tip4p_ew
+
 
 def construct_system(
     sp,
