@@ -48,7 +48,7 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # If the gomc binary files are callable directly from the terminal without a path,
 # please just enter and empty string (i.e., "" or '')
 # gomc_binary_path = "/wsu/home/hf/hf68/hf6839/GOMC_dev_2_22_22/bin"
-gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_2_22_22/bin"
+gomc_binary_path = "/home/greg/Desktop/GOMC/bin"
 
 # number of MC cycles
 MC_cycles_melt_equilb_NVT = 5 * 10 ** 3  # set value for paper = 5 * 10 ** 3
@@ -198,7 +198,7 @@ def initial_parameters(job):
         job.doc.production_ensemble = "GEMC_NVT"
     else:
         job.doc.production_ensemble = job.sp.ensemble
-    print("SCHWIEBERT!")
+
     # list replica seed numbers
     replica_no_to_seed_dict = {
         0: 0,
