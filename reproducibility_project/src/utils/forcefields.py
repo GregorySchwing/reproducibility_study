@@ -6,6 +6,7 @@ import foyer
 
 def load_ff(
     name: str = None,
+    molname: str = None,
 ) -> foyer.Forcefield:
     """Based on a forcefield name, return a foyer.Forcefield object.
 
@@ -36,7 +37,7 @@ def load_ff(
         return foyer.Forcefield(forcefield_files=ff_path)
     else:
         from reproducibility_project.src import xmls
-        ff_name = name+".xml"
+        ff_name = molname+".xml"
         ff_path = (
             str(os.path.dirname(os.path.abspath(xmls.__file__))) + "/" + ff_name
         )
