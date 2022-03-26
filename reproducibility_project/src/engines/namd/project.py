@@ -48,7 +48,7 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # If the gomc binary files are callable directly from the terminal without a path,
 # please just enter and empty string (i.e., "" or '')
 # gomc_binary_path = "/wsu/home/hf/hf68/hf6839/GOMC_dev_2_22_22/bin"
-gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_2_22_22/bin"
+gomc_binary_path = "/home/greg/Desktop/GOMC/bin"
 
 # number of MC cycles
 MC_cycles_melt_equilb_NVT = 5 * 10 ** 3  # set value for paper = 5 * 10 ** 3
@@ -128,6 +128,13 @@ ff_info_dict = {
         "ElectroStatic": True,
         "VDWGeometricSigma": True,
     },
+    "custom": {
+        "ngpu": 0,
+        "ncpu": 1,
+        "Ewald": True,
+        "ElectroStatic": True,
+        "VDWGeometricSigma": False,
+    },
 }
 
 # ******************************************************
@@ -182,7 +189,7 @@ def initial_parameters(job):
         )
 
     # FF type to directory and path
-    job.doc.forcefield_directory_name = get_ff_path(job.sp.forcefield_name)
+    job.doc.forcefield_directory_name = get_ff_path(job.sp.forcefield_name, job.sp.molecule)
 
     # reformat ensembles for input to GOMC
     if job.sp.ensemble in ["GEMC-NPT", "GEMC_NPT"]:
@@ -847,9 +854,23 @@ def build_psf_pdb_ff_gomc_conf(job):
             RotFreq = (0.5,)
             RegrowthFreq = (None,)
 
+        elif job.sp.forcefield_name in ["custom"]:
+            VolFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.5,)
+            RotFreq = (0.5,)
+            RegrowthFreq = (None,)
+
+        elif job.sp.forcefield_name in ["custom"]:
+            VolFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.5,)
+            RotFreq = (0.5,)
+            RegrowthFreq = (None,)
+
         else:
             raise ValueError(
-                "Moleules MC move rations not listed in the GOMC control file writer."
+                "Moleules MC move ratios not listed in the GOMC control file writer."
             )
 
         if Restart is True:
@@ -901,9 +922,16 @@ def build_psf_pdb_ff_gomc_conf(job):
             RotFreq = (0.5,)
             RegrowthFreq = (None,)
 
+        elif job.sp.forcefield_name in ["custom"]:
+            VolFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.5,)
+            RotFreq = (0.5,)
+            RegrowthFreq = (None,)
+
         else:
             raise ValueError(
-                "Moleules MC move rations not listed in the GOMC control file writer."
+                "Moleules MC move ratios not listed in the GOMC control file writer."
             )
 
         if Restart is True:
@@ -1092,9 +1120,23 @@ def build_psf_pdb_ff_gomc_conf(job):
             RotFreq = (0.5,)
             RegrowthFreq = (None,)
 
+        elif job.sp.forcefield_name in ["custom"]:
+            VolFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.5,)
+            RotFreq = (0.5,)
+            RegrowthFreq = (None,)
+
+        elif job.sp.forcefield_name in ["custom"]:
+            VolFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.5,)
+            RotFreq = (0.5,)
+            RegrowthFreq = (None,)
+
         else:
             raise ValueError(
-                "Moleules MC move rations not listed in the GOMC control file writer."
+                "Moleules MC move ratios not listed in the GOMC control file writer."
             )
 
         if Restart is True:
@@ -1146,9 +1188,16 @@ def build_psf_pdb_ff_gomc_conf(job):
             RotFreq = (0.5,)
             RegrowthFreq = (None,)
 
+        elif job.sp.forcefield_name in ["custom"]:
+            VolFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.5,)
+            RotFreq = (0.5,)
+            RegrowthFreq = (None,)
+
         else:
             raise ValueError(
-                "Moleules MC move rations not listed in the GOMC control file writer."
+                "Moleules MC move ratios not listed in the GOMC control file writer."
             )
 
         if Restart is True:
@@ -1356,6 +1405,13 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RegrowthFreq = (0.33,)
 
             elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
+                VolFreq = (0.01,)
+                SwapFreq = (None,)
+                DisFreq = (0.49,)
+                RotFreq = (0.5,)
+                RegrowthFreq = (None,)
+
+            elif job.sp.forcefield_name in ["custom"]:
                 VolFreq = (0.01,)
                 SwapFreq = (None,)
                 DisFreq = (0.49,)
@@ -1625,9 +1681,16 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RotFreq = (0.5,)
                 RegrowthFreq = (None,)
 
+            elif job.sp.forcefield_name in ["custom"]:
+                VolFreq = (0.01,)
+                SwapFreq = (None,)
+                DisFreq = (0.49,)
+                RotFreq = (0.5,)
+                RegrowthFreq = (None,)
+
             else:
                 raise ValueError(
-                    "Moleules MC move rations not listed in the GOMC control file writer."
+                    "Molecules MC move ratios not listed in the GOMC control file writer."
                 )
 
             if Restart is True:
@@ -1681,7 +1744,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
             else:
                 raise ValueError(
-                    "Moleules MC move rations not listed in the GOMC control file writer."
+                    "Moleules MC move ratios not listed in the GOMC control file writer."
                 )
 
             if Restart is True:
