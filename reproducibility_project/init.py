@@ -37,10 +37,19 @@ simulation_engines = [
 ]
 md_engines = ["gromacs", "hoomd", "lammps-VU", "lammps-UD"]
 mc_engines = ["cassandra", "mcccs", "gomc"]
-forcefields = {}
+forcefields = {"tip3p":"tip3p",
+"spce":"spce",
+"opc3":"opc3",
+"tip4p_ew":"tip4p_ew",
+"tip4p_2005":"tip4p_2005",
+"tip4p_d":"tip4p_d",
+"a99SB_disp":"a99SB_disp",
+"opc":"opc",
+}
 r_cuts = {}
 cutoff_styles = ["hard"]
 long_range_correction = ["energy_pressure"]
+
 for key in molecules:
     if "UA" in key:
         if "benz" not in key:
@@ -51,6 +60,8 @@ for key in molecules:
     elif "SPCE" in key:
         forcefields[key] = "spce"
         r_cuts[key] = 9 * u.angstrom
+    elif key in forcefields[key]
+        forcefields[key] = key
     else:
         forcefields[key] = "oplsaa"
         r_cuts[key] = 10 * u.angstrom

@@ -35,9 +35,17 @@ def load_ff(
         )
         return foyer.Forcefield(forcefield_files=ff_path)
     else:
-        raise ValueError(
-            f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+        from reproducibility_project.src import xmls
+        ff_name = name+".xml"
+        ff_path = (
+            str(os.path.dirname(os.path.abspath(xmls.__file__))) + "/" + ff_name
         )
+        try:
+            return foyer.Forcefield(forcefield_files=ff_path)
+        except:
+            raise ValueError(
+                f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+            )
 
 
 def get_ff_path(

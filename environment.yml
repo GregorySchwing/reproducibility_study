@@ -1,7 +1,6 @@
 name: mosdef-study38
 channels:
   - conda-forge
-  - conda-forge/label/hoomd_dev
   - bioconda
 dependencies:
   - constrainmol
