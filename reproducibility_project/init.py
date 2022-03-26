@@ -139,7 +139,6 @@ liq_box_lengths = {
     "a99SB_disp": [32.07] * u.angstrom,
     "opc": [32.07] * u.angstrom,
 }
-}
 
 vap_box_lengths = {
     "tip3p": [None],
