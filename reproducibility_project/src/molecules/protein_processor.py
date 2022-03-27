@@ -86,8 +86,11 @@ def translacion_cM(selection):
 	newMol = applyTransformation(model_trans, selection)
 
 def align_protein_to_inertial_axes(
-    selection,
+	infilename,
+	outfilename,
 ):
+	molecule = parsePDB(infilename)
+	selection = molecule.protein
 	translacion_cM(selection)
 	matriz_inercia(selection)
 	global transf, transf_array, ord_autovect_array, transf_array_print
@@ -109,11 +112,13 @@ def align_protein_to_inertial_axes(
 	model_transf = Transformation(transf_array_2D)
 	print(model_transf.getMatrix())
 	newMol = applyTransformation(model_transf, selection)
+	molecule = writePDB(outfilename,selection)
 
 def get_protein_dimensions(
-    selection,
+    infilename,
 ):	
-	molecule = writePDB("rot.pdb",selection)
+	molecule = parsePDB(infilename)
+	selection = molecule.protein
 	coords = selection.getCoords()
 	x = coords[:,0]
 	y = coords[:,1]
@@ -127,8 +132,8 @@ def get_protein_dimensions(
 	return ([minX, minY, minZ],[maxX, maxY, maxZ])
 
 def main():
-	molecule = parsePDB("prot.pdb")
-	([minX, minY, minZ],[maxX, maxY, maxZ]) = get_protein_dimensions(molecule.protein)
+	align_protein_to_inertial_axes("prot.pdb", "prot_al.pdb")
+	([minX, minY, minZ],[maxX, maxY, maxZ]) = get_protein_dimensions("prot_al.pdb")
 	print("The Inertia Axis Aligned Bounding Box (IABB) dimensions are (%.2f, %.2f, %.2f)" % (maxX-minX, maxY-minY, maxZ-minZ))
 	print("The Inertia Axis Aligned Bounding Box (IABB) volume is %.2f A3" % ((maxX-minX)*(maxY-minY)*(maxZ-minZ)))
 
