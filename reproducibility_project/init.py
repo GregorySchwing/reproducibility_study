@@ -6,7 +6,13 @@ import numpy as np
 import signac
 import unyt as u
 from numpy import ModuleDeprecationWarning
+from numpy import ModuleDeprecationWarning
 
+from src.proteins.protein_processor import (
+    align_protein_to_inertial_axes,
+    get_protein_dimensions,
+    get_protein_path,
+)
 
 def dict_product(dd):
     """Return the product of the key/values of a dictionary."""
@@ -14,8 +20,18 @@ def dict_product(dd):
     for element in itertools.product(*dd.values()):
         yield dict(zip(keys, element))
 
+def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
+     for prot in proteins:
+          proteinpaths[prot] = get_protein_path(prot+".pdb")
+          proteinalignedpaths[prot] = get_protein_path(prot+"_aligned"+".pdb")
+          align_protein_to_inertial_axes(proteinpaths[prot],proteinalignedpaths[prot])
+          ([minX, minY, minZ],[maxX, maxY, maxZ]) = get_protein_dimensions(proteinalignedpaths[prot])
+          print("The Inertia Axis Aligned Bounding Box (IABB) dimensions of %s are (%.2f, %.2f, %.2f)" % (proteinalignedpaths[prot],maxX-minX, maxY-minY, maxZ-minZ))
+          print("The Inertia Axis Aligned Bounding Box (IABB) volume of %s is %.2f A3" % (proteinalignedpaths[prot],(maxX-minX)*(maxY-minY)*(maxZ-minZ)))
+          boundingBoxSizes[prot] = np.array([maxX-minX, maxY-minY, maxZ-minZ])
+          liq_box_lengths[prot] = [u.unyt_array(boundingBoxSizes[prot]+2*box_padding, u.angstrom)]
 
-molecules = [
+solvent_molecules = [
     "tip3p",
     "spce",
     "opc3",
@@ -26,6 +42,17 @@ molecules = [
     "opc",
 ]
 
+proteins = [
+    "6g6k",
+]
+proteinpaths = dict()
+proteinalignedpaths = dict()
+boundingBoxSizes = dict()
+liq_box_lengths = dict()
+box_padding = 10
+prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding)
+
+print(boundingBoxSizes)
 moleculeNameAsXML = True
 
 replicas = range(1)
@@ -39,7 +66,7 @@ r_cuts = {}
 cutoff_styles = ["hard"]
 long_range_correction = ["energy_pressure"]
 
-for key in molecules:
+for key in solvent_molecules:
     if "UA" in key:
         if "benz" not in key:
             forcefields[key] = "trappe-ua"
@@ -108,7 +135,7 @@ pressures = {
     "opc": [101.325, 101.325, 101.325] * u.kPa,
 }
 
-N_liq_molecules = {
+N_liq_solvent_molecules = {
     "tip3p": [1100, 1100, 1100],
     "spce": [1100, 1100, 1100],
     "opc3": [1100, 1100, 1100],
@@ -119,7 +146,7 @@ N_liq_molecules = {
     "opc": [1100, 1100, 1100],
 }
 
-N_vap_molecules = {
+N_vap_solvent_molecules = {
     "spce": [None],
     "tip3p": [None],
     "opc3": [None],
@@ -128,17 +155,6 @@ N_vap_molecules = {
     "tip4p_d": [None],
     "a99SB_disp": [None],
     "opc": [None],
-}
-
-liq_box_lengths = {
-    "tip3p": [32.07] * u.angstrom,
-    "spce": [32.07] * u.angstrom,
-    "opc3": [32.07] * u.angstrom,
-    "tip4p_ew": [32.07] * u.angstrom,
-    "tip4p_2005": [32.07] * u.angstrom,
-    "tip4p_d": [32.07] * u.angstrom,
-    "a99SB_disp": [32.07] * u.angstrom,
-    "opc": [32.07] * u.angstrom,
 }
 
 vap_box_lengths = {
@@ -166,85 +182,98 @@ ensembles = {
 
 pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
-
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
 total_statepoints = list()
-for molecule in molecules:
-    for (
-        engine,
-        ensemble,
-        (temp, press),
-        n_liq,
-        liq_box_L,
-        n_vap,
-        vap_box_L,
-        (init_liq_den, init_vap_den),
-        mass,
-        lrc,
-        cutoff_style,
-        replica,
-    ) in itertools.product(
-        simulation_engines,
-        ensembles[molecule],
-        zip(temperatures[molecule], pressures[molecule]),
-        N_liq_molecules[molecule],
-        liq_box_lengths[molecule],
-        N_vap_molecules[molecule],
-        vap_box_lengths[molecule],
-        zip(init_density_liq[molecule], init_density_vap[molecule]),
-        masses[molecule],
-        long_range_correction,
-        cutoff_styles,
-        replicas,
-    ):
-        statepoint = {
-            "molecule": molecule,
-            "engine": engine,
-            "replica": replica,
-            "temperature": np.round(
-                temp.to_value("K"),
-                decimals=3,
-            ).item(),
-            "pressure": np.round(press.to_value("kPa"), decimals=3).item(),
-            "ensemble": ensemble if ensemble else None,
-            "N_liquid": n_liq,
-            "N_vap": n_vap if n_vap else None,
-            "box_L_liq": np.round(
-                liq_box_L.to_value("nm"),
-                decimals=3,
-            ).item()
-            if liq_box_L
-            else None,
-            "box_L_vap": np.round(
-                vap_box_L.to_value("nm"),
-                decimals=3,
-            ).item()
-            if vap_box_L
-            else None,
-            "init_liq_den": np.round(
-                init_liq_den.to_value(g_per_cm3),
-                decimals=3,
-            ).item(),
-            "init_vap_den": np.round(
-                init_vap_den.to_value(g_per_cm3),
-                decimals=3,
-            ).item()
-            if init_vap_den
-            else None,
-            "mass": np.round(
-                mass.to_value("amu"),
-                decimals=3,
-            ).item(),
-            "forcefield_name": forcefields[molecule],
-            "cutoff_style": cutoff_style,
-            "long_range_correction": lrc,
-            "r_cut": np.round(
-                r_cuts[molecule].to_value("nm"),
-                decimals=3,
-            ).item(),
-        }
-        total_statepoints.append(statepoint)
+for prot in proteins:
+    for molecule in solvent_molecules:
+        for (
+            engine,
+            ensemble,
+            (temp, press),
+            n_liq,
+            liq_box_L,
+            n_vap,
+            vap_box_L,
+            (init_liq_den, init_vap_den),
+            mass,
+            lrc,
+            cutoff_style,
+            replica,
+        ) in itertools.product(
+            simulation_engines,
+            ensembles[molecule],
+            zip(temperatures[molecule], pressures[molecule]),
+            N_liq_solvent_molecules[molecule],
+            liq_box_lengths[prot],
+            N_vap_solvent_molecules[molecule],
+            vap_box_lengths[molecule],
+            zip(init_density_liq[molecule], init_density_vap[molecule]),
+            masses[molecule],
+            long_range_correction,
+            cutoff_styles,
+            replicas,
+        ):
+            statepoint = {
+                "molecule": molecule,
+                "proteinpath" : proteinalignedpaths[prot],
+                "engine": engine,
+                "replica": replica,
+                "temperature": np.round(
+                    temp.to_value("K"),
+                    decimals=3,
+                ).item(),
+                "pressure": np.round(press.to_value("kPa"), decimals=3).item(),
+                "ensemble": ensemble if ensemble else None,
+                "N_liquid": n_liq,
+                "N_vap": n_vap if n_vap else None,
+                "box_L_liq_x": np.round(
+                    liq_box_L[0].to_value("nm"),
+                    decimals=3,
+                ).item()
+                if liq_box_L[0]
+                else None,
+                "box_L_liq_y": np.round(
+                    liq_box_L[1].to_value("nm"),
+                    decimals=3,
+                ).item()
+                if liq_box_L[1]
+                else None,
+                "box_L_liq_z": np.round(
+                    liq_box_L[2].to_value("nm"),
+                    decimals=3,
+                ).item()
+                if liq_box_L[2]
+                else None,
+                "box_L_vap": np.round(
+                    vap_box_L.to_value("nm"),
+                    decimals=3,
+                ).item()
+                if vap_box_L
+                else None,
+                "init_liq_den": np.round(
+                    init_liq_den.to_value(g_per_cm3),
+                    decimals=3, 
+                ).item(),
+                "init_vap_den": np.round(
+                    init_vap_den.to_value(g_per_cm3),
+                    decimals=3,
+                ).item()
+                if init_vap_den
+                else None,
+                "mass": np.round(
+                    mass.to_value("amu"),
+                    decimals=3,
+                ).item(),
+                "forcefield_name": forcefields[molecule],
+                "cutoff_style": cutoff_style,
+                "long_range_correction": lrc,
+                "r_cut": np.round(
+                    r_cuts[molecule].to_value("nm"),
+                    decimals=3,
+                ).item(),
+            }
+            total_statepoints.append(statepoint)
 
 # print(len(total_statepoints))
 indices_to_remove = set()
