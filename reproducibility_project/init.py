@@ -51,8 +51,6 @@ boundingBoxSizes = dict()
 liq_box_lengths = dict()
 box_padding = 10
 prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding)
-
-print(boundingBoxSizes)
 moleculeNameAsXML = True
 
 replicas = range(1)
