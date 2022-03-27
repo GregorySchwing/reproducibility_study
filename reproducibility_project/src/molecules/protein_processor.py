@@ -82,7 +82,6 @@ def translacion_cM(selection):
 	trans_array = ([1, 0, 0, -cM[0], 0, 1, 0, -cM[1], 0, 0, 1, -cM[2], 0, 0, 0, 1])
 	trans_array_2D = numpy.reshape(trans_array, (-1, 4))
 	model_trans = Transformation(trans_array_2D)
-	print(model_trans.getMatrix())
 	newMol = applyTransformation(model_trans, selection)
 
 def align_protein_to_inertial_axes(
@@ -106,11 +105,8 @@ def align_protein_to_inertial_axes(
 	                            transf[1][0], transf[1][1], transf[1][2], 0,
 				    transf[2][0], transf[2][1], transf[2][2], 0,
 				    0, 0, 0, 1])
-	print(transf_array)
 	transf_array_2D = numpy.reshape(transf_array, (-1, 4))
-	print(transf_array_2D)
 	model_transf = Transformation(transf_array_2D)
-	print(model_transf.getMatrix())
 	newMol = applyTransformation(model_transf, selection)
 	molecule = writePDB(outfilename,selection)
 
