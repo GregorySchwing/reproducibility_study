@@ -184,9 +184,11 @@ def merge_solv_and_solute(
 	from prody.proteins.pdbfile import parsePDB, writePDB
 	from prody.measure.transform import moveAtoms
 
+	solvbox2 = parsePSF("mosdef_box_0.psf")
+	solvbox2_positions = parsePDB("mosdef_box_0.pdb")
 
-	pro2 = parsePSF(get_protein_path(sp.job.pdbid+".psf"))
-	pro2_positions = parsePDB(get_protein_path(sp.job.pdbid+"_aligned.pdb"))
+	pro2 = parsePSF(get_protein_path(job.sp.pdbid+".psf"))
+	pro2_positions = parsePDB(get_protein_path(job.sp.pdbid+"_aligned.pdb"))
 
 	moveAtoms(solvbox2_positions, to=zeros(3), ag=True, weights=solvbox2_positions.getMasses())
 
