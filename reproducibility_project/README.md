@@ -16,6 +16,10 @@ Each engine directory in `src/engines` contains its own `project.py` file. To qu
 python src/engines/hoomd/project.py status
 ```
 
+Make sure the reproducibility_project directory is on the python path
+
+export PYTHONPATH=$PYTHONPATH:/home/greg/Desktop/2021/f30Continued/prelim2/reproducibility_study
+
 To learn more about the ways to use this project:
 ```bash
 python src/engines/hoomd/project.py -h
