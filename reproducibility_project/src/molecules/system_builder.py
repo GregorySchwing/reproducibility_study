@@ -63,7 +63,7 @@ def construct_system(
         Return list of system as specified.
     """
     molecule = get_molecule(sp)
-    liq_box = mb.Box([sp["box_L_liq_x"] * scale_liq_box, sp["box_L_liq_y"] * scale_liq_box, sp["box_L_liq_z"] * scale_liq_box)
+    liq_box = mb.Box([sp["box_L_liq_x"] * scale_liq_box, sp["box_L_liq_y"] * scale_liq_box, sp["box_L_liq_z"] * scale_liq_box])
 
     filled_liq_box = mb.fill_box(
         compound=[molecule],
