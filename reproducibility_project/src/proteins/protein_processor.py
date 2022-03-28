@@ -175,6 +175,13 @@ def get_protein_path(
 	)
 	return prot_path
 
+def get_total_charge(
+    job,
+):
+	from prody.trajectory.psffile import parsePSF, writePSF
+	from prody.proteins.pdbfile import parsePDB, writePDB
+	getCharges
+
 def merge_solv_and_solute(
     job,
 ):	
@@ -188,6 +195,7 @@ def merge_solv_and_solute(
 	import numpy as np
 	import pandas as pd
 	#Shuift geometric center of solvent box to origin
+	print("Centering solvent on origin")
 	uncentered_positions = parsePDB(job.fn("mosdef_box_0.pdb"))
 	moveAtoms(uncentered_positions, to=zeros(3), ag=True)
 	writePDB(job.fn("mosdef_box_0_centered.pdb"), uncentered_positions)
@@ -203,7 +211,7 @@ def merge_solv_and_solute(
 	pro2_parm_pos = load_file(get_protein_path(job.sp.pdbid+"_aligned.pdb"))
 	parmPosComb = pro2_parm_pos + solvbox2_pos
 
-
+	print("Superimposing protein and solvent")
 	#Combine topolgies in parmed and write intermediate files
 	# Also note that the protein has to be on the left when merging (prot+solv)
 	# Very important not ro renumber since we need to cross reference with the psf.
@@ -222,9 +230,11 @@ def merge_solv_and_solute(
 	# Very important not to change this before merging topologies
 	endOfProtein = df2.segid.eq('SYS').idxmax()
 	startOfSolvent = endOfProtein+1
+	endOfSolvent = len(df2.index)
 	prot = "@0-{end}".format(end=endOfProtein)
 	solv = "@{start}-{end}".format(start=startOfSolvent, end=endOfSolvent)
 
+	print("Masking solvent residues possessing an atom within 2.4 A of protein")
 	amberMaskRes = "{protS}<:2.4&{solvS}".format(protS=prot, solvS=solv)
 	badWatersRes = systemPSFComb_pos[amberMaskRes]
 
@@ -238,10 +248,12 @@ def merge_solv_and_solute(
 	df['Exist'] = np.where(df.Exist == 'both', True, False)
 	stripInput = df['Exist'].to_numpy()
 
+	print("Stripping masked solvent")
 	# Strip bad waters from coordinates object
 	splitRes = systemPSFComb.strip(stripInput)
 	systemPSFComb.write_psf(job.fn("combined.psf"))
 
+	print("Writing combined topology/coordinate files")
 	# Strip bad waters from topology object
 	splitRes = systemPSFComb_pos.strip(stripInput)
 	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"))
