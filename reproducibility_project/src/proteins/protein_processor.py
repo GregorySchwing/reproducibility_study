@@ -176,22 +176,17 @@ def get_protein_path(
 	return prot_path
 
 def merge_solv_and_solute(
-    infilename,
+    job,
 ):	
 
 	from numpy import zeros
 	from prody.trajectory.psffile import parsePSF, writePSF
 	from prody.proteins.pdbfile import parsePDB, writePDB
 	from prody.measure.transform import moveAtoms
-	solvbox1 = parmed.charmm.CharmmPsfFile("mosdef_box_0.psf")
-	solvbox1_positions = load_file("mosdef_box_0.pdb")
 
-	solvbox2 = parsePSF("mosdef_box_0.psf")
-	solvbox2_positions = parsePDB("mosdef_box_0.pdb")
 
-	#, positions="mosdef_box_0.psf
-	pro2 = parsePSF("/home/greg/Desktop/2021/f30Continued/prelim2/reproducibility_study/reproducibility_project/src/proteins/6g6k.psf")
-	pro2_positions = parsePDB("/home/greg/Desktop/2021/f30Continued/prelim2/reproducibility_study/reproducibility_project/src/proteins/6g6k_aligned.pdb")
+	pro2 = parsePSF(get_protein_path(sp.job.pdbid+".psf"))
+	pro2_positions = parsePDB(get_protein_path(sp.job.pdbid+"_aligned.pdb"))
 
 	moveAtoms(solvbox2_positions, to=zeros(3), ag=True, weights=solvbox2_positions.getMasses())
 
@@ -199,8 +194,8 @@ def merge_solv_and_solute(
 	struc2comb = pro2 + solvbox2
 	#system.setCoords(system_positions)
 
-	writePSF("test2.psf", struc2comb)
-	writePDB("test2.pdb", pos2comb)
+	writePSF(job.fn("test2.psf"), struc2comb)
+	writePDB(job.fn("test2.pdb"), pos2comb)
 
 
 def main():

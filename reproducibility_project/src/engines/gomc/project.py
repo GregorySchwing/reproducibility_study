@@ -23,6 +23,13 @@ from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.molecules.system_builder import (
     construct_system,
 )
+from src.proteins.protein_processor import (
+    align_protein_to_inertial_axes,
+    get_protein_dimensions,
+    get_protein_path,
+    merge_solv_and_solute,
+)
+
 from reproducibility_project.src.utils.forcefields import get_ff_path
 from reproducibility_project.src.utils.plotting import plot_data_with_t0_line
 
@@ -765,7 +772,9 @@ def build_charmm(job, write_files=True):
 def build_psf_pdb_ff_gomc_conf(job):
     """Build the Charmm object and write the pdb, psd, and force field (FF) files for all the simulations in the workspace."""
     charmm_object_with_files = build_charmm(job, write_files=True)
-
+    if job.sp.pdbid:
+        merge_solv_and_solute(job)
+    else: None,
     # ******************************************************
     # melt_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (start)
     # ******************************************************
