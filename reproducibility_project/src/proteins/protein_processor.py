@@ -1,7 +1,15 @@
+from __future__ import print_function
+
+__author__  = 'Pablo Guardado Calvo'
+__version__ = '0.1'
+__email__   = 'pablo.guardado (at) gmail.com'
+__date__    = '13/08/2015'
+
+
 """Methods used to create process pdb file job statepoint."""
 
 
-'''
+"""
 Calculate and display the dimensions of a protein.
 
 
@@ -17,14 +25,8 @@ Based on "inertia_tensor.py" (c) 2010 by Mateusz Maciejewski
 
 License: MIT
 
-'''
+"""
 
-from __future__ import print_function
-
-__author__  = 'Pablo Guardado Calvo'
-__version__ = '0.1'
-__email__   = 'pablo.guardado (at) gmail.com'
-__date__    = '13/08/2015'
 
 
 # For a dimer, Myc-Max, aligning decreases the box volume by 85721.536846008 A^3
