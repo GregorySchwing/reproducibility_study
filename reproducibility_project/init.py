@@ -50,7 +50,8 @@ proteinalignedpaths = dict()
 boundingBoxSizes = dict()
 liq_box_lengths = dict()
 box_padding = 10
-prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding)
+empty_space = 2
+prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding+empty_space)
 moleculeNameAsXML = True
 
 replicas = range(1)
@@ -92,14 +93,14 @@ masses = {
     "opc": [18.0153] * u.amu,
 }
 init_density_liq = {
-    "tip3p": [980] * g_per_cm3,
-    "spce": [993] * g_per_cm3,
-    "opc3": [991] * g_per_cm3,
-    "tip4p_ew": [996] * g_per_cm3,
-    "tip4p_2005": [997] * g_per_cm3,
-    "tip4p_d": [993] * g_per_cm3,
-    "a99SB_disp": [996] * g_per_cm3,
-    "opc": [997] * g_per_cm3,
+    "tip3p": [98.0] * g_per_cm3,
+    "spce": [99.3] * g_per_cm3,
+    "opc3": [99.1] * g_per_cm3,
+    "tip4p_ew": [99.6] * g_per_cm3,
+    "tip4p_2005": [99.7] * g_per_cm3,
+    "tip4p_d": [99.3] * g_per_cm3,
+    "a99SB_disp": [99.6] * g_per_cm3,
+    "opc": [99.7] * g_per_cm3,
 }
 init_density_vap = {
     "tip3p": [None],

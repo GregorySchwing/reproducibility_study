@@ -52,9 +52,10 @@ def matriz_inercia(selection):
 	x,y,z = 0,0,0
 	for (mass, coord) in zip(masses, coords):
 		m = mass
-		x += coord[0]*mass
-		y += coord[1]*mass
-		z += coord[2]*mass
+		m = 1
+		x += coord[0]*m
+		y += coord[1]*m
+		z += coord[2]*m
 		totmass += mass
 	global cM
 	cM = numpy.array([x/totmass, y/totmass, z/totmass])
@@ -65,20 +66,22 @@ def matriz_inercia(selection):
 		I.append(0)
 
 	for (mass, coord) in zip(masses, coords):
+		m = mass
+		m = 1
 		temp_x, temp_y, temp_z = coord[0], coord[1], coord[2]
 		temp_x -= x
 		temp_y -= y
 		temp_z -= z
 
-		I[0] += mass * (temp_y**2 + temp_z**2)
-		I[1] -= mass * temp_x * temp_y
-		I[2] -= mass * temp_x * temp_z
-		I[3] -= mass * temp_x * temp_y
-		I[4] += mass * (temp_x**2 + temp_z**2)
-		I[5] -= mass * temp_y * temp_z
-		I[6] -= mass * temp_x * temp_z
-		I[7] -= mass * temp_y * temp_z
-		I[8] += mass * (temp_x**2 + temp_y**2)
+		I[0] += m * (temp_y**2 + temp_z**2)
+		I[1] -= m * temp_x * temp_y
+		I[2] -= m * temp_x * temp_z
+		I[3] -= m * temp_x * temp_y
+		I[4] += m * (temp_x**2 + temp_z**2)
+		I[5] -= m * temp_y * temp_z
+		I[6] -= m * temp_x * temp_z
+		I[7] -= m * temp_y * temp_z
+		I[8] += m * (temp_x**2 + temp_y**2)
 
 	global tensor
 	tensor = numpy.array([(I[0:3]), (I[3:6]), (I[6:9])])
@@ -106,6 +109,7 @@ def translacion_cM(selection):
 	x,y,z = 0,0,0
 	for (mass, coord) in zip(masses, coords):
 		m = mass
+		m = 1
 		x += coord[0]*m
 		y += coord[1]*m
 		z += coord[2]*m
