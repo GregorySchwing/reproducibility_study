@@ -214,7 +214,7 @@ for prot in proteins:
         ):
             statepoint = {
                 "molecule": molecule,
-                "proteinpath" : proteinalignedpaths[prot],
+                "proteinpath" : prot,
                 "engine": engine,
                 "replica": replica,
                 "temperature": np.round(

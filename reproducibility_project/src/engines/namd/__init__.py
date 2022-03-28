@@ -1,1 +1,1 @@
-"""GOMC project module."""
+"""NAMD project module."""
