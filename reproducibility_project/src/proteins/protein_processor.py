@@ -183,21 +183,68 @@ def merge_solv_and_solute(
 	from prody.trajectory.psffile import parsePSF, writePSF
 	from prody.proteins.pdbfile import parsePDB, writePDB
 	from prody.measure.transform import moveAtoms
+	from parmed.charmm import CharmmPsfFile
+	from parmed.formats.registry import load_file
+	import numpy as np
+	import pandas as pd
+	#Shuift geometric center of solvent box to origin
+	uncentered_positions = parsePDB(job.fn("mosdef_box_0.pdb"))
+	moveAtoms(uncentered_positions, to=zeros(3), ag=True)
+	writePDB(job.fn("mosdef_box_0_centered.pdb"), uncentered_positions)
 
-	solvbox2 = parsePSF("mosdef_box_0.psf")
-	solvbox2_positions = parsePDB("mosdef_box_0.pdb")
+	#Load centered sovent box into Partmed
+	solvbox2 = CharmmPsfFile(job.fn("mosdef_box_0.psf"))
+	solvbox2_pos = load_file(job.fn("mosdef_box_0_centered.pdb"))
 
-	pro2 = parsePSF(get_protein_path(job.sp.pdbid+".psf"))
-	pro2_positions = parsePDB(get_protein_path(job.sp.pdbid+"_aligned.pdb"))
 
-	moveAtoms(solvbox2_positions, to=zeros(3), ag=True, weights=solvbox2_positions.getMasses())
+	#Load protein structure into Partmed
+	pro2_parm = CharmmPsfFile(get_protein_path(job.sp.pdbid+".psf"))
 
-	pos2comb = pro2_positions + solvbox2_positions
-	struc2comb = pro2 + solvbox2
-	#system.setCoords(system_positions)
+	pro2_parm_pos = load_file(get_protein_path(job.sp.pdbid+"_aligned.pdb"))
+	parmPosComb = pro2_parm_pos + solvbox2_pos
 
-	writePSF(job.fn("test2.psf"), struc2comb)
-	writePDB(job.fn("test2.pdb"), pos2comb)
+
+	#Combine topolgies in parmed and write intermediate files
+	# Also note that the protein has to be on the left when merging (prot+solv)
+	# Very important not ro renumber since we need to cross reference with the psf.
+	systemPSF = CharmmPsfFile.from_structure(pro2_parm + solvbox2)
+	systemPSF.write_psf(job.fn("intermediate.psf"))
+	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False)
+
+	#Load intermediate structure into Partmed
+	systemPSFComb = CharmmPsfFile(job.fn("intermediate.psf"))
+	systemPSFComb_pos = load_file(job.fn("intermediate.pdb"))
+
+	df = systemPSFComb_pos.to_dataframe()
+	df2 = systemPSFComb.to_dataframe()
+
+	# Separate protein from solvent using Mosdef's SYS segment ID
+	# Very important not to change this before merging topologies
+	endOfProtein = df2.segid.eq('SYS').idxmax()
+	startOfSolvent = endOfProtein+1
+	prot = "@0-{end}".format(end=endOfProtein)
+	solv = "@{start}-{end}".format(start=startOfSolvent, end=endOfSolvent)
+
+	amberMaskRes = "{protS}<:2.4&{solvS}".format(protS=prot, solvS=solv)
+	badWatersRes = systemPSFComb_pos[amberMaskRes]
+
+	# Create dataframes for checking existence unique combinations in bad water subset. 
+	bwDF = badWatersRes.to_dataframe()
+	allAtoms = df2[["name","resname","resnum"]]
+	badWaters = bwDF[["name","resname","resnum"]]
+
+	# Create a list of length atoms where values are true and false, indicating whether this atom should be removed.
+	df = pd.merge(allAtoms, badWaters, on=["name","resname","resnum"], how='left', indicator='Exist')
+	df['Exist'] = np.where(df.Exist == 'both', True, False)
+	stripInput = df['Exist'].to_numpy()
+
+	# Strip bad waters from coordinates object
+	splitRes = systemPSFComb.strip(stripInput)
+	systemPSFComb.write_psf(job.fn("combined.psf"))
+
+	# Strip bad waters from topology object
+	splitRes = systemPSFComb_pos.strip(stripInput)
+	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"))
 
 
 def main():
@@ -205,6 +252,7 @@ def main():
 	([minX, minY, minZ],[maxX, maxY, maxZ]) = get_protein_dimensions("prot_al.pdb")
 	print("The Inertia Axis Aligned Bounding Box (IABB) dimensions are (%.2f, %.2f, %.2f)" % (maxX-minX, maxY-minY, maxZ-minZ))
 	print("The Inertia Axis Aligned Bounding Box (IABB) volume is %.2f A3" % ((maxX-minX)*(maxY-minY)*(maxZ-minZ)))
+
 
 if __name__ == "__main__":
     main()
