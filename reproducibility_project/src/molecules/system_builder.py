@@ -156,5 +156,7 @@ def get_molecule(sp):
         "opc": opc(),
     }
     molecule = molecule_dict[sp["molecule"]]
-    molecule.name = sp["molecule"]
+    # For now, hardcode all molecule names to WAT
+    #molecule.name = sp["molecule"]
+    molecule.name = "WAT"
     return molecule
