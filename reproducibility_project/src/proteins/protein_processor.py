@@ -258,57 +258,35 @@ def merge_solv_and_solute(
 	splitRes = systemPSFComb_pos.strip(stripInput)
 	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"), use_hetatoms=False)
 
-def convert_solv_to_salt(
+# Convert segment SYS to W00 to WNN, so prevent repeated (resid, segment) pairs
+def fix_segment(
     job,
 ):	
+	Text_File_Import = open(job.fn("combined.psf"), 'r')
 
-	from numpy import zeros
-	from prody.trajectory.psffile import parsePSF, writePSF
-	from prody.proteins.pdbfile import parsePDB, writePDB
-	from prody.measure.transform import moveAtoms
-	from parmed.charmm import CharmmPsfFile
-	from parmed.formats.registry import load_file
-	import numpy as np
-	import pandas as pd
+	Text_lines = Text_File_Import.readlines()
+	counter = 00
+	segID = "W00"
+	lastResid = 0
+	with open(job.fn("combined.psf"), 'w') as the_file:	
+	for line in Text_lines:
+		User_Inputs = line.split()
+		resName = 0
+		try:
+			resName = User_Inputs.index("WAT")
+		except ValueError:
+			"print no water"		
 
-	print("Loading unionized system")
-	system = CharmmPsfFile(job.fn("combined.psf"))
-	system_pos = load_file(job.fn("combined.pdb"))
+		if (resName > 0):
+			if (User_Inputs[resName-1] == str(1) and lastResid == str(9999)):
+				counter = counter + 1
+				segID = "W{0:0=2d}".format(counter)
+			newLine = line.replace('SYS', segID)
+			the_file.write(newLine)
+			lastResid = User_Inputs[resName-1]
+		else:
+			the_file.write(line)
 
-	df = system.to_dataframe()
-	df2 = system_pos.to_dataframe()
-
-	# Separate protein from solvent using Mosdef's SYS segment ID
-	# Very important not to change this before merging topologies
-	endOfProtein = df2.segid.eq('SYS').idxmax()
-	startOfSolvent = endOfProtein+1
-	endOfSolvent = len(df2.index)
-	prot = "@0-{end}".format(end=endOfProtein)
-	solv = "@{start}-{end}".format(start=startOfSolvent, end=endOfSolvent)
-
-	print("Masking random solvent residues possessing an atom within 2.4 A of protein")
-	amberMaskRes = "{protS}<:2.4&{solvS}".format(protS=prot, solvS=solv)
-	badWatersRes = systemPSFComb_pos[amberMaskRes]
-
-	# Create dataframes for checking existence unique combinations in bad water subset. 
-	bwDF = badWatersRes.to_dataframe()
-	allAtoms = df2[["name","resname","resnum"]]
-	badWaters = bwDF[["name","resname","resnum"]]
-
-	# Create a list of length atoms where values are true and false, indicating whether this atom should be removed.
-	df = pd.merge(allAtoms, badWaters, on=["name","resname","resnum"], how='left', indicator='Exist')
-	df['Exist'] = np.where(df.Exist == 'both', True, False)
-	stripInput = df['Exist'].to_numpy()
-
-	print("Stripping masked solvent")
-	# Strip bad waters from coordinates object
-	splitRes = systemPSFComb.strip(stripInput)
-	systemPSFComb.write_psf(job.fn("combined.psf"))
-
-	print("Writing combined topology/coordinate files")
-	# Strip bad waters from topology object
-	splitRes = systemPSFComb_pos.strip(stripInput)
-	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"), use_hetatoms=False)
 
 def main():
 	align_protein_to_inertial_axes("prot.pdb", "prot_al.pdb")
