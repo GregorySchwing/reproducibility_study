@@ -703,7 +703,7 @@ def build_charmm(job, write_files=True):
     if job.sp.molecule in ["waterSPCE", "benzeneUA"]:
         gomc_fix_bonds_angles_list = Molecule_ResName_List
     else:
-        gomc_fix_bonds_angles_list = None
+        gomc_fix_bonds_angles_list = ["WAT"]
 
     if job.doc.production_ensemble in ["NVT", "NPT"]:
         charmm = mf_charmm.Charmm(
