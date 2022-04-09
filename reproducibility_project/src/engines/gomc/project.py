@@ -695,7 +695,10 @@ def build_charmm(job, write_files=True):
         "_CH": "C",
         "_HC": "C",
     }
-    Molecule_ResName_List = [job.sp.molecule]
+
+    # Name all water models WAT for vmd recongnition these are waters.
+    #Molecule_ResName_List = [job.sp.molecule]
+    Molecule_ResName_List = ["WAT"]
 
     if job.sp.molecule in ["waterSPCE", "benzeneUA"]:
         gomc_fix_bonds_angles_list = Molecule_ResName_List
