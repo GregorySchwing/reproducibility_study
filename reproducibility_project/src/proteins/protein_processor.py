@@ -217,7 +217,7 @@ def merge_solv_and_solute(
 	# Very important not ro renumber since we need to cross reference with the psf.
 	systemPSF = CharmmPsfFile.from_structure(pro2_parm + solvbox2)
 	systemPSF.write_psf(job.fn("intermediate.psf"))
-	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False)
+	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
 
 	#Load intermediate structure into Partmed
 	systemPSFComb = CharmmPsfFile(job.fn("intermediate.psf"))
@@ -256,7 +256,7 @@ def merge_solv_and_solute(
 	print("Writing combined topology/coordinate files")
 	# Strip bad waters from topology object
 	splitRes = systemPSFComb_pos.strip(stripInput)
-	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"))
+	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"), use_hetatoms=False))
 
 
 def main():
