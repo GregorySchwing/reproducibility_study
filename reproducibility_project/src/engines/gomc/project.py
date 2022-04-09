@@ -28,6 +28,7 @@ from src.proteins.protein_processor import (
     get_protein_dimensions,
     get_protein_path,
     merge_solv_and_solute,
+    fix_segment
 )
 
 from reproducibility_project.src.utils.forcefields import get_ff_path
@@ -773,10 +774,11 @@ def build_charmm(job, write_files=True):
 )
 @flow.with_job
 def build_psf_pdb_ff_gomc_conf(job):
-    """Build the Charmm object and write the pdb, psd, and force field (FF) files for all the simulations in the workspace."""
+    """Build the Charmm object and write the pdb, psf, and force field (FF) files for all the simulations in the workspace."""
     charmm_object_with_files = build_charmm(job, write_files=True)
     if job.sp.pdbid:
         merge_solv_and_solute(job)
+        fix_segment(job)
     else: None,
     # ******************************************************
     # melt_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (start)
