@@ -76,7 +76,10 @@ equilb_design_ensemble_max_number = 3
 # Note: do not add extensions
 ff_filename_str = "in_FF"
 
-
+# initial mosdef structure and coordinates
+# Note: do not add extensions
+mosdef_structure_box_0_name_str = "mosdef_box_0"
+mosdef_structure_box_1_name_str = "mosdef_box_1"
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
@@ -799,11 +802,6 @@ def build_charmm(job, write_files=True):
 def build_psf_pdb_ff_gomc_conf(job):
     """Build the Charmm object and write the pdb, psf, and force field (FF) files for all the simulations in the workspace."""
     charmm_object_with_files = build_charmm(job, write_files=True)
-
-    # initial mosdef structure and coordinates
-    # Note: do not add extensions
-    mosdef_structure_box_0_name_str = "mosdef_box_0"
-    mosdef_structure_box_1_name_str = "mosdef_box_1"
 
     # ******************************************************
     # melt_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (start)

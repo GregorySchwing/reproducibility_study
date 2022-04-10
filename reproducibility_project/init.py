@@ -46,8 +46,9 @@ solvent_molecules = [
 solvent_molecules = [
     "tip3p",
 ]
-#salt_strengths = [0.075] 
-salt_strengths = [0.00, 0.075, 0.150, 0.225, 0.300] 
+salt_strengths = [0.075,0.150] 
+#salt_strengths = [0.00, 0.075, 0.150, 0.225, 0.300] 
+
 
 proteins = [
     "6g6k",
