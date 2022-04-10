@@ -144,7 +144,7 @@ proc getNumIons {psfSolvated pdbSolvated {cation SOD} {cationCharge 1} {anion CL
     }
   }
 
-  return $nIonsList
+  return [list $nCation $nAnion]
 }
 
 

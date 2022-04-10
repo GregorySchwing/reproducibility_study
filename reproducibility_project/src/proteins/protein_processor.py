@@ -299,6 +299,8 @@ def ionize(
 
 	# Replace the target string
 	filedata = filedata.replace("HELPER_METHODS", helperMethods)
+	filedata = filedata.replace("PATH_2_PROT_PSF", get_protein_path(job.sp.pdbid+".psf"))
+	filedata = filedata.replace("PATH_2_PROT_PDB", get_protein_path(job.sp.pdbid+"_aligned.pdb"))
 	filedata = filedata.replace("PATH_2_SOLVATED_PSF", job.fn("solvated.psf"))
 	filedata = filedata.replace("PATH_2_SOLVATED_PDB", job.fn("solvated.pdb"))
 	filedata = filedata.replace("CATION_NAME", job.sp.cat_name)
