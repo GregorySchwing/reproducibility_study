@@ -27,8 +27,6 @@ License: MIT
 
 """
 
-
-
 # For a dimer, Myc-Max, aligning decreases the box volume by 85721.536846008 A^3
 
 from prody.proteins.pdbfile import parsePDB
@@ -287,9 +285,8 @@ def fix_segment(
 			else:
 				the_file.write(line)
 
-def ionize(
-    job,
-):	
+def compute_ion_numbers_and_positions(job):
+
 	from vmd import evaltcl
 	template = get_protein_path("ionizeTemplate.tcl")
 	helperMethods = get_protein_path("concentrationHelpers.tcl")
@@ -312,8 +309,122 @@ def ionize(
 	with open(job.fn("filled_template.tcl"), 'w') as file:
 		file.write(filedata)
 
+
+	print("Computing number and positions of ions in", job)
 	ions = evaltcl("source " + job.fn("filled_template.tcl"))
-	print("from python", ions)
+	ionsList = ions.split()
+
+	job.document["NCATION"] = ionsList[0]
+	job.document["NANION"] = ionsList[1]
+	with open(job.fn("NUMIONS.txt"), "w") as file:
+		file.write(ions + "\n")
+
+def build_ions_psf(job):
+	import os
+	import glob
+	return 
+
+def merge_ions_and_system(
+    job,
+):	
+
+	from numpy import zeros
+	from prody.trajectory.psffile import parsePSF, writePSF
+	from prody.proteins.pdbfile import parsePDB, writePDB
+	from prody.measure.transform import moveAtoms
+	from parmed.charmm import CharmmPsfFile
+	from parmed.formats.registry import load_file
+	import numpy as np
+	import pandas as pd
+	import re
+
+	p = re.compile("(\w+?)-ions_(\d+)-(\w+?).pdb")
+
+	from os import listdir
+	ionFiles = [f for f in listdir(job.ws) if ((job.isfile(f) and p.match(f)))]
+
+	print(ionFiles)
+
+	#Load centered sovent box into Partmed
+	print("Loading system")
+	system = CharmmPsfFile(job.fn("solvated.psf"))
+	system_pos = load_file(job.fn("solvated.pdb"))
+	parmPosComb = system_pos
+
+	#Shuift geometric center of solvent box to origin
+	print("Merging ions with system")
+	for f in ionFiles:
+		ions = load_file(job.fn(f))
+		parmPosComb = parmPosComb + ions
+		system = system + ions
+
+	parmPosComb.write_pdb(job.fn("combined.pdb"), renumber=False, use_hetatoms=False)
+	system.write_psf(job.fn("combined.psf"))
+	quit()
+	#Load centered sovent box into Partmed
+	solvbox2 = CharmmPsfFile(job.fn("mosdef_box_0.psf"))
+	solvbox2_pos = load_file(job.fn("mosdef_box_0_centered.pdb"))
+
+
+	#Load protein structure into Partmed
+	pro2_parm = CharmmPsfFile(get_protein_path(job.sp.pdbid+".psf"))
+
+	pro2_parm_pos = load_file(get_protein_path(job.sp.pdbid+"_aligned.pdb"))
+	parmPosComb = pro2_parm_pos + solvbox2_pos
+
+	print("Superimposing protein and solvent")
+	#Combine topolgies in parmed and write intermediate files
+	# Also note that the protein has to be on the left when merging (prot+solv)
+	# Very important not ro renumber since we need to cross reference with the psf.
+	systemPSF = CharmmPsfFile.from_structure(pro2_parm + solvbox2)
+	systemPSF.write_psf(job.fn("intermediate.psf"))
+	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
+
+	#Load intermediate structure into Partmed
+	systemPSFComb = CharmmPsfFile(job.fn("intermediate.psf"))
+	systemPSFComb_pos = load_file(job.fn("intermediate.pdb"))
+
+	df = systemPSFComb_pos.to_dataframe()
+	df2 = systemPSFComb.to_dataframe()
+
+	# Separate protein from solvent using Mosdef's SYS segment ID
+	# Very important not to change this before merging topologies
+	endOfProtein = df2.segid.eq('SYS').idxmax()
+	startOfSolvent = endOfProtein+1
+	endOfSolvent = len(df2.index)
+	prot = "@0-{end}".format(end=endOfProtein)
+	solv = "@{start}-{end}".format(start=startOfSolvent, end=endOfSolvent)
+
+	print("Masking solvent residues possessing an atom within 2.4 A of protein")
+	amberMaskRes = "{protS}<:2.4&{solvS}".format(protS=prot, solvS=solv)
+	badWatersRes = systemPSFComb_pos[amberMaskRes]
+
+	# Create dataframes for checking existence unique combinations in bad water subset. 
+	bwDF = badWatersRes.to_dataframe()
+	allAtoms = df2[["name","resname","resnum"]]
+	badWaters = bwDF[["name","resname","resnum"]]
+
+	# Create a list of length atoms where values are true and false, indicating whether this atom should be removed.
+	df = pd.merge(allAtoms, badWaters, on=["name","resname","resnum"], how='left', indicator='Exist')
+	df['Exist'] = np.where(df.Exist == 'both', True, False)
+	stripInput = df['Exist'].to_numpy()
+
+	print("Stripping masked solvent")
+	# Strip bad waters from coordinates object
+	splitRes = systemPSFComb.strip(stripInput)
+	systemPSFComb.write_psf(job.fn("solvated.psf"))
+
+	print("Writing combined topology/coordinate files")
+	# Strip bad waters from topology object
+	splitRes = systemPSFComb_pos.strip(stripInput)
+	systemPSFComb_pos.write_pdb(job.fn("solvated.pdb"), use_hetatoms=False)
+
+def ionize(
+    job,
+):	
+	compute_ion_numbers_and_positions(job)
+	merge_ions_and_system(job)
+
 
 def main():
 	align_protein_to_inertial_axes("prot.pdb", "prot_al.pdb")

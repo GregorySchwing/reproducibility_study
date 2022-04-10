@@ -15,4 +15,6 @@ set all [atomselect $solute all]
 set minmax [measure minmax $all]
 set vals "[lindex [lindex $minmax 0] 0] [lindex [lindex $minmax 0] 1] [lindex [lindex $minmax 0] 2] [lindex [lindex $minmax 1] 0] [lindex [lindex $minmax 1] 1] [lindex [lindex $minmax 1] 2]"
 puts "$vals"
-cionize -mol 0 -np 4 -mg -prefix default -border 0 -ga test -ions "{CATION_NAME [lindex $numCatAn 0] CATION_VAL} {ANION_NAME [lindex $numCatAn 1] ANION_VAL}" 
+cionize -mol $solute -np 4 -mg -prefix default -border 0 -ga test -ions "{CATION_NAME [lindex $numCatAn 0] CATION_VAL} {ANION_NAME [lindex $numCatAn 1] ANION_VAL}" 
+
+return "$numCatAn"

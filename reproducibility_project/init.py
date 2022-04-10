@@ -59,7 +59,7 @@ proteinalignedpaths = dict()
 boundingBoxSizes = dict()
 liq_box_lengths = dict()
 
-box_padding = 10
+box_padding = 15
 empty_space = 2
 prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding+empty_space)
 moleculeNameAsXML = True
