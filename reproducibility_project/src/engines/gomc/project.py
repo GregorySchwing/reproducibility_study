@@ -28,7 +28,8 @@ from src.proteins.protein_processor import (
     get_protein_dimensions,
     get_protein_path,
     merge_solv_and_solute,
-    fix_segment
+    fix_segment,
+    ionize
 )
 
 from reproducibility_project.src.utils.forcefields import get_ff_path
@@ -75,10 +76,7 @@ equilb_design_ensemble_max_number = 3
 # Note: do not add extensions
 ff_filename_str = "in_FF"
 
-# initial mosdef structure and coordinates
-# Note: do not add extensions
-mosdef_structure_box_0_name_str = "mosdef_box_0"
-mosdef_structure_box_1_name_str = "mosdef_box_1"
+
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
@@ -153,6 +151,7 @@ ff_info_dict = {
 # ******************************************************
 # signac and GOMC-MOSDEF code (start)
 # ******************************************************
+# checking if the GOMC control file is written for the melt equilb NVT run
 
 # ******************************************************
 # ******************************************************
@@ -480,6 +479,29 @@ def part_2d_production_control_file_written(job):
         return False
 
 
+@Project.label
+@Project.pre(lambda j: j.sp.engine == "gomc")
+@flow.with_job
+def part_2a_solvated(job):
+    """Check that the initial job data is written to the json files."""
+    data_written_bool = False
+    if job.isfile(f"{'solvated.pdb'}"):
+        data_written_bool = True
+
+    return data_written_bool
+
+
+@Project.label
+@Project.pre(lambda j: j.sp.engine == "gomc")
+@flow.with_job
+def part_2a_ionized(job):
+    """Check that the initial job data is written to the json files."""
+    data_written_bool = False
+    if job.isfile(f"{'ionized.pdb'}"):
+        data_written_bool = True
+
+    return data_written_bool
+
 # ******************************************************
 # ******************************************************
 # check if GOMC control file was written (end)
@@ -746,6 +768,7 @@ def build_charmm(job, write_files=True):
     return charmm
 
 
+
 # ******************************************************
 # ******************************************************
 # build system, with option to write the force field (FF), pdb, psf files.
@@ -776,10 +799,12 @@ def build_charmm(job, write_files=True):
 def build_psf_pdb_ff_gomc_conf(job):
     """Build the Charmm object and write the pdb, psf, and force field (FF) files for all the simulations in the workspace."""
     charmm_object_with_files = build_charmm(job, write_files=True)
-    if job.sp.pdbid:
-        merge_solv_and_solute(job)
-        fix_segment(job)
-    else: None,
+
+    # initial mosdef structure and coordinates
+    # Note: do not add extensions
+    mosdef_structure_box_0_name_str = "mosdef_box_0"
+    mosdef_structure_box_1_name_str = "mosdef_box_1"
+
     # ******************************************************
     # melt_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (start)
     # ******************************************************
@@ -1863,6 +1888,41 @@ def build_psf_pdb_ff_gomc_conf(job):
 
 # ******************************************************
 # ******************************************************
+# Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
+# ******************************************************
+# ******************************************************
+@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(part_2a_melt_equilb_NVT_control_file_written)
+@Project.pre(part_2b_equilb_NVT_control_file_written)
+@Project.pre(part_2c_equilb_design_ensemble_control_file_written)
+@Project.pre(part_2d_production_control_file_written)
+@Project.post(part_2a_solvated)
+@FlowProject.operation
+@flow.with_job
+def solvate_protein(job):
+    print("#**********************")
+    print("# Started the solvation process.")
+    print("#**********************")
+    if job.sp.pdbid:
+        merge_solv_and_solute(job)
+        fix_segment(job)
+    else: None,
+
+@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(part_2a_solvated)
+@Project.post(part_2a_ionized)
+@FlowProject.operation
+@flow.with_job
+def ionize_protein(job):
+    print("#**********************")
+    print("# Started the ionization process.")
+    print("#**********************")
+    if job.sp.pdbid:
+        ionize(job)
+    else: None,
+
+# ******************************************************
+# ******************************************************
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (end)
 # ******************************************************
 # ******************************************************
@@ -1874,6 +1934,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # ******************************************************
 @Project.pre(lambda j: j.sp.engine == "gomc")
 @Project.pre(part_2a_melt_equilb_NVT_control_file_written)
+@Project.pre(part_2a_ionized)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
 @Project.post(part_4a_job_melt_equilb_NVT_completed_properly)
 @Project.operation.with_directives(

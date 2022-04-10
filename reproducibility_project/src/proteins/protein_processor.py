@@ -251,24 +251,24 @@ def merge_solv_and_solute(
 	print("Stripping masked solvent")
 	# Strip bad waters from coordinates object
 	splitRes = systemPSFComb.strip(stripInput)
-	systemPSFComb.write_psf(job.fn("combined.psf"))
+	systemPSFComb.write_psf(job.fn("solvated.psf"))
 
 	print("Writing combined topology/coordinate files")
 	# Strip bad waters from topology object
 	splitRes = systemPSFComb_pos.strip(stripInput)
-	systemPSFComb_pos.write_pdb(job.fn("combined.pdb"), use_hetatoms=False)
+	systemPSFComb_pos.write_pdb(job.fn("solvated.pdb"), use_hetatoms=False)
 
 # Convert segment SYS to W00 to WNN, so prevent repeated (resid, segment) pairs
 def fix_segment(
     job,
 ):	
-	Text_File_Import = open(job.fn("combined.psf"), 'r')
+	Text_File_Import = open(job.fn("solvated.psf"), 'r')
 
 	Text_lines = Text_File_Import.readlines()
 	counter = 00
 	segID = "W00"
 	lastResid = 0
-	with open(job.fn("combined.psf"), 'w') as the_file:	
+	with open(job.fn("solvated.psf"), 'w') as the_file:	
 		for line in Text_lines:
 			User_Inputs = line.split()
 			resName = 0
@@ -287,6 +287,31 @@ def fix_segment(
 			else:
 				the_file.write(line)
 
+def ionize(
+    job,
+):	
+	from vmd import evaltcl
+	template = get_protein_path("ionizeTemplate.tcl")
+	helperMethods = get_protein_path("concentrationHelpers.tcl")
+	# Read in the file
+	with open(template, 'r') as file :
+		filedata = file.read()
+
+	# Replace the target string
+	filedata = filedata.replace("HELPER_METHODS", helperMethods)
+	filedata = filedata.replace("PATH_2_SOLVATED_PSF", job.fn("solvated.psf"))
+	filedata = filedata.replace("PATH_2_SOLVATED_PDB", job.fn("solvated.pdb"))
+	filedata = filedata.replace("CATION_NAME", job.sp.cat_name)
+	filedata = filedata.replace("CATION_VAL", str(job.sp.cat_val))
+	filedata = filedata.replace("ANION_NAME", job.sp.an_name)
+	filedata = filedata.replace("ANION_VAL", str(job.sp.an_val))
+	filedata = filedata.replace("SALC_CONC_VALUE", str(job.sp.salt_conc))
+	# Write the file out again
+	with open(job.fn("filled_template.tcl"), 'w') as file:
+		file.write(filedata)
+
+	ions = evaltcl("source " + job.fn("filled_template.tcl"))
+	print("from python", ions)
 
 def main():
 	align_protein_to_inertial_axes("prot.pdb", "prot_al.pdb")

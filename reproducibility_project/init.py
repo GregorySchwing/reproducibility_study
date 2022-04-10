@@ -31,6 +31,7 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
           boundingBoxSizes[prot] = np.array([maxX-minX, maxY-minY, maxZ-minZ])
           liq_box_lengths[prot] = [u.unyt_array(boundingBoxSizes[prot]+2*box_padding, u.angstrom)]
 
+"""
 solvent_molecules = [
     "tip3p",
     "spce",
@@ -41,14 +42,22 @@ solvent_molecules = [
     "a99SB_disp",
     "opc",
 ]
+"""
+solvent_molecules = [
+    "tip3p",
+]
+#salt_strengths = [0.075] 
+salt_strengths = [0.00, 0.075, 0.150, 0.225, 0.300] 
 
 proteins = [
     "6g6k",
 ]
+
 proteinpaths = dict()
 proteinalignedpaths = dict()
 boundingBoxSizes = dict()
 liq_box_lengths = dict()
+
 box_padding = 10
 empty_space = 2
 prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding+empty_space)
@@ -157,6 +166,7 @@ N_vap_solvent_molecules = {
     "opc": [None],
 }
 
+
 vap_box_lengths = {
     "tip3p": [None],
     "spce": [None],
@@ -179,6 +189,9 @@ ensembles = {
     "opc": ["NPT", None],
 }
 
+cations = [["SOD", "1"]]
+anions = [["CLA", "-1"]]
+
 
 pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
@@ -200,6 +213,9 @@ for prot in proteins:
             lrc,
             cutoff_style,
             replica,
+            conc,
+            cat,
+            an
         ) in itertools.product(
             simulation_engines,
             ensembles[molecule],
@@ -213,9 +229,17 @@ for prot in proteins:
             long_range_correction,
             cutoff_styles,
             replicas,
+            salt_strengths,
+            cations,
+            anions
         ):
             statepoint = {
                 "molecule": molecule,
+                "salt_conc": conc,
+                "cat_name": cat[0],
+                "cat_val": cat[1],
+                "an_name": an[0],
+                "an_val": an[1],
                 "pdbid" : prot,
                 "engine": engine,
                 "replica": replica,
