@@ -32,7 +32,7 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
           liq_box_lengths[prot] = [u.unyt_array(boundingBoxSizes[prot]+2*box_padding, u.angstrom)]
 
 
-solvent_molecules = [
+molecules = [
     "tip3p",
     "spce",
     "opc3",
@@ -44,7 +44,7 @@ solvent_molecules = [
 ]
 
 protein = False
-
+moleculeNameAsXML = True
 if(protein):
     # None is used as the statepoint to equilibrate the solvent
     salt_strengths = [0.00, 0.075, 0.150, 0.225, 0.300, None]
@@ -60,17 +60,21 @@ if(protein):
     box_padding = 15
     empty_space = 2
     prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding+empty_space)
-    moleculeNameAsXML = True
+
+    cations = [["SOD", "1"]]
+    anions = [["CLA", "-1"]]
+
 else:
+    sideLength = 40.0
     liq_box_lengths = {
-        "tip3p": [40.0] * u.angstrom,
-        "spce": [40.0] * u.angstrom,
-        "opc3": [40.0] * u.angstrom,
-        "tip4p_ew":  [40.0] * u.angstrom,
-        "tip4p_2005":  [40.0] * u.angstrom,
-        "tip4p_d":  [40.0] * u.angstrom,
-        "a99SB_disp":  [40.0] * u.angstrom,
-        "opc":  [40.0] * u.angstrom,
+        "tip3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "spce": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "opc3": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tip4p_ew":  [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tip4p_2005":  [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tip4p_d":  [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "a99SB_disp":  [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "opc":  [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)]
     }
 
     salt_strengths = [None]
@@ -92,7 +96,7 @@ r_cuts = {}
 cutoff_styles = ["hard"]
 long_range_correction = ["energy_pressure"]
 
-for key in solvent_molecules:
+for key in molecules:
     if "UA" in key:
         if "benz" not in key:
             forcefields[key] = "trappe-ua"
@@ -162,7 +166,7 @@ pressures = {
     "opc": [101.325] * u.kPa,
 }
 
-N_liq_solvent_molecules = {
+N_liq_molecules = {
     "tip3p": [2000],
     "spce": [2000],
     "opc3": [2000],
@@ -173,7 +177,7 @@ N_liq_solvent_molecules = {
     "opc": [2000],
 }
 
-N_vap_solvent_molecules = {
+N_vap_molecules = {
     "spce": [None],
     "tip3p": [None],
     "opc3": [None],
@@ -207,122 +211,18 @@ ensembles = {
     "opc": ["NPT", None],
 }
 
-cations = [["SOD", "1"]]
-anions = [["CLA", "-1"]]
 
 
 pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
-# ignore statepoints that are not being tested (gemc only for methane, pentane)
-# filter the list of dictionaries
-total_statepoints = list()
-for prot in proteins:
-    for molecule in solvent_molecules:
-        for (
-            engine,
-            ensemble,
-            (temp, press),
-            n_liq,
-            liq_box_L,
-            n_vap,
-            vap_box_L,
-            (init_liq_den, init_vap_den),
-            mass,
-            lrc,
-            cutoff_style,
-            replica,
-            conc,
-            cat,
-            an
-        ) in itertools.product(
-            simulation_engines,
-            ensembles[molecule],
-            zip(temperatures[molecule], pressures[molecule]),
-            N_liq_solvent_molecules[molecule],
-            liq_box_lengths[prot],
-            N_vap_solvent_molecules[molecule],
-            vap_box_lengths[molecule],
-            zip(init_density_liq[molecule], init_density_vap[molecule]),
-            masses[molecule],
-            long_range_correction,
-            cutoff_styles,
-            replicas,
-            salt_strengths,
-            cations,
-            anions
-        ):
-            statepoint = {
-                "molecule": molecule,
-                "salt_conc": conc,
-                "cat_name": cat[0],
-                "cat_val": cat[1],
-                "an_name": an[0],
-                "an_val": an[1],
-                "pdbid" : prot,
-                "engine": engine,
-                "replica": replica,
-                "temperature": np.round(
-                    temp.to_value("K"),
-                    decimals=3,
-                ).item(),
-                "pressure": np.round(press.to_value("kPa"), decimals=3).item(),
-                "ensemble": ensemble if ensemble else None,
-                "N_liquid": n_liq,
-                "N_vap": n_vap if n_vap else None,
-                "box_L_liq_x": np.round(
-                    liq_box_L[0].to_value("nm"),
-                    decimals=3,
-                ).item()
-                if liq_box_L[0]
-                else None,
-                "box_L_liq_y": np.round(
-                    liq_box_L[1].to_value("nm"),
-                    decimals=3,
-                ).item()
-                if liq_box_L[1]
-                else None,
-                "box_L_liq_z": np.round(
-                    liq_box_L[2].to_value("nm"),
-                    decimals=3,
-                ).item()
-                if liq_box_L[2]
-                else None,
-                "box_L_vap": np.round(
-                    vap_box_L.to_value("nm"),
-                    decimals=3,
-                ).item()
-                if vap_box_L
-                else None,
-                "init_liq_den": np.round(
-                    init_liq_den.to_value(g_per_cm3),
-                    decimals=3, 
-                ).item(),
-                "init_vap_den": np.round(
-                    init_vap_den.to_value(g_per_cm3),
-                    decimals=3,
-                ).item()
-                if init_vap_den
-                else None,
-                "mass": np.round(
-                    mass.to_value("amu"),
-                    decimals=3,
-                ).item(),
-                "forcefield_name": forcefields[molecule],
-                "cutoff_style": cutoff_style,
-                "long_range_correction": lrc,
-                "r_cut": np.round(
-                    r_cuts[molecule].to_value("nm"),
-                    decimals=3,
-                ).item(),
-            }
-            total_statepoints.append(statepoint)
+
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
 total_statepoints = list()
 if(protein):
     for prot in proteins:
-        for molecule in solvent_molecules:
+        for molecule in molecules:
             for (
                 engine,
                 ensemble,
@@ -343,9 +243,9 @@ if(protein):
                 simulation_engines,
                 ensembles[molecule],
                 zip(temperatures[molecule], pressures[molecule]),
-                N_liq_solvent_molecules[molecule],
+                N_liq_molecules[molecule],
                 liq_box_lengths[prot],
-                N_vap_solvent_molecules[molecule],
+                N_vap_molecules[molecule],
                 vap_box_lengths[molecule],
                 zip(init_density_liq[molecule], init_density_vap[molecule]),
                 masses[molecule],
@@ -455,6 +355,7 @@ else:
         ):
             statepoint = {
                 "molecule": molecule,
+                "salt_conc": None,
                 "engine": engine,
                 "replica": replica,
                 "temperature": np.round(
@@ -465,11 +366,23 @@ else:
                 "ensemble": ensemble if ensemble else None,
                 "N_liquid": n_liq,
                 "N_vap": n_vap if n_vap else None,
-                "box_L_liq": np.round(
-                    liq_box_L.to_value("nm"),
+                "box_L_liq_x": np.round(
+                    liq_box_L[0].to_value("nm"),
                     decimals=3,
                 ).item()
-                if liq_box_L
+                if liq_box_L[0]
+                else None,
+                "box_L_liq_y": np.round(
+                    liq_box_L[1].to_value("nm"),
+                    decimals=3,
+                ).item()
+                if liq_box_L[1]
+                else None,
+                "box_L_liq_z": np.round(
+                    liq_box_L[2].to_value("nm"),
+                    decimals=3,
+                ).item()
+                if liq_box_L[2]
                 else None,
                 "box_L_vap": np.round(
                     vap_box_L.to_value("nm"),
