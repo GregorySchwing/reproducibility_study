@@ -46,7 +46,9 @@ solvent_molecules = [
 solvent_molecules = [
     "tip3p",
 ]
-salt_strengths = [0.075,0.150] 
+
+# None is used as the statepoint to equilibrate the solvent
+salt_strengths = [0.075,0.150, None] 
 #salt_strengths = [0.00, 0.075, 0.150, 0.225, 0.300] 
 
 

@@ -50,6 +50,9 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     template = "grid.sh"
 
 
+equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
+prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
+
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
@@ -173,8 +176,9 @@ def part_1a_initial_data_input_to_json(job):
 
     return data_written_bool
 
-
+@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.post(part_1a_initial_data_input_to_json)
 @Project.operation.with_directives(
     {
@@ -783,6 +787,7 @@ def build_charmm(job, write_files=True):
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
 # ******************************************************
 # ******************************************************
+@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "gomc")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
@@ -1889,13 +1894,11 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
 # ******************************************************
 # ******************************************************
+@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "gomc")
-@Project.pre(part_2a_melt_equilb_NVT_control_file_written)
-@Project.pre(part_2b_equilb_NVT_control_file_written)
-@Project.pre(part_2c_equilb_design_ensemble_control_file_written)
-@Project.pre(part_2d_production_control_file_written)
+@Project.pre(part_4d_job_production_run_completed_properly)
 @Project.post(part_2a_solvated)
-@FlowProject.operation
+@Project.operation
 @flow.with_job
 def solvate_protein(job):
     print("#**********************")
@@ -1906,10 +1909,11 @@ def solvate_protein(job):
         fix_segment(job)
     else: None,
 
+@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "gomc")
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_ionized)
-@FlowProject.operation
+@Project.operation
 @flow.with_job
 def ionize_protein(job):
     print("#**********************")
@@ -1930,9 +1934,9 @@ def ionize_protein(job):
 # melt_NVT -starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "gomc")
 @Project.pre(part_2a_melt_equilb_NVT_control_file_written)
-@Project.pre(part_2a_ionized)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
 @Project.post(part_4a_job_melt_equilb_NVT_completed_properly)
 @Project.operation.with_directives(
@@ -1980,6 +1984,7 @@ def run_melt_equilb_NVT_gomc_command(job):
 # equilb_NVT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "gomc")
 @Project.pre(part_4a_job_melt_equilb_NVT_completed_properly)
 @Project.pre(part_2b_equilb_NVT_control_file_written)
@@ -2241,6 +2246,7 @@ def pymbar_stabilized_equilb_design_ensemble(job):
 # equilb NPT or GEMC-NVT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "gomc")
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
 @Project.pre(part_2c_equilb_design_ensemble_control_file_written)
@@ -2331,6 +2337,7 @@ def run_equilb_ensemble_gomc_command(job):
 # production run - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+@equilibrateSolvent
 @Project.pre(part_4c_job_equilb_design_ensemble_completed_properly)
 @Project.pre(part_2d_production_control_file_written)
 @Project.pre(pymbar_stabilized_equilb_design_ensemble)
