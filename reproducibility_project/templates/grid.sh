@@ -19,7 +19,7 @@
 
 echo  "Running on host" hostname
 echo  "Time is" date
-
+source ~/anaconda3/etc/profile.d/conda.sh
 conda activate mosdef-study38
 
 module load python/3.8
