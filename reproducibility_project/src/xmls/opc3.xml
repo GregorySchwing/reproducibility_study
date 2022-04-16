@@ -12,6 +12,6 @@
  <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
    <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
   <Atom type="OW" charge="-0.89517" sigma="0.317427" epsilon="-0.683690704"/>
-  <Atom type="HW" charge="0.4238" sigma="0.000017818" epsilon="-0.000004184"/>
+  <Atom type="HW" charge="0.4238" sigma="0.0" epsilon="0.0"/>
  </NonbondedForce>
 </ForceField>
