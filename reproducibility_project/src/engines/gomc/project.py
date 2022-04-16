@@ -60,7 +60,7 @@ prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
 # If the gomc binary files are callable directly from the terminal without a path,
 # please just enter and empty string (i.e., "" or '')
 # gomc_binary_path = "/wsu/home/hf/hf68/hf6839/GOMC_dev_2_22_22/bin"
-gomc_binary_path = "/home/greg/Desktop/GOMC/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/GOMC/bin"
 
 # number of MC cycles
 MC_cycles_melt_equilb_NVT = 5 * 10 ** 3  # set value for paper = 5 * 10 ** 3
