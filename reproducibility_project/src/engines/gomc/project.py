@@ -206,7 +206,9 @@ def initial_parameters(job):
     job.doc.forcefield_directory_name = get_ff_path(job.sp.forcefield_name, job.sp.molecule)
 
     # reformat ensembles for input to GOMC
-    if job.sp.ensemble in ["GEMC-NPT", "GEMC_NPT"]:
+    if job.sp.ensemble in ["NPT", "NVT"]:
+        job.doc.production_ensemble = job.sp.ensemble
+    elif job.sp.ensemble in ["GEMC-NPT", "GEMC_NPT"]:
         job.doc.production_ensemble = "GEMC_NPT"
     elif job.sp.ensemble in ["GEMC-NVT", "GEMC_NVT"]:
         job.doc.production_ensemble = "GEMC_NVT"
