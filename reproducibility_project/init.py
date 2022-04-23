@@ -356,6 +356,7 @@ else:
             statepoint = {
                 "molecule": molecule,
                 "salt_conc": None,
+                "pdbid": None,
                 "engine": engine,
                 "replica": replica,
                 "temperature": np.round(
