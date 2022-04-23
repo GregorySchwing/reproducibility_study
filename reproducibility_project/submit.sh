@@ -2,7 +2,7 @@
 # Example with 28 cores for OpenMP
 #
 # Project/Account
-#SBATCH --qos=secondary
+#SBATCH --qos=primary
 # Request one node
 #SBATCH -N 1
 # Total number of cores, in this example it will 1 node with 1 core each. 
