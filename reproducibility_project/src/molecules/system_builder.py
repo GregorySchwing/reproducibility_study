@@ -64,7 +64,7 @@ def construct_system(
     """
     molecule = get_molecule(sp)
     liq_box = mb.Box([sp["box_L_liq_x"] * scale_liq_box, sp["box_L_liq_y"] * scale_liq_box, sp["box_L_liq_z"] * scale_liq_box])
-    if(job.sp.pdbid):
+    if(sp.pdbid):
         filled_liq_box = mb.fill_box(
             compound=[molecule],
             density=[sp["init_liq_den"]],
