@@ -5,11 +5,11 @@
    <Type name="_LP" class="_LP" element="_LP" mass="0.0000" def="[_LP;X1][O;X3](H)(H)" desc="Lone Pair in TIP4P 2005 mass is 1 in mol2 file " doi="10.1063/1.2121687"/>
  </AtomTypes>
  <HarmonicBondForce>
-   <Bond class1="OW" class2="HW" length="0.09572" k="188280"/>
-   <Bond class1="OW" class2="_LP" length="0.01546" k="188280"/>
+   <Bond class1="OW" class2="HW" length="0.09572" k="209200"/>
+   <Bond class1="OW" class2="_LP" length="0.01546" k="209200"/>
  </HarmonicBondForce>
  <HarmonicAngleForce>
-   <Angle class1="HW" class2="OW" class3="HW" angle="1.8242181342" k="230.12"/>
+   <Angle class1="HW" class2="OW" class3="HW" angle="1.8242181342" k="209.2"/>
    <Angle class1="HW" class2="OW" class3="_LP" angle="0.9121090671" k="418.4"/>
  </HarmonicAngleForce>
  <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">

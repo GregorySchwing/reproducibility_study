@@ -5,11 +5,11 @@
    <Type name="_LP" class="_LP" element="_LP" mass="0.0000" def="[_LP;X1][O;X3](H)(H)" desc="OPC mass is 1 in mol2 file " doi="doi/10.1021/jz501780a"/>
  </AtomTypes>
  <HarmonicBondForce>
-   <Bond class1="OW" class2="HW" length="0.08724" k="188280"/>
-   <Bond class1="OW" class2="_LP" length="0.01594" k="188280"/>
+   <Bond class1="OW" class2="HW" length="0.08724" k="209200"/>
+   <Bond class1="OW" class2="_LP" length="0.01594" k="209200"/>
  </HarmonicBondForce>
  <HarmonicAngleForce>
-   <Angle class1="HW" class2="OW" class3="HW" angle="1.8081611051" k="230.12"/>
+   <Angle class1="HW" class2="OW" class3="HW" angle="1.8081611051" k="209.2"/>
    <Angle class1="HW" class2="OW" class3="_LP" angle="0.9040805525" k="418.4"/>
  </HarmonicAngleForce>
  <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
