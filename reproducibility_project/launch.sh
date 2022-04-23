@@ -21,4 +21,5 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate mosdef-study38
 export PYTHONPATH=$PYTHONPATH:wsu/home/go/go24/go2432/reproducibility_study/reproducibility_project
 python init.py
+signac view
 python src/engines/gomc/project.py submit
