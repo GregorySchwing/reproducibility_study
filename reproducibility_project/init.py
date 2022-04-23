@@ -33,7 +33,7 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
 
 
 molecules = [
-    "tip3p",
+    "tips3p",
     "spce",
     "opc3",
     "tip4p_ew",
@@ -67,7 +67,7 @@ if(protein):
 else:
     sideLength = 40.0
     liq_box_lengths = {
-        "tip3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tips3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "spce": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "opc3": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "tip4p_ew":  [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
@@ -114,7 +114,7 @@ for key in molecules:
         r_cuts[key] = 10 * u.angstrom
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 masses = {
-    "tip3p": [18.0153] * u.amu,
+    "tips3p": [18.0153] * u.amu,
     "spce": [18.0153] * u.amu,
     "opc3": [18.0153] * u.amu,
     "tip4p_ew": [18.0153] * u.amu,
@@ -124,7 +124,7 @@ masses = {
     "opc": [18.0153] * u.amu,
 }
 init_density_liq = {
-    "tip3p": [99.8] * g_per_cm3,
+    "tips3p": [99.8] * g_per_cm3,
     "spce": [99.8] * g_per_cm3,
     "opc3": [99.8] * g_per_cm3,
     "tip4p_ew": [99.8] * g_per_cm3,
@@ -134,7 +134,7 @@ init_density_liq = {
     "opc": [99.8] * g_per_cm3,
 }
 init_density_vap = {
-    "tip3p": [None],
+    "tips3p": [None],
     "spce": [None],
     "opc3": [None],
     "tip4p_ew": [None],
@@ -145,7 +145,7 @@ init_density_vap = {
 }
 # 300  -> 280.0, 300.0, 320.0
 temperatures = {
-    "tip3p": [298.15] * u.K,
+    "tips3p": [298.15] * u.K,
     "spce": [298.15] * u.K,
     "opc3": [298.15] * u.K,
     "tip4p_ew": [298.15] * u.K,
@@ -156,7 +156,7 @@ temperatures = {
 }
 # 101.325, 101.325, 101.325
 pressures = {
-    "tip3p": [101.325] * u.kPa,
+    "tips3p": [101.325] * u.kPa,
     "spce": [101.325] * u.kPa,
     "opc3": [101.325] * u.kPa,
     "tip4p_ew": [101.325] * u.kPa,
@@ -167,7 +167,7 @@ pressures = {
 }
 
 N_liq_molecules = {
-    "tip3p": [2000],
+    "tips3p": [2000],
     "spce": [2000],
     "opc3": [2000],
     "tip4p_ew": [2000],
@@ -179,7 +179,7 @@ N_liq_molecules = {
 
 N_vap_molecules = {
     "spce": [None],
-    "tip3p": [None],
+    "tips3p": [None],
     "opc3": [None],
     "tip4p_ew": [None],
     "tip4p_2005": [None],
@@ -190,7 +190,7 @@ N_vap_molecules = {
 
 
 vap_box_lengths = {
-    "tip3p": [None],
+    "tips3p": [None],
     "spce": [None],
     "opc3": [None],
     "tip4p_ew": [None],
@@ -201,7 +201,7 @@ vap_box_lengths = {
 }
 
 ensembles = {
-    "tip3p": ["NPT", None],
+    "tips3p": ["NPT", None],
     "spce": ["NPT", None],
     "opc3": ["NPT", None],
     "tip4p_ew": ["NPT", None],
