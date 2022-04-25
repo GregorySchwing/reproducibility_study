@@ -12,7 +12,7 @@ class tip3p(mb.Compound):
     def __init__(self):
         super(tip3p, self).__init__()
         abs_path = os.path.dirname(os.path.abspath(molecules.__file__))
-        self.add(mb.load(f"{abs_path}/tip3p.mol2"), label="WAT")
+        self.add(mb.load(f"{abs_path}/tips3p.mol2"), label="WAT")
 
 
 def main():
