@@ -23,6 +23,15 @@ from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.molecules.system_builder import (
     construct_system,
 )
+from src.proteins.protein_processor import (
+    align_protein_to_inertial_axes,
+    get_protein_dimensions,
+    get_protein_path,
+    merge_solv_and_solute,
+    fix_segment,
+    ionize
+)
+
 from reproducibility_project.src.utils.forcefields import get_ff_path
 from reproducibility_project.src.utils.plotting import plot_data_with_t0_line
 
@@ -41,14 +50,22 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     template = "grid.sh"
 
 
+equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
+prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
+
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
 # set binary path to gomc binary files (the bin folder).
 # If the gomc binary files are callable directly from the terminal without a path,
 # please just enter and empty string (i.e., "" or '')
-# gomc_binary_path = "/wsu/home/hf/hf68/hf6839/GOMC_dev_2_22_22/bin"
-gomc_binary_path = "/home/greg/Desktop/GOMC/bin"
+# namd_binary_path = "/wsu/home/hf/hf68/hf6839/GOMC_dev_2_22_22/bin"
+namd_binary_path = "/home/greg/Desktop/NAMD_2.12_Linux-x86_64-multicore"
+namd3 = False
+if (namd3):
+    namdbin = f"namd3"
+else:
+    namdbin = f"namd2"
 
 # number of MC cycles
 MC_cycles_melt_equilb_NVT = 5 * 10 ** 3  # set value for paper = 5 * 10 ** 3
@@ -145,6 +162,7 @@ ff_info_dict = {
 # ******************************************************
 # signac and GOMC-MOSDEF code (start)
 # ******************************************************
+# checking if the GOMC control file is written for the melt equilb NVT run
 
 # ******************************************************
 # ******************************************************
@@ -154,7 +172,7 @@ ff_info_dict = {
 # ******************************************************
 # ******************************************************
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 def part_1a_initial_data_input_to_json(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
@@ -163,8 +181,9 @@ def part_1a_initial_data_input_to_json(job):
 
     return data_written_bool
 
-
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@equilibrateSolvent
+@Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.post(part_1a_initial_data_input_to_json)
 @Project.operation.with_directives(
     {
@@ -265,46 +284,26 @@ def initial_parameters(job):
         )
 
     # select binary path and binary file
-    job.doc.gomc_binary_path = gomc_binary_path
+    job.doc.namd_binary_path = namd_binary_path
 
     if job.doc.production_ensemble in ["NPT", "NVT"]:
-        job.doc.melt_NVT_gomc_binary_file = f"GOMC_{job.doc.cpu_or_gpu}_NVT"
-        job.doc.equilb_NVT_gomc_binary_file = f"GOMC_{job.doc.cpu_or_gpu}_NVT"
+        job.doc.melt_NVT_gomc_binary_file = namdbin
+        job.doc.equilb_NVT_gomc_binary_file = namdbin
         job.doc.equilb_design_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_NPT"
-        )
-    elif job.doc.production_ensemble in ["GEMC_NVT", "GEMC_NPT"]:
-        job.doc.melt_NVT_gomc_binary_file = f"GOMC_{job.doc.cpu_or_gpu}_GEMC"
-        job.doc.equilb_NVT_gomc_binary_file = f"GOMC_{job.doc.cpu_or_gpu}_GEMC"
-        job.doc.equilb_design_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_GEMC"
-        )
-    elif job.doc.production_ensemble in ["GCMC"]:
-        job.doc.melt_NVT_gomc_binary_file = f"GOMC_{job.doc.cpu_or_gpu}_GCMC"
-        job.doc.equilb_NVT_gomc_binary_file = f"GOMC_{job.doc.cpu_or_gpu}_GCMC"
-        job.doc.equilb_design_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_GCMC"
+            namdbin
         )
     else:
         raise ValueError(
-            "ERROR: A wrong ensemble has been specified for the gomc binary file"
+            "ERROR: A wrong ensemble has been specified for the namd binary file"
         )
 
     if job.doc.production_ensemble in ["NPT"]:
         job.doc.production_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_NPT"
+            namdbin
         )
     elif job.doc.production_ensemble in ["NVT"]:
         job.doc.production_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_NVT"
-        )
-    elif job.doc.production_ensemble in ["GEMC_NVT", "GEMC_NPT"]:
-        job.doc.production_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_GEMC"
-        )
-    elif job.doc.production_ensemble in ["GCMC"]:
-        job.doc.production_ensemble_gomc_binary_file = (
-            f"GOMC_{job.doc.cpu_or_gpu}_GCMC"
+            namdbin
         )
     else:
         raise ValueError(
@@ -328,7 +327,7 @@ def initial_parameters(job):
 
 
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 def part_1b_under_equilb_design_ensemble_run_limit(job):
     """Check that the equilbrium design ensemble run is under it's run limit."""
     try:
@@ -348,7 +347,7 @@ def part_1b_under_equilb_design_ensemble_run_limit(job):
 # check if GOMC-MOSDEF wrote the gomc files
 # @Project.pre(select_production_ensemble)
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def mosdef_input_written(job):
     """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
@@ -416,7 +415,7 @@ def gomc_control_file_written(job, control_filename_str):
 
 # checking if the GOMC control file is written for the melt equilb NVT run
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_2a_melt_equilb_NVT_control_file_written(job):
     """General check that the melt_equilb_NVT_control (high temperature) gomc control file is written."""
@@ -425,7 +424,7 @@ def part_2a_melt_equilb_NVT_control_file_written(job):
 
 # checking if the GOMC control file is written for the equilb NVT run
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_2b_equilb_NVT_control_file_written(job):
     """General check that the equilb_NVT_control (run temperature) gomc control file is written."""
@@ -434,7 +433,7 @@ def part_2b_equilb_NVT_control_file_written(job):
 
 # checking if the GOMC control file is written for the equilb run with the selected ensemble
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_2c_equilb_design_ensemble_control_file_written(job):
     """General check that the equilb_design_ensemble (run temperature) gomc control file is written."""
@@ -454,7 +453,7 @@ def part_2c_equilb_design_ensemble_control_file_written(job):
 
 # checking if the GOMC control file is written for the production run
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_2d_production_control_file_written(job):
     """General check that the production run (run temperature) gomc control file is written."""
@@ -471,6 +470,29 @@ def part_2d_production_control_file_written(job):
     except:
         return False
 
+
+@Project.label
+@Project.pre(lambda j: j.sp.engine == "namd")
+@flow.with_job
+def part_2a_solvated(job):
+    """Check that the initial job data is written to the json files."""
+    data_written_bool = False
+    if job.isfile(f"{'solvated.pdb'}"):
+        data_written_bool = True
+
+    return data_written_bool
+
+
+@Project.label
+@Project.pre(lambda j: j.sp.engine == "namd")
+@flow.with_job
+def part_2a_ionized(job):
+    """Check that the initial job data is written to the json files."""
+    data_written_bool = False
+    if job.isfile(f"{'ionized.pdb'}"):
+        data_written_bool = True
+
+    return data_written_bool
 
 # ******************************************************
 # ******************************************************
@@ -497,7 +519,7 @@ def gomc_simulation_started(job, control_filename_str):
 
 # check if melt equilb_NVT GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_3a_output_melt_equilb_NVT_started(job):
     """Check to see if the melt_equilb_NVT (high temperature) gomc simulation is started."""
@@ -506,7 +528,7 @@ def part_3a_output_melt_equilb_NVT_started(job):
 
 # check if equilb_NVT GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_3b_output_equilb_NVT_started(job):
     """Check to see if the equilb_NVT (set temperature) gomc simulation is started."""
@@ -515,7 +537,7 @@ def part_3b_output_equilb_NVT_started(job):
 
 # check if equilb_with design ensemble GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_3c_output_equilb_design_ensemble_started(job):
     """Check to see if the equilb_design_ensemble (set temperature) gomc simulation is started."""
@@ -557,7 +579,7 @@ def part_3c_output_equilb_design_ensemble_started(job):
 
 # check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_3d_output_production_run_started(job):
     """Check to see if the production run (set temperature) gomc simulation is started."""
@@ -607,7 +629,7 @@ def gomc_sim_completed_properly(job, control_filename_str):
 
 # check if melt equilb NVT GOMC run completed by checking the end of the GOMC consol file
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_4a_job_melt_equilb_NVT_completed_properly(job):
     """Check to see if the melt_equilb_NVT (high temperature) gomc simulation was completed properly."""
@@ -618,7 +640,7 @@ def part_4a_job_melt_equilb_NVT_completed_properly(job):
 
 # check if equilb NVT GOMC run completed by checking the end of the GOMC consol file
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_4b_job_equilb_NVT_completed_properly(job):
     """Check to see if the equilb_NVT (set temperature) gomc simulation was completed properly."""
@@ -627,7 +649,7 @@ def part_4b_job_equilb_NVT_completed_properly(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_4c_job_equilb_design_ensemble_completed_properly(job):
     """Check to see if the equilb_design_ensemble (set temperature) gomc simulation was completed properly."""
@@ -652,7 +674,7 @@ def part_4c_job_equilb_design_ensemble_completed_properly(job):
 
 # check if production GOMC run completed by checking the end of the GOMC consol file
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_4d_job_production_run_completed_properly(job):
     """Check to see if the production run (set temperature) gomc simulation was completed properly."""
@@ -688,12 +710,15 @@ def build_charmm(job, write_files=True):
         "_CH": "C",
         "_HC": "C",
     }
-    Molecule_ResName_List = [job.sp.molecule]
+
+    # Name all water models WAT for vmd recongnition these are waters.
+    #Molecule_ResName_List = [job.sp.molecule]
+    Molecule_ResName_List = ["WAT"]
 
     if job.sp.molecule in ["waterSPCE", "benzeneUA"]:
         gomc_fix_bonds_angles_list = Molecule_ResName_List
     else:
-        gomc_fix_bonds_angles_list = None
+        gomc_fix_bonds_angles_list = ["WAT"]
 
     if job.doc.production_ensemble in ["NVT", "NPT"]:
         charmm = mf_charmm.Charmm(
@@ -735,6 +760,7 @@ def build_charmm(job, write_files=True):
     return charmm
 
 
+
 # ******************************************************
 # ******************************************************
 # build system, with option to write the force field (FF), pdb, psf files.
@@ -746,7 +772,8 @@ def build_charmm(job, write_files=True):
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@equilibrateSolvent
+@Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.post(part_2a_melt_equilb_NVT_control_file_written)
@@ -763,1089 +790,141 @@ def build_charmm(job, write_files=True):
 )
 @flow.with_job
 def build_psf_pdb_ff_gomc_conf(job):
-    """Build the Charmm object and write the pdb, psd, and force field (FF) files for all the simulations in the workspace."""
+
+    from reproducibility_project.src.engine_input.namd import conf
+
+    """Build the Charmm object and write the pdb, psf, and force field (FF) files for all the simulations in the workspace."""
     charmm_object_with_files = build_charmm(job, write_files=True)
 
-    # ******************************************************
-    # melt_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (start)
-    # ******************************************************
-    print("#**********************")
-    print("Starting: melt_NVT GOMC control file writing")
-    print("#**********************")
-
-    Restart = False
-
-    temperature = (1000 * u.K).to_value("K")
-    pressure = (job.sp.pressure * u.kPa).to_value("bar")
-
-    output_name_control_file_name = melt_equilb_NVT_control_file_name_str
-    restart_control_file_name_str = None
-
-    # replica unmber cycles
-    MC_cycles = MC_cycles_melt_equilb_NVT
-    # calc MC steps
-
-    MC_steps = int(MC_cycles * job.doc.N_total)
-    EqSteps = 1000
-
-    seed_no = job.doc.replica_number_int
-
-    production_ensemble = job.doc.production_ensemble
-
-    Ewald = ff_info_dict.get(job.sp.forcefield_name).get("Ewald")
-    ElectroStatic = ff_info_dict.get(job.sp.forcefield_name).get(
-        "ElectroStatic"
-    )
-    VDWGeometricSigma = ff_info_dict.get(job.sp.forcefield_name).get(
-        "VDWGeometricSigma"
-    )
-    Rcut = job.sp.r_cut * u.nm
-    Rcut = Rcut.to_value("angstrom")
-
-    if job.sp.cutoff_style == "hard":
-        Potential = "VDW"
-        try:
-            if job.sp.long_range_correction == "None":
-                LRC = False
-            elif job.sp.long_range_correction == "energy_pressure":
-                LRC = True
-            else:
-                raise ValueError("ERROR: Not a valid cutoff_style")
-        except:
-            LRC = False
-
-    elif job.sp.cutoff_style == "shift":
-        Potential = "SHIFT"
-        LRC = False
-    else:
-        raise ValueError("ERROR: Not a valid cutoff_style")
-
-    # output all data and calc frequecy
-    output_true_list_input = [
-        True,
-        int(output_data_every_X_MC_cycles * job.doc.N_total),
-    ]
-    output_false_list_input = [
-        False,
-        int(output_data_every_X_MC_cycles * job.doc.N_total),
-    ]
-
-    if production_ensemble in ["NVT", "NPT"]:
-        used_ensemble = "NVT"
-
-        if job.sp.molecule in ["methaneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (1.00,)
-            RotFreq = (None,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.34,)
-            RotFreq = (0.33,)
-            RegrowthFreq = (0.33,)
-
-        elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.forcefield_name in ["custom"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.forcefield_name in ["custom"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        else:
-            raise ValueError(
-                "Moleules MC move ratios not listed in the GOMC control file writer."
-            )
-
-        if Restart is True:
-            Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                output_name_control_file_name
-            )
-            Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                output_name_control_file_name
-            )
-            binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                output_name_control_file_name
-            )
-            extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                output_name_control_file_name
-            )
-
-        elif Restart is False:
-            Coordinates_box_0 = None
-            Structure_box_0 = None
-            binCoordinates_box_0 = None
-            extendedSystem_box_0 = None
-
-        Coordinates_box_1 = None
-        Structure_box_1 = None
-        binCoordinates_box_1 = None
-        extendedSystem_box_1 = None
-
-    elif job.doc.production_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]:
-        used_ensemble = job.doc.production_ensemble
-
-        if job.sp.molecule in ["methaneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (1.00,)
-            RotFreq = (None,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.34,)
-            RotFreq = (0.33,)
-            RegrowthFreq = (0.33,)
-
-        elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.forcefield_name in ["custom"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        else:
-            raise ValueError(
-                "Moleules MC move ratios not listed in the GOMC control file writer."
-            )
-
-        if Restart is True:
-            Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                output_name_control_file_name
-            )
-            Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                output_name_control_file_name
-            )
-            binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                output_name_control_file_name
-            )
-            extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                output_name_control_file_name
-            )
-
-            Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
-                output_name_control_file_name
-            )
-            Structure_box_1 = "{}_BOX_1_restart.psf".format(
-                output_name_control_file_name
-            )
-            binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
-                output_name_control_file_name
-            )
-            extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
-                output_name_control_file_name
-            )
-
-        elif Restart is False:
-            Coordinates_box_0 = None
-            Structure_box_0 = None
-            binCoordinates_box_0 = None
-            extendedSystem_box_0 = None
-
-            Coordinates_box_1 = None
-            Structure_box_1 = None
-            binCoordinates_box_1 = None
-            extendedSystem_box_1 = None
-
-    gomc_control.write_gomc_control_file(
-        charmm_object_with_files,
-        output_name_control_file_name,
-        used_ensemble,
-        MC_steps,
-        temperature,
-        ff_psf_pdb_file_directory=None,
-        check_input_files_exist=False,
-        Parameters="{}.inp".format(ff_filename_str),
-        Restart=Restart,
-        RestartCheckpoint=False,
-        ExpertMode=True,
-        Coordinates_box_0=Coordinates_box_0,
-        Structure_box_0=Structure_box_0,
-        binCoordinates_box_0=binCoordinates_box_0,
-        extendedSystem_box_0=extendedSystem_box_0,
-        binVelocities_box_0=None,
-        Coordinates_box_1=Coordinates_box_1,
-        Structure_box_1=Structure_box_1,
-        binCoordinates_box_1=binCoordinates_box_1,
-        extendedSystem_box_1=extendedSystem_box_1,
-        binVelocities_box_1=None,
-        input_variables_dict={
-            "PRNG": seed_no,
-            "Pressure": pressure,
-            "Ewald": Ewald,
-            "ElectroStatic": ElectroStatic,
-            "VDWGeometricSigma": VDWGeometricSigma,
-            "Rcut": Rcut,
-            "VolFreq": VolFreq[-1],
-            "SwapFreq": SwapFreq[-1],
-            "DisFreq": DisFreq[-1],
-            "RotFreq": RotFreq[-1],
-            "RegrowthFreq": RegrowthFreq[-1],
-            "OutputName": output_name_control_file_name,
-            "EqSteps": EqSteps,
-            "PressureCalc": output_true_list_input,
-            "RestartFreq": output_true_list_input,
-            "CheckpointFreq": output_true_list_input,
-            "ConsoleFreq": output_true_list_input,
-            "BlockAverageFreq": output_true_list_input,
-            "HistogramFreq": output_true_list_input,
-            "CoordinatesFreq": output_false_list_input,
-            "DCDFreq": output_false_list_input,
-            "Potential": Potential,
-            "LRC": LRC,
-            "RcutLow": 1,
-            "CBMC_First": 12,
-            "CBMC_Nth": 10,
-            "CBMC_Ang": 50,
-            "CBMC_Dih": 50,
-        },
-    )
-
-    print("#**********************")
-    print("Completed: melt_NVT GOMC control file writing")
-    print("#**********************")
-    # ******************************************************
-    # melt_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
-    # ******************************************************
-
-    # ******************************************************
-    # equilb_NVT - GOMC control file writing  (start)
-    # ******************************************************
-    print("#**********************")
-    print("Started: equilb_NVT GOMC control file writing")
-    print("#**********************")
-
-    Restart = True
-
-    temperature = (job.sp.temperature * u.K).to_value("K")
-    pressure = (job.sp.pressure * u.kPa).to_value("bar")
-
-    output_name_control_file_name = equilb_NVT_control_file_name_str
-    restart_control_file_name_str = melt_equilb_NVT_control_file_name_str
-
-    # replica unmber cycles
-    MC_cycles = MC_cycles_equilb_NVT
-    # calc MC steps
-    MC_steps = int(MC_cycles * job.doc.N_total)
-    EqSteps = 1000
-
-    seed_no = job.doc.replica_number_int
-
-    production_ensemble = job.doc.production_ensemble
-
-    Ewald = ff_info_dict.get(job.sp.forcefield_name).get("Ewald")
-    ElectroStatic = ff_info_dict.get(job.sp.forcefield_name).get(
-        "ElectroStatic"
-    )
-    VDWGeometricSigma = ff_info_dict.get(job.sp.forcefield_name).get(
-        "VDWGeometricSigma"
-    )
-    Rcut = job.sp.r_cut * u.nm
-    Rcut = Rcut.to_value("angstrom")
-
-    if job.sp.cutoff_style == "hard":
-        Potential = "VDW"
-        try:
-            if job.sp.long_range_correction == "None":
-                LRC = False
-            elif job.sp.long_range_correction == "energy_pressure":
-                LRC = True
-            else:
-                raise ValueError("ERROR: Not a valid cutoff_style")
-        except:
-            LRC = False
-
-    elif job.sp.cutoff_style == "shift":
-        Potential = "SHIFT"
-        LRC = False
-    else:
-        raise ValueError("ERROR: Not a valid cutoff_style")
-
-    # output all data and calc frequecy
-    output_true_list_input = [
-        True,
-        int(output_data_every_X_MC_cycles * job.doc.N_total),
-    ]
-    output_false_list_input = [
-        False,
-        int(output_data_every_X_MC_cycles * job.doc.N_total),
-    ]
-
-    if production_ensemble in ["NVT", "NPT"]:
-        used_ensemble = "NVT"
-
-        if job.sp.molecule in ["methaneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (1.00,)
-            RotFreq = (None,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.34,)
-            RotFreq = (0.33,)
-            RegrowthFreq = (0.33,)
-
-        elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.forcefield_name in ["custom"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.forcefield_name in ["custom"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        else:
-            raise ValueError(
-                "Moleules MC move ratios not listed in the GOMC control file writer."
-            )
-
-        if Restart is True:
-            Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                restart_control_file_name_str
-            )
-            Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                restart_control_file_name_str
-            )
-            binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                restart_control_file_name_str
-            )
-            extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                restart_control_file_name_str
-            )
-
-        elif Restart is False:
-            Coordinates_box_0 = None
-            Structure_box_0 = None
-            binCoordinates_box_0 = None
-            extendedSystem_box_0 = None
-
-        Coordinates_box_1 = None
-        Structure_box_1 = None
-        binCoordinates_box_1 = None
-        extendedSystem_box_1 = None
-
-    elif job.doc.production_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]:
-        used_ensemble = job.doc.production_ensemble
-
-        if job.sp.molecule in ["methaneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (1.00,)
-            RotFreq = (None,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.34,)
-            RotFreq = (0.33,)
-            RegrowthFreq = (0.33,)
-
-        elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        elif job.sp.forcefield_name in ["custom"]:
-            VolFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.5,)
-            RotFreq = (0.5,)
-            RegrowthFreq = (None,)
-
-        else:
-            raise ValueError(
-                "Moleules MC move ratios not listed in the GOMC control file writer."
-            )
-
-        if Restart is True:
-            Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                restart_control_file_name_str
-            )
-            Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                restart_control_file_name_str
-            )
-            binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                restart_control_file_name_str
-            )
-            extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                restart_control_file_name_str
-            )
-
-            Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
-                restart_control_file_name_str
-            )
-            Structure_box_1 = "{}_BOX_1_restart.psf".format(
-                restart_control_file_name_str
-            )
-            binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
-                restart_control_file_name_str
-            )
-            extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
-                restart_control_file_name_str
-            )
-
-        elif Restart is False:
-            Coordinates_box_0 = None
-            Structure_box_0 = None
-            binCoordinates_box_0 = None
-            extendedSystem_box_0 = None
-
-            Coordinates_box_1 = None
-            Structure_box_1 = None
-            binCoordinates_box_1 = None
-            extendedSystem_box_1 = None
-
-    gomc_control.write_gomc_control_file(
-        charmm_object_with_files,
-        output_name_control_file_name,
-        used_ensemble,
-        MC_steps,
-        temperature,
-        ff_psf_pdb_file_directory=None,
-        check_input_files_exist=False,
-        Parameters="{}.inp".format(ff_filename_str),
-        Restart=Restart,
-        RestartCheckpoint=False,
-        ExpertMode=True,
-        Coordinates_box_0=Coordinates_box_0,
-        Structure_box_0=Structure_box_0,
-        binCoordinates_box_0=binCoordinates_box_0,
-        extendedSystem_box_0=extendedSystem_box_0,
-        binVelocities_box_0=None,
-        Coordinates_box_1=Coordinates_box_1,
-        Structure_box_1=Structure_box_1,
-        binCoordinates_box_1=binCoordinates_box_1,
-        extendedSystem_box_1=extendedSystem_box_1,
-        binVelocities_box_1=None,
-        input_variables_dict={
-            "PRNG": seed_no,
-            "Pressure": pressure,
-            "Ewald": Ewald,
-            "ElectroStatic": ElectroStatic,
-            "VDWGeometricSigma": VDWGeometricSigma,
-            "Rcut": Rcut,
-            "VolFreq": VolFreq[-1],
-            "SwapFreq": SwapFreq[-1],
-            "DisFreq": DisFreq[-1],
-            "RotFreq": RotFreq[-1],
-            "RegrowthFreq": RegrowthFreq[-1],
-            "OutputName": output_name_control_file_name,
-            "EqSteps": EqSteps,
-            "PressureCalc": output_true_list_input,
-            "RestartFreq": output_true_list_input,
-            "CheckpointFreq": output_true_list_input,
-            "ConsoleFreq": output_true_list_input,
-            "BlockAverageFreq": output_true_list_input,
-            "HistogramFreq": output_true_list_input,
-            "CoordinatesFreq": output_false_list_input,
-            "DCDFreq": output_false_list_input,
-            "Potential": Potential,
-            "LRC": LRC,
-            "RcutLow": 1,
-            "CBMC_First": 12,
-            "CBMC_Nth": 10,
-            "CBMC_Ang": 50,
-            "CBMC_Dih": 50,
-        },
-    )
-
-    print("#**********************")
-    print("Completed: equilb_NVT GOMC control file writing")
-    print("#**********************")
-    # ******************************************************
-    # equilb_NVT - GOMC control file writing  (end)
-    # ******************************************************
-
-    # ******************************************************
-    # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
-    # Note: the control files are written for the max number of equilb_design_ensemble runs
-    # so the Charmm object only needs created 1 time.
-    # ******************************************************
-    print("#**********************")
-    print("Started: equilb NPT or GEMC-NVT GOMC control file writing")
-    print("#**********************")
-
-    for number_sims_i in range(0, job.doc.equilb_design_ensemble_max_number):
-        Restart = True
-
-        temperature = (job.sp.temperature * u.K).to_value("K")
-        pressure = (job.sp.pressure * u.kPa).to_value("bar")
-
-        if number_sims_i == 0:
-            restart_control_file_name_str = equilb_NVT_control_file_name_str
-            output_name_control_file_name = "{}_number_{}".format(
-                equilb_design_ensemble_control_file_name_str, number_sims_i
-            )
-
-        elif number_sims_i <= job.doc.equilb_design_ensemble_max_number:
-            restart_control_file_name_str = "{}_number_{}".format(
-                equilb_design_ensemble_control_file_name_str,
-                int(number_sims_i - 1),
-            )
-
-            output_name_control_file_name = "{}_number_{}".format(
-                equilb_design_ensemble_control_file_name_str, number_sims_i
-            )
-        job.doc.equilb_design_ensemble_dict.update(
-            {
-                number_sims_i: {
-                    "restart_control_file_name": restart_control_file_name_str,
-                    "output_name_control_file_name": output_name_control_file_name,
-                }
-            }
-        )
-
-        # replica unmber cycles
-        MC_cycles = MC_cycles_equilb_design_ensemble
-
-        # calc MC steps
-        MC_steps = int(MC_cycles * job.doc.N_total)
-        EqSteps = 1000
-
-        seed_no = job.doc.replica_number_int
-
-        production_ensemble = job.doc.production_ensemble
-
-        Ewald = ff_info_dict.get(job.sp.forcefield_name).get("Ewald")
-        ElectroStatic = ff_info_dict.get(job.sp.forcefield_name).get(
-            "ElectroStatic"
-        )
-        VDWGeometricSigma = ff_info_dict.get(job.sp.forcefield_name).get(
-            "VDWGeometricSigma"
-        )
-        Rcut = job.sp.r_cut * u.nm
-        Rcut = Rcut.to_value("angstrom")
-
-        if job.sp.cutoff_style == "hard":
-            Potential = "VDW"
-            try:
-                if job.sp.long_range_correction == "None":
-                    LRC = False
-                elif job.sp.long_range_correction == "energy_pressure":
-                    LRC = True
-                else:
-                    raise ValueError("ERROR: Not a valid cutoff_style")
-            except:
-                LRC = False
-
-        elif job.sp.cutoff_style == "shift":
-            Potential = "SHIFT"
-            LRC = False
-        else:
-            raise ValueError("ERROR: Not a valid cutoff_style")
-
-        # output all data and calc frequecy
-        output_true_list_input = [
-            True,
-            int(output_data_every_X_MC_cycles * job.doc.N_total),
-        ]
-        output_false_list_input = [
-            False,
-            int(output_data_every_X_MC_cycles * job.doc.N_total),
-        ]
-
-        if production_ensemble in ["NVT", "NPT"]:
-            used_ensemble = "NPT"
-
-            if job.sp.molecule in ["methaneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.99,)
-                RotFreq = (None,)
-                RegrowthFreq = (None,)
-
-            elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.33,)
-                RotFreq = (0.33,)
-                RegrowthFreq = (0.33,)
-
-            elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.49,)
-                RotFreq = (0.5,)
-                RegrowthFreq = (None,)
-
-            elif job.sp.forcefield_name in ["custom"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.49,)
-                RotFreq = (0.5,)
-                RegrowthFreq = (None,)
-
-            else:
-                raise ValueError(
-                    "Moleules MC move ratios not listed in the GOMC control file writer."
-                )
-
-            if Restart is True:
-                Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                    restart_control_file_name_str
-                )
-                Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                    restart_control_file_name_str
-                )
-                binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                    restart_control_file_name_str
-                )
-                extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                    restart_control_file_name_str
-                )
-
-            elif Restart is False:
-                Coordinates_box_0 = None
-                Structure_box_0 = None
-                binCoordinates_box_0 = None
-                extendedSystem_box_0 = None
-
-            Coordinates_box_1 = None
-            Structure_box_1 = None
-            binCoordinates_box_1 = None
-            extendedSystem_box_1 = None
-
-        elif job.doc.production_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]:
-            used_ensemble = job.doc.production_ensemble
-
-            if job.sp.molecule in ["methaneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (0.29,)
-                DisFreq = (0.70,)
-                RotFreq = (None,)
-                RegrowthFreq = (None,)
-
-            elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (0.20,)
-                DisFreq = (0.27,)
-                RotFreq = (0.26,)
-                RegrowthFreq = (0.26,)
-
-            elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (0.20,)
-                DisFreq = (0.40,)
-                RotFreq = (0.39,)
-                RegrowthFreq = (None,)
-
-            else:
-                raise ValueError(
-                    "Moleules MC move ratios not listed in the GOMC control file writer."
-                )
-
-            if Restart is True:
-                Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                    restart_control_file_name_str
-                )
-                Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                    restart_control_file_name_str
-                )
-                binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                    restart_control_file_name_str
-                )
-                extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                    restart_control_file_name_str
-                )
-
-                Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
-                    restart_control_file_name_str
-                )
-                Structure_box_1 = "{}_BOX_1_restart.psf".format(
-                    restart_control_file_name_str
-                )
-                binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
-                    restart_control_file_name_str
-                )
-                extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
-                    restart_control_file_name_str
-                )
-
-            elif Restart is False:
-                Coordinates_box_0 = None
-                Structure_box_0 = None
-                binCoordinates_box_0 = None
-                extendedSystem_box_0 = None
-
-                Coordinates_box_1 = None
-                Structure_box_1 = None
-                binCoordinates_box_1 = None
-                extendedSystem_box_1 = None
-
-        gomc_control.write_gomc_control_file(
-            charmm_object_with_files,
-            output_name_control_file_name,
-            used_ensemble,
-            MC_steps,
-            temperature,
-            ff_psf_pdb_file_directory=None,
-            check_input_files_exist=False,
-            Parameters="{}.inp".format(ff_filename_str),
-            Restart=Restart,
-            RestartCheckpoint=False,
-            ExpertMode=True,
-            Coordinates_box_0=Coordinates_box_0,
-            Structure_box_0=Structure_box_0,
-            binCoordinates_box_0=binCoordinates_box_0,
-            extendedSystem_box_0=extendedSystem_box_0,
-            binVelocities_box_0=None,
-            Coordinates_box_1=Coordinates_box_1,
-            Structure_box_1=Structure_box_1,
-            binCoordinates_box_1=binCoordinates_box_1,
-            extendedSystem_box_1=extendedSystem_box_1,
-            binVelocities_box_1=None,
-            input_variables_dict={
-                "PRNG": seed_no,
-                "Pressure": pressure,
-                "Ewald": Ewald,
-                "ElectroStatic": ElectroStatic,
-                "VDWGeometricSigma": VDWGeometricSigma,
-                "Rcut": Rcut,
-                "VolFreq": VolFreq[-1],
-                "SwapFreq": SwapFreq[-1],
-                "DisFreq": DisFreq[-1],
-                "RotFreq": RotFreq[-1],
-                "RegrowthFreq": RegrowthFreq[-1],
-                "OutputName": output_name_control_file_name,
-                "EqSteps": EqSteps,
-                "PressureCalc": output_true_list_input,
-                "RestartFreq": output_true_list_input,
-                "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": output_true_list_input,
-                "BlockAverageFreq": output_true_list_input,
-                "HistogramFreq": output_false_list_input,
-                "CoordinatesFreq": output_false_list_input,
-                "DCDFreq": output_false_list_input,
-                "Potential": Potential,
-                "LRC": LRC,
-                "RcutLow": 1,
-                "CBMC_First": 12,
-                "CBMC_Nth": 10,
-                "CBMC_Ang": 50,
-                "CBMC_Dih": 50,
+    # Modify mdp files according to job statepoint parameters
+    cutoff_styles = {"hard": "None", "shift": "Potential-shift"}
+    lrcs = {"None": "no", "energy_pressure": "EnerPres"}
+
+    pressure = job.sp.pressure * u.kPa
+    conf_abs_path = os.path.dirname(os.path.abspath(conf.__file__))
+    mdps = {
+        "em": {
+            "fname": "em.conf",
+            "template": f"{conf_abs_path}/melt_template.inp.jinja",
+            "water-template": f"{conf_abs_path}/melt_template_water.inp.jinja",
+            "data": {
+                "structure" : job.fn("mosdef_box_0.psf"),
+                "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "parameters" : job.fn("in_FF.inp"),
+                "outputname" : "em",
+                "X_DIM_BOX" : job.sp.box_L_liq_x*10,
+                "Y_DIM_BOX" : job.sp.box_L_liq_y*10,
+                "Z_DIM_BOX" : job.sp.box_L_liq_z*10,
+                "X_ORIGIN_BOX" : job.sp.box_L_liq_x/2*10,
+                "Y_ORIGIN_BOX" : job.sp.box_L_liq_y/2*10,
+                "Z_ORIGIN_BOX" : job.sp.box_L_liq_z/2*10,
+                "cutoff": job.sp.r_cut*10,
+                "switchdist": job.sp.r_cut*10 - 2,
+                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
+                "temp": job.sp.temperature,
+                "replica": job.sp.replica,
+                "lrc": lrcs[job.sp.long_range_correction],
+                "reassignIncr" : job.sp.temperature / 125000 / 20,
+                "minimize_steps" : 10000,
+                "run_steps" : 125000,
             },
-        )
-        print("#**********************")
-        print("Completed: equilb NPT or GEMC-NVT GOMC control file writing")
-        print("#**********************")
-
-        # ******************************************************
-        # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (end)
-        # Note: the control files are written for the max number of equilb_design_ensemble runs
-        # so the Charmm object only needs created 1 time.
-        # ******************************************************
-
-        # ******************************************************
-        # production NPT or GEMC-NVT - GOMC control file writing  (start)
-        # ******************************************************
-
-        print("#**********************")
-        print("Started: production NPT or GEMC-NVT GOMC control file writing")
-        print("#**********************")
-
-        Restart = True
-
-        temperature = (job.sp.temperature * u.K).to_value("K")
-        pressure = (job.sp.pressure * u.kPa).to_value("bar")
-
-        input_name_control_file_name = "{}_number_{}".format(
-            production_control_file_name_str, number_sims_i
-        )
-        output_name_control_file_name = production_control_file_name_str
-        restart_control_file_name_str = "{}_number_{}".format(
-            equilb_design_ensemble_control_file_name_str, int(number_sims_i)
-        )
-        job.doc.production_run_ensemble_dict.update(
-            {
-                number_sims_i: {
-                    "restart_control_file_name": restart_control_file_name_str,
-                    "input_name_control_file_name": input_name_control_file_name,
-                    "output_name_control_file_name": output_name_control_file_name,
-                }
-            }
-        )
-
-        # replica unmber cycles
-        MC_cycles = MC_cycles_production
-
-        # calc MC steps
-        MC_steps = int(MC_cycles * job.doc.N_total)
-        EqSteps = 1000
-
-        seed_no = job.doc.replica_number_int
-
-        production_ensemble = job.doc.production_ensemble
-
-        Ewald = ff_info_dict.get(job.sp.forcefield_name).get("Ewald")
-        ElectroStatic = ff_info_dict.get(job.sp.forcefield_name).get(
-            "ElectroStatic"
-        )
-        VDWGeometricSigma = ff_info_dict.get(job.sp.forcefield_name).get(
-            "VDWGeometricSigma"
-        )
-        Rcut = job.sp.r_cut * u.nm
-        Rcut = Rcut.to_value("angstrom")
-
-        if job.sp.cutoff_style == "hard":
-            Potential = "VDW"
-            try:
-                if job.sp.long_range_correction == "None":
-                    LRC = False
-                elif job.sp.long_range_correction == "energy_pressure":
-                    LRC = True
-                else:
-                    raise ValueError("ERROR: Not a valid cutoff_style")
-            except:
-                LRC = False
-
-        elif job.sp.cutoff_style == "shift":
-            Potential = "SHIFT"
-            LRC = False
-        else:
-            raise ValueError("ERROR: Not a valid cutoff_style")
-
-        # output all data and calc frequecy
-        output_true_list_input = [
-            True,
-            int(output_data_every_X_MC_cycles * job.doc.N_total),
-        ]
-        output_false_list_input = [
-            False,
-            int(output_data_every_X_MC_cycles * job.doc.N_total),
-        ]
-
-        if production_ensemble in ["NVT", "NPT"]:
-            used_ensemble = "NPT"
-
-            if job.sp.molecule in ["methaneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.99,)
-                RotFreq = (None,)
-                RegrowthFreq = (None,)
-
-            elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.33,)
-                RotFreq = (0.33,)
-                RegrowthFreq = (0.33,)
-
-            elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.49,)
-                RotFreq = (0.5,)
-                RegrowthFreq = (None,)
-
-            elif job.sp.forcefield_name in ["custom"]:
-                VolFreq = (0.01,)
-                SwapFreq = (None,)
-                DisFreq = (0.49,)
-                RotFreq = (0.5,)
-                RegrowthFreq = (None,)
-
-            else:
-                raise ValueError(
-                    "Molecules MC move ratios not listed in the GOMC control file writer."
-                )
-
-            if Restart is True:
-                Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                    restart_control_file_name_str
-                )
-                Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                    restart_control_file_name_str
-                )
-                binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                    restart_control_file_name_str
-                )
-                extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                    restart_control_file_name_str
-                )
-
-            elif Restart is False:
-                Coordinates_box_0 = None
-                Structure_box_0 = None
-                binCoordinates_box_0 = None
-                extendedSystem_box_0 = None
-
-            Coordinates_box_1 = None
-            Structure_box_1 = None
-            binCoordinates_box_1 = None
-            extendedSystem_box_1 = None
-
-        elif job.doc.production_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]:
-            used_ensemble = job.doc.production_ensemble
-
-            if job.sp.molecule in ["methaneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (0.29,)
-                DisFreq = (0.70,)
-                RotFreq = (None,)
-                RegrowthFreq = (None,)
-
-            elif job.sp.molecule in ["pentaneUA", "ethanolAA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (0.20,)
-                DisFreq = (0.27,)
-                RotFreq = (0.26,)
-                RegrowthFreq = (0.26,)
-
-            elif job.sp.molecule in ["waterSPCE", "benzeneUA"]:
-                VolFreq = (0.01,)
-                SwapFreq = (0.20,)
-                DisFreq = (0.40,)
-                RotFreq = (0.39,)
-                RegrowthFreq = (None,)
-
-            else:
-                raise ValueError(
-                    "Moleules MC move ratios not listed in the GOMC control file writer."
-                )
-
-            if Restart is True:
-                Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                    restart_control_file_name_str
-                )
-                Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                    restart_control_file_name_str
-                )
-                binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                    restart_control_file_name_str
-                )
-                extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                    restart_control_file_name_str
-                )
-
-                Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
-                    restart_control_file_name_str
-                )
-                Structure_box_1 = "{}_BOX_1_restart.psf".format(
-                    restart_control_file_name_str
-                )
-                binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
-                    restart_control_file_name_str
-                )
-                extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
-                    restart_control_file_name_str
-                )
-
-            elif Restart is False:
-                Coordinates_box_0 = None
-                Structure_box_0 = None
-                binCoordinates_box_0 = None
-                extendedSystem_box_0 = None
-
-                Coordinates_box_1 = None
-                Structure_box_1 = None
-                binCoordinates_box_1 = None
-                extendedSystem_box_1 = None
-
-        gomc_control.write_gomc_control_file(
-            charmm_object_with_files,
-            input_name_control_file_name,
-            used_ensemble,
-            MC_steps,
-            temperature,
-            ff_psf_pdb_file_directory=None,
-            check_input_files_exist=False,
-            Parameters="{}.inp".format(ff_filename_str),
-            Restart=Restart,
-            RestartCheckpoint=True,
-            ExpertMode=False,
-            Coordinates_box_0=Coordinates_box_0,
-            Structure_box_0=Structure_box_0,
-            binCoordinates_box_0=binCoordinates_box_0,
-            extendedSystem_box_0=extendedSystem_box_0,
-            binVelocities_box_0=None,
-            Coordinates_box_1=Coordinates_box_1,
-            Structure_box_1=Structure_box_1,
-            binCoordinates_box_1=binCoordinates_box_1,
-            extendedSystem_box_1=extendedSystem_box_1,
-            binVelocities_box_1=None,
-            input_variables_dict={
-                "PRNG": seed_no,
-                "Pressure": pressure,
-                "Ewald": Ewald,
-                "ElectroStatic": ElectroStatic,
-                "VDWGeometricSigma": VDWGeometricSigma,
-                "Rcut": Rcut,
-                "VolFreq": VolFreq[-1],
-                "SwapFreq": SwapFreq[-1],
-                "DisFreq": DisFreq[-1],
-                "RotFreq": RotFreq[-1],
-                "RegrowthFreq": RegrowthFreq[-1],
-                "OutputName": output_name_control_file_name,
-                "EqSteps": EqSteps,
-                "PressureCalc": output_true_list_input,
-                "RestartFreq": output_true_list_input,
-                "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": output_true_list_input,
-                "BlockAverageFreq": output_true_list_input,
-                "HistogramFreq": output_true_list_input,
-                "CoordinatesFreq": output_false_list_input,
-                "DCDFreq": output_true_list_input,
-                "Potential": Potential,
-                "LRC": LRC,
-                "RcutLow": 1,
-                "CBMC_First": 12,
-                "CBMC_Nth": 10,
-                "CBMC_Ang": 50,
-                "CBMC_Dih": 50,
+        },
+        "npt_eq": {
+            "fname": "npt_eq.conf",
+            "template": f"{conf_abs_path}/nvt_template_water.inp.jinja",
+            "water-template": f"{conf_abs_path}/nvt_template.inp.jinja",
+            "data": {
+                "structure" : job.fn("mosdef_box_0.psf"),
+                "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "parameters" : job.fn("in_FF.inp"),
+                "binary_coordinates" : job.fn("em.restart.coor"),
+                "binary_boxsize" : job.fn("em.restart.xsc"),
+                "binary_velocities" : job.fn("em.restart.vel"),
+                "outputname" : "npt_eq",
+                "cutoff": job.sp.r_cut*10,
+                "switchdist": job.sp.r_cut*10 - 2,
+                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
+                "temp": job.sp.temperature,
+                "replica": job.sp.replica,
+                "lrc": lrcs[job.sp.long_range_correction],
+                "run_steps" : 125000,
             },
-        )
+        },
+        "npt_prod": {
+            "fname": "npt_prod.mdp",
+            "template": f"{conf_abs_path}/npt_template.inp.jinja",
+            "water-template": f"{conf_abs_path}/npt_template_water.inp.jinja",
+            "data": {
+                "structure" : job.fn("mosdef_box_0.psf"),
+                "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "parameters" : job.fn("in_FF.inp"),
+                "binary_coordinates" : job.fn("npt_eq.restart.coor"),
+                "binary_boxsize" : job.fn("npt_eq.restart.xsc"),
+                "binary_velocities" : job.fn("npt_eq.restart.vel"),
+                "outputname" : "npt_prod",
+                "cutoff": job.sp.r_cut*10,
+                "switchdist": job.sp.r_cut*10 - 2,
+                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
+                "temp": job.sp.temperature,
+                "replica": job.sp.replica,
+                "lrc": lrcs[job.sp.long_range_correction],
+                "run_steps" : "em",
+            }
+        }
+    }
 
-        print("#**********************")
-        print("Completed: production NPT or GEMC-NVT GOMC control file writing")
-        print("#**********************")
-        # ******************************************************
-        # production NPT or GEMC-NVT - GOMC control file writing  (end)
-        # ******************************************************
+    for op, mdp in mdps.items():
+        if job.sp.molecule == "waterSPCE":
+            _setup_conf(
+                fname=mdp["fname"],
+                template=mdp["water-template"],
+                data=mdp["data"],
+                overwrite=True,
+            )
+        else:
+            _setup_conf(
+                fname=mdp["fname"],
+                template=mdp["template"],
+                data=mdp["data"],
+                overwrite=True,
+            )
 
+
+
+
+# ******************************************************
+# ******************************************************
+# Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
+# ******************************************************
+# ******************************************************
+@prepareProteinSimulation
+@Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_4d_job_production_run_completed_properly)
+@Project.post(part_2a_solvated)
+@Project.operation
+@flow.with_job
+def solvate_protein(job):
+    print("#**********************")
+    print("# Started the solvation process.")
+    print("#**********************")
+    if job.sp.pdbid:
+        merge_solv_and_solute(job)
+        fix_segment(job)
+    else: None,
+
+@prepareProteinSimulation
+@Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_2a_solvated)
+@Project.post(part_2a_ionized)
+@Project.operation
+@flow.with_job
+def ionize_protein(job):
+    print("#**********************")
+    print("# Started the ionization process.")
+    print("#**********************")
+    if job.sp.pdbid:
+        ionize(job)
+    else: None,
 
 # ******************************************************
 # ******************************************************
@@ -1858,7 +937,8 @@ def build_psf_pdb_ff_gomc_conf(job):
 # melt_NVT -starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@equilibrateSolvent
+@Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_2a_melt_equilb_NVT_control_file_written)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
 @Project.post(part_4a_job_melt_equilb_NVT_completed_properly)
@@ -1886,7 +966,7 @@ def run_melt_equilb_NVT_gomc_command(job):
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-        str(job.doc.gomc_binary_path),
+        str(job.doc.namd_binary_path),
         str(job.doc.melt_NVT_gomc_binary_file),
         str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
         str(control_file_name_str),
@@ -1907,7 +987,8 @@ def run_melt_equilb_NVT_gomc_command(job):
 # equilb_NVT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@equilibrateSolvent
+@Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_4a_job_melt_equilb_NVT_completed_properly)
 @Project.pre(part_2b_equilb_NVT_control_file_written)
 @Project.post(part_3b_output_equilb_NVT_started)
@@ -1934,7 +1015,7 @@ def run_equilb_NVT_gomc_command(job):
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-        str(job.doc.gomc_binary_path),
+        str(job.doc.namd_binary_path),
         str(job.doc.equilb_NVT_gomc_binary_file),
         str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
         str(control_file_name_str),
@@ -2142,7 +1223,7 @@ def test_pymbar_stabilized_equilb_design_ensemble(job):
 
 
 @Project.label
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@Project.pre(lambda j: j.sp.engine == "namd")
 @Project.post(part_4c_job_equilb_design_ensemble_completed_properly)
 @flow.with_job
 def pymbar_stabilized_equilb_design_ensemble(job):
@@ -2168,7 +1249,8 @@ def pymbar_stabilized_equilb_design_ensemble(job):
 # equilb NPT or GEMC-NVT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.engine == "gomc")
+@equilibrateSolvent
+@Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
 @Project.pre(part_2c_equilb_design_ensemble_control_file_written)
 @Project.post(part_3c_output_equilb_design_ensemble_started)
@@ -2221,7 +1303,7 @@ def run_equilb_ensemble_gomc_command(job):
 
             print(f"Running simulation job id {job}")
             run_command = "{}/{} +p{} {}.conf > out_{}.dat" "".format(
-                str(job.doc.gomc_binary_path),
+                str(job.doc.namd_binary_path),
                 str(job.doc.equilb_design_ensemble_gomc_binary_file),
                 str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
                 str(control_file_name_str),
@@ -2258,6 +1340,7 @@ def run_equilb_ensemble_gomc_command(job):
 # production run - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+@equilibrateSolvent
 @Project.pre(part_4c_job_equilb_design_ensemble_completed_properly)
 @Project.pre(part_2d_production_control_file_written)
 @Project.pre(pymbar_stabilized_equilb_design_ensemble)
@@ -2301,7 +1384,7 @@ def run_production_run_gomc_command(job):
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-        str(job.doc.gomc_binary_path),
+        str(job.doc.namd_binary_path),
         str(job.doc.production_ensemble_gomc_binary_file),
         str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
         str(control_file_name_str),
@@ -2309,6 +1392,43 @@ def run_production_run_gomc_command(job):
     )
 
     return run_command
+
+
+def _setup_conf(fname, template, data, overwrite=False):
+    """Create conf files based on a template and provided data.
+
+    Parameters
+    ----------
+    fname: str
+        Name of the file to be saved out
+    template: str, or jinja2.Template
+        Either a jinja2.Template or path to a jinja template
+    data: dict
+        Dictionary storing data matched with the fields available in the template
+    overwrite: bool, optional, default=False
+        Options to overwrite (or not) existing mdp file of the
+
+    Returns
+    -------
+    File saved with names defined by fname
+    """
+    from jinja2 import Template
+
+    if isinstance(template, str):
+        with open(template, "r") as f:
+            template = Template(f.read())
+
+    if not overwrite:
+        if os.path.isfile(fname):
+            raise FileExistsError(
+                f"{fname} already exists. Set overwrite=True to write out."
+            )
+
+    rendered = template.render(data)
+    with open(fname, "w") as f:
+        f.write(rendered)
+
+    return None
 
 
 # ******************************************************
