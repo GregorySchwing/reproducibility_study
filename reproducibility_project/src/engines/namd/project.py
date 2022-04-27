@@ -830,8 +830,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         },
         "npt_eq": {
             "fname": "npt_eq.conf",
-            "template": f"{conf_abs_path}/nvt_template_water.inp.jinja",
-            "water-template": f"{conf_abs_path}/nvt_template.inp.jinja",
+            "template": f"{conf_abs_path}/npt_template.inp.jinja",
+            "water-template": f"{conf_abs_path}/npt_template_water.inp.jinja",
             "data": {
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
@@ -867,7 +867,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "temp": job.sp.temperature,
                 "replica": job.sp.replica,
                 "lrc": lrcs[job.sp.long_range_correction],
-                "run_steps" : "em",
+                "run_steps" : 125000,
             }
         }
     }
