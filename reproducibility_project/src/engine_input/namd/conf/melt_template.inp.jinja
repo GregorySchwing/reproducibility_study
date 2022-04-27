@@ -83,6 +83,8 @@ PMEGridSpacing          1.0;                # maximum PME grid space / used to c
 
 minimize                {{  minimize_steps  }};  
 
+set freq 20
+
 for {set i 0} {$i <= $temp} {incr i} {
 	if {$i > $temp} {
 		set i $temp
