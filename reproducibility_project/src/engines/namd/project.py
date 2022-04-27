@@ -730,7 +730,7 @@ def build_charmm(job, write_files=True):
             forcefield_selection=job.doc.forcefield_directory_name,
             residues=Molecule_ResName_List,
             bead_to_atom_name_dict=Bead_to_atom_name_dict,
-            gomc_fix_bonds_angles=gomc_fix_bonds_angles_list,
+            gomc_fix_bonds_angles=None,
         )
 
     elif job.doc.production_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]:
@@ -743,7 +743,7 @@ def build_charmm(job, write_files=True):
             forcefield_selection=job.doc.forcefield_directory_name,
             residues=Molecule_ResName_List,
             bead_to_atom_name_dict=Bead_to_atom_name_dict,
-            gomc_fix_bonds_angles=gomc_fix_bonds_angles_list,
+            gomc_fix_bonds_angles=None,
         )
 
     if write_files == True:
@@ -824,7 +824,6 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "temp": job.sp.temperature,
                 "replica": job.sp.replica,
                 "lrc": lrcs[job.sp.long_range_correction],
-                "reassignIncr" : job.sp.temperature / 125000 / 20,
                 "minimize_steps" : 10000,
                 "run_steps" : 125000,
             },
