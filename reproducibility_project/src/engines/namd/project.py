@@ -850,7 +850,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             },
         },
         "npt_prod": {
-            "fname": "npt_prod.mdp",
+            "fname": "npt_prod.conf",
             "template": f"{conf_abs_path}/npt_template.inp.jinja",
             "water-template": f"{conf_abs_path}/npt_template_water.inp.jinja",
             "data": {

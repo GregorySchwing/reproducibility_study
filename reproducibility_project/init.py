@@ -34,6 +34,11 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
 
 molecules = [
     "tips3p",
+]
+
+"""
+molecules = [
+    "tips3p",
     "spce",
     "opc3",
     "tip4p_ew",
@@ -42,12 +47,13 @@ molecules = [
     "a99SB_disp",
     "opc",
 ]
+"""
 
 protein = False
 moleculeNameAsXML = True
 if(protein):
     # None is used as the statepoint to equilibrate the solvent
-    salt_strengths = [0.00, 0.075, 0.150, 0.225, 0.300, None]
+    salt_strengths = [0.000, 0.075, 0.150, 0.225, 0.300, None]
     proteins = [
         "6g6k",
     ]
@@ -78,9 +84,15 @@ else:
     }
 
     salt_strengths = [None]
-
-replicas = range(16)
+#replicas = range(16)
+replicas = range(1)
 simulation_engines = [
+    "namd",
+]
+
+"""
+simulation_engines = [
+    "namd",
     "cassandra",
     "mcccs",
     "gomc",
@@ -89,8 +101,12 @@ simulation_engines = [
     "lammps-VU",
     "lammps-UD",
 ]
-md_engines = ["gromacs", "hoomd", "lammps-VU", "lammps-UD"]
-mc_engines = ["cassandra", "mcccs", "gomc"]
+"""
+
+md_engines = ["namd",]
+#md_engines = ["namd", "gromacs", "hoomd", "lammps-VU", "lammps-UD"]
+#mc_engines = ["cassandra", "mcccs", "gomc"]
+mc_engines = []
 forcefields = {}
 r_cuts = {}
 cutoff_styles = ["hard"]
