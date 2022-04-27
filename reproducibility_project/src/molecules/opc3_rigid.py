@@ -6,18 +6,18 @@ import mbuild as mb
 from reproducibility_project.src import molecules
 
 
-class opc3(mb.Compound):
+class opc3_rigid(mb.Compound):
     """Create a single particle water compound."""
 
     def __init__(self):
-        super(opc3, self).__init__()
+        super(opc3_rigid, self).__init__()
         abs_path = os.path.dirname(os.path.abspath(molecules.__file__))
-        self.add(mb.load(f"{abs_path}/opc3.mol2"), label="WAT")
+        self.add(mb.load(f"{abs_path}/opc3_rigid.mol2"), label="WAT")
 
 
 def main():
     """Create a opc3 compound and print basic properties."""
-    water = opc3()
+    water = opc3_rigid()
     print(water)
     print(water.name)
     print(water.labels)

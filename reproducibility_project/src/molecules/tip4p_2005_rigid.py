@@ -6,18 +6,18 @@ import mbuild as mb
 from reproducibility_project.src import molecules
 
 
-class tip4p_2005(mb.Compound):
+class tip4p_2005_rigid(mb.Compound):
     """Create a single particle water compound."""
 
     def __init__(self):
-        super(tip4p_2005, self).__init__()
+        super(tip4p_2005_rigid, self).__init__()
         abs_path = os.path.dirname(os.path.abspath(molecules.__file__))
-        self.add(mb.load(f"{abs_path}/tip4p_2005.mol2"), label="WAT")
+        self.add(mb.load(f"{abs_path}/tip4p_2005_rigid.mol2"), label="WAT")
 
 
 def main():
     """Create a tip4p_2005 compound and print basic properties."""
-    water = tip4p_2005()
+    water = tip4p_2005_rigid()
     print(water)
     print(water.name)
     print(water.labels)
