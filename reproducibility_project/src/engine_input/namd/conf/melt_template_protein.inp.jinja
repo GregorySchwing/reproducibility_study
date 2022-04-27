@@ -80,10 +80,14 @@ PMEInterpOrder          6;                  # interpolation order (spline order 
 PMEGridSpacing          1.0;                # maximum PME grid space / used to calculate grid size
 
 # NVT
+constraints             on
+consexp                 2
+consref                 restraints/prot_posres.ref
+conskfile               restraints/prot_posres.ref
+conskcol                B
+constraintScaling       1.0
 
 minimize                {{  minimize_steps  }};  
-
-set freq 20
 
 for {set i 0} {$i <= $temp} {incr i} {
 	if {$i > $temp} {
@@ -92,7 +96,7 @@ for {set i 0} {$i <= $temp} {incr i} {
 	langevinTemp $i
 	reinitvels $i
 	run $freq
-} 
+}
 
 run                     {{  run_steps  }};  
 

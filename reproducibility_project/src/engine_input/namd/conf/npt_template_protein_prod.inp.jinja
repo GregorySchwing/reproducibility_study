@@ -5,13 +5,9 @@ set temp                {{  temp  }};
 
 set outputname          {{  outputname  }};
 
-# Periodic Boundary Conditions
-CellBasisVector1  {{X_DIM_box}}	  	0.00  			0.00
-CellBasisVector2  0.00  		{{Y_DIM_box}}		0.00
-CellBasisVector3  0.00  		0.00  			{{Z_DIM_box}}
-cellOrigin        {{X_ORIGIN_box}}   	{{Y_ORIGIN_box}}  	{{Z_ORIGIN_box}}	
-
-temperature             $temp;
+binCoordinates     {{  binary_coordinates  }};
+extendedSystem	   {{  binary_boxsize  }};
+binvelocities	   {{  binary_velocities  }};
 
 outputName              $outputname;        # base name for output from this run
                                             # NAMD writes two files at the end, final coord and vel
@@ -29,7 +25,6 @@ outputEnergies          125;                # 125 steps = every 0.25ps
                                             # The number of timesteps between each energy output of NAMD
 outputTiming            1000;               # The number of timesteps between each timing output shows
                                             # time per step and time to completion
-
 # Force-Field Parameters
 paraTypeCharmm          on;                 # We're using charmm type parameter file(s)
                                             # multiple definitions may be used but only one file per definition
@@ -79,20 +74,23 @@ PME                     yes;
 PMEInterpOrder          6;                  # interpolation order (spline order 6 in charmm)
 PMEGridSpacing          1.0;                # maximum PME grid space / used to calculate grid size
 
-# NVT
+# NPT
+# Constant pressure
+langevinPiston          on;                 # Nose-Hoover Langevin piston pressure control
+langevinPistonTarget    1.01325;            # target pressure in bar 1atm = 1.01325bar
+langevinPistonPeriod    50.0;               # oscillation period in fs. correspond to pgamma T=50fs=0.05ps
+                                            # f=1/T=20.0(pgamma)
+langevinPistonDecay     25.0;               # oscillation decay time. smaller value corresponds to larger random
+                                            # forces and increased coupling to the Langevin temp bath.
+                                            # Equal or smaller than piston period
+langevinPistonTemp      $temp;              # coupled to heat bath
 
-minimize                {{  minimize_steps  }};  
-
-set freq 20
-
-for {set i 0} {$i <= $temp} {incr i} {
-	if {$i > $temp} {
-		set i $temp
-	}
-	langevinTemp $i
-	reinitvels $i
-	run $freq
-} 
+constraints             on
+consexp                 2
+consref                 restraints/prot_posres.ref
+conskfile               restraints/prot_posres.ref
+conskcol                B
+constraintScaling       1.0
 
 run                     {{  run_steps  }};  
 
