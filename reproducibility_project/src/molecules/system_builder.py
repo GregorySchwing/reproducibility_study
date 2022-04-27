@@ -15,14 +15,6 @@ from reproducibility_project.src.molecules.tip4p_2005 import tip4p_2005
 from reproducibility_project.src.molecules.tip4p_d import tip4p_d
 from reproducibility_project.src.molecules.tip4p_ew import tip4p_ew
 
-from reproducibility_project.src.molecules.tips3p_rigid import tips3p_rigid
-from reproducibility_project.src.molecules.opc3_rigid import opc3_rigid
-from reproducibility_project.src.molecules.a99SB_disp_rigid import a99SB_disp_rigid
-from reproducibility_project.src.molecules.opc_rigid import opc_rigid
-from reproducibility_project.src.molecules.tip4p_2005_rigid import tip4p_2005_rigid
-from reproducibility_project.src.molecules.tip4p_d_rigid import tip4p_d_rigid
-from reproducibility_project.src.molecules.tip4p_ew_rigid import tip4p_ew_rigid
-
 
 def construct_system(
     sp,
@@ -161,13 +153,13 @@ def get_molecule(sp):
         "waterSPCE": WaterSPC(),
         "ethanolAA": EthanolAA(),
         "spce": WaterSPC(),
-        "tips3p": tips3p_rigid(),
-        "opc3": opc3_rigid(),
-        "tip4p_ew": tip4p_ew_rigid(),
-        "tip4p_2005": tip4p_2005_rigid(),
-        "tip4p_d": tip4p_d_rigid(),
-        "a99SB_disp": a99SB_disp_rigid(),
-        "opc": opc_rigid(),
+        "tips3p": tips3p(),
+        "opc3": opc3(),
+        "tip4p_ew": tip4p_ew(),
+        "tip4p_2005": tip4p_2005(),
+        "tip4p_d": tip4p_d(),
+        "a99SB_disp": a99SB_disp(),
+        "opc": opc(),
     }
     molecule = molecule_dict[sp["molecule"]]
     # For now, hardcode all molecule names to WAT
