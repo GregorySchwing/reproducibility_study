@@ -14,7 +14,7 @@
  </HarmonicAngleForce>
  <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
    <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
-  <Atom type="OW" charge="0" sigma="0.316655" epsilon="-0.89036"/>
+  <Atom type="OW" charge="0" sigma="0.316655" epsilon="0.89036"/>
   <Atom type="HW" charge="0.6791" sigma="0" epsilon="0.0"/>
   <Atom type="_LP" charge="-1.3582" sigma="0" epsilon="0.0"/>
  </NonbondedForce>
