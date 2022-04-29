@@ -77,7 +77,7 @@ PMEGridSpacing          1.0;                # maximum PME grid space / used to c
 
 # NVT
 
-set freq [expr {floor( {{  run_steps  }} / $temp )}]
+set freq [expr {int(floor( {{  run_steps  }} / $temp ))}]
 
 for {set i 1} {$i <= $temp} {incr i} {
 	if {$i > $temp} {
