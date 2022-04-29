@@ -56,6 +56,7 @@ switchdist              {{  switchdist  }}; # cutoff - 2.
 pairlistdist            16.0;               # stores the all the pairs with in the distance it should be larger
                                             # than cutoff( + 2.)
 stepspercycle           20;                 # 20 redo pairlists every ten steps
+set stepspercycle	20
 pairlistsPerCycle       2;                  # 2 is the default
                                             # cycle represents the number of steps between atom reassignments
                                             # this means every 20/2=10 steps the pairlist will be updated
@@ -83,7 +84,9 @@ conskfile               restraints/prot_posres.ref
 conskcol                B
 constraintScaling       1.0
 
-set freq [expr {int(floor( {{  run_steps  }} / $temp ))}]
+set freq [expr {int($stepspercycle*floor( {{  run_steps  }} / $temp / $stepspercycle))}]
+
+set num_iters [expr {int(ceil( 1000 / $stepspercycle ))}]
 
 for {set i 1} {$i <= $temp} {incr i} {
 	if {$i > $temp} {
@@ -94,6 +97,5 @@ for {set i 1} {$i <= $temp} {incr i} {
 	run $freq
 } 
 
-run                     {{  run_steps  }};  
 
 
