@@ -104,7 +104,7 @@ mosdef_structure_box_1_name_str = "mosdef_box_1"
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-melt_equilb_NVT_control_file_name_str = "em"
+min_NVT_control_file_name_str = "em"
 
 # equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
@@ -117,7 +117,7 @@ equilb_NPT_control_file_name_str = "npt_eq"
 # The production run using the ensemble used for the simulation design, which
 # includes the simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-production_control_file_name_str = "prod_"
+production_control_file_name_str = "npt_prod"
 
 
 path_from_job_to_box_inputs = "../../"
@@ -423,9 +423,9 @@ def gomc_control_file_written(job, control_filename_str):
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
-def part_2a_melt_equilb_NVT_control_file_written(job):
-    """General check that the melt_equilb_NVT_control (high temperature) gomc control file is written."""
-    return gomc_control_file_written(job, melt_equilb_NVT_control_file_name_str)
+def part_2a_min_NVT_control_file_written(job):
+    """General check that the min control file is written."""
+    return gomc_control_file_written(job, min_NVT_control_file_name_str)
 
 
 # checking if the GOMC control file is written for the equilb NVT run
@@ -458,7 +458,7 @@ def part_2d_production_control_file_written(job):
     for cycle in cycleList:
         cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(job.doc.cycle))
         allConfsExist = allConfsExist and cycleExists
-    return gomc_control_file_written(job, production_control_file_name_str)
+    return allConfsExist
 
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
@@ -512,7 +512,7 @@ def gomc_simulation_started(job, control_filename_str):
 @flow.with_job
 def part_3a_output_melt_equilb_NVT_started(job):
     """Check to see if the melt_equilb_NVT (high temperature) gomc simulation is started."""
-    return gomc_simulation_started(job, melt_equilb_NVT_control_file_name_str)
+    return gomc_simulation_started(job, min_NVT_control_file_name_str)
 
 
 # check if equilb_NVT GOMC run is started by seeing if the GOMC consol file and the merged psf exist
@@ -583,10 +583,10 @@ def gomc_sim_completed_properly(job, control_filename_str):
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
-def part_4a_job_melt_equilb_NVT_completed_properly(job):
+def part_4a_job_min_NVT_completed_properly(job):
     """Check to see if the melt_equilb_NVT (high temperature) gomc simulation was completed properly."""
     return gomc_sim_completed_properly(
-        job, melt_equilb_NVT_control_file_name_str
+        job, min_NVT_control_file_name_str
     )
 
 
@@ -711,7 +711,7 @@ def build_charmm(job, write_files=True):
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
-@Project.post(part_2a_melt_equilb_NVT_control_file_written)
+@Project.post(part_2a_min_NVT_control_file_written)
 @Project.post(part_2b_equilb_NVT_control_file_written)
 @Project.post(part_2c_equilb_NPT_control_file_written)
 @Project.post(part_2d_production_control_file_written)
@@ -926,9 +926,9 @@ def ionize_protein(job):
 # ******************************************************
 @equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
-@Project.pre(part_2a_melt_equilb_NVT_control_file_written)
+@Project.pre(part_2a_min_NVT_control_file_written)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
-@Project.post(part_4a_job_melt_equilb_NVT_completed_properly)
+@Project.post(part_4a_job_min_NVT_completed_properly)
 @Project.operation.with_directives(
     {
         "np": lambda job: ff_info_dict.get(job.sp.forcefield_name).get(
@@ -943,13 +943,13 @@ def ionize_protein(job):
 )
 @flow.with_job
 @flow.cmd
-def run_melt_equilb_NVT_gomc_command(job):
+def run_min_NVT_gomc_command(job):
     """Run the gomc melt_equilb_NVT simulation."""
     print("#**********************")
-    print("# Started the run_melt_NVT_gomc_command.")
+    print("# Started the run_min_NVT_gomc_command.")
     print("#**********************")
 
-    control_file_name_str = melt_equilb_NVT_control_file_name_str
+    control_file_name_str = min_NVT_control_file_name_str
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
@@ -976,7 +976,7 @@ def run_melt_equilb_NVT_gomc_command(job):
 # ******************************************************
 @equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
-@Project.pre(part_4a_job_melt_equilb_NVT_completed_properly)
+@Project.pre(part_4a_job_min_NVT_completed_properly)
 @Project.pre(part_2b_equilb_NVT_control_file_written)
 @Project.post(part_3b_output_equilb_NVT_started)
 @Project.post(part_4b_job_equilb_NVT_completed_properly)
@@ -995,7 +995,7 @@ def run_melt_equilb_NVT_gomc_command(job):
 def run_equilb_NVT_gomc_command(job):
     """Run the gomc equilb_NVT simulation."""
     print("#**********************")
-    print("# Started the run_NVT_gomc_command.")
+    print("# Started the run_equilb_NVT_gomc_command.")
     print("#**********************")
 
     control_file_name_str = equilb_NVT_control_file_name_str
@@ -1087,39 +1087,25 @@ def run_equilb_NPT_gomc_command(job):
 )
 @flow.with_job
 @flow.cmd
-def run_production_run_gomc_command(job):
+def run_production_NPT_gomc_command(job):
     """Run the gomc production_run simulation."""
     print("#**********************")
-    print("# Started the run_production_run_gomc_command function.")
+    print("# Started the run_production_NPT_gomc_command function.")
     print("#**********************")
 
-    if job.doc.equilb_design_ensemble_max_number_under_limit is True:
-        control_file_name_str = job.doc.production_run_ensemble_dict[
-            str(job.doc.equilb_design_ensemble_number)
-        ]["input_name_control_file_name"]
-
-        output_file_name_str = job.doc.production_run_ensemble_dict[
-            str(job.doc.equilb_design_ensemble_number)
-        ]["output_name_control_file_name"]
-
-    elif job.doc.equilb_design_ensemble_max_number_under_limit is False:
-        control_file_name_str = job.doc.production_run_ensemble_dict[
-            str(int(job.doc.equilb_design_ensemble_number - 1))
-        ]["input_name_control_file_name"]
-
-        output_file_name_str = job.doc.production_run_ensemble_dict[
-            str(int(job.doc.equilb_design_ensemble_number - 1))
-        ]["output_name_control_file_name"]
-
-    print(f"Running simulation job id {job}")
-    run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-        str(job.doc.namd_binary_path),
-        str(job.doc.production_ensemble_gomc_binary_file),
-        str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
-        str(control_file_name_str),
-        str(output_file_name_str),
-    )
-
+    if (job.doc.cycle < job.doc.num_cycles):
+        control_file_name_str = production_control_file_name_str +"_"+str(job.doc.cycle)
+    
+        print(f"Running simulation job id {job}")
+        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+            str(job.doc.namd_binary_path),
+            str(job.doc.production_ensemble_gomc_binary_file),
+            str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
+            str(control_file_name_str),
+            str(control_file_name_str),
+        )
+    else:
+        run_command = "echo Cycle exceeded number of cycles! Error!"
     return run_command
 
 
