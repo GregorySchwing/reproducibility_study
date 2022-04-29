@@ -615,6 +615,14 @@ def part_4d_job_production_run_completed_properly(job):
     """Check to see if the production run (set temperature) gomc simulation was completed properly."""
     return gomc_sim_completed_properly(job, production_control_file_name_str+"_"+str(job.doc.cycle))
 
+# check if production GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_1a_initial_data_input_to_json)
+@flow.with_job
+def part_4e_job_final_production_run_completed_properly(job):
+    """Check to see if the production run (set temperature) gomc simulation was completed properly."""
+    return job.doc.cycle == job.doc.num_cycles
 
 # ******************************************************
 # ******************************************************
@@ -1086,14 +1094,13 @@ def run_equilb_NPT_gomc_command(job):
     }
 )
 @flow.with_job
-@flow.cmd
 def run_production_NPT_gomc_command(job):
     """Run the gomc production_run simulation."""
     print("#**********************")
     print("# Started the run_production_NPT_gomc_command function.")
     print("#**********************")
 
-    if (job.doc.cycle < job.doc.num_cycles):
+    while (job.doc.cycle < job.doc.num_cycles):
         control_file_name_str = production_control_file_name_str +"_"+str(job.doc.cycle)
     
         print(f"Running simulation job id {job}")
@@ -1104,46 +1111,51 @@ def run_production_NPT_gomc_command(job):
             str(control_file_name_str),
             str(control_file_name_str),
         )
-    else:
-        run_command = "echo Cycle exceeded number of cycles! Error!"
-    return run_command
+
+        exec_run_command = subprocess.Popen(
+            run_command, shell=True, stderr=subprocess.STDOUT
+        )
+        os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
+
+        if part_4d_job_production_run_completed_properly(job)
+            job.doc.cycle += 1
 
 
 def _setup_conf(job, fname, template, data, overwrite=False):
-    """Create conf files based on a template and provided data.
+"""Create conf files based on a template and provided data.
 
-    Parameters
-    ----------
-    fname: str
-        Name of the file to be saved out
-    template: str, or jinja2.Template
-        Either a jinja2.Template or path to a jinja template
-    data: dict
-        Dictionary storing data matched with the fields available in the template
-    overwrite: bool, optional, default=False
-        Options to overwrite (or not) existing mdp file of the
+Parameters
+----------
+fname: str
+    Name of the file to be saved out
+template: str, or jinja2.Template
+    Either a jinja2.Template or path to a jinja template
+data: dict
+    Dictionary storing data matched with the fields available in the template
+overwrite: bool, optional, default=False
+    Options to overwrite (or not) existing mdp file of the
 
-    Returns
-    -------
-    File saved with names defined by fname
-    """
-    from jinja2 import Template
+Returns
+-------
+File saved with names defined by fname
+"""
+from jinja2 import Template
 
-    if isinstance(template, str):
-        with open(template, "r") as f:
-            template = Template(f.read())
+if isinstance(template, str):
+    with open(template, "r") as f:
+        template = Template(f.read())
 
-    if not overwrite:
-        if os.path.isfile(fname):
-            raise FileExistsError(
-                f"{fname} already exists. Set overwrite=True to write out."
-            )
+if not overwrite:
+    if os.path.isfile(fname):
+        raise FileExistsError(
+            f"{fname} already exists. Set overwrite=True to write out."
+        )
 
-    rendered = template.render(data)
-    with open(fname, "w") as f:
-        f.write(rendered)
+rendered = template.render(data)
+with open(fname, "w") as f:
+    f.write(rendered)
 
-    return None
+return None
 
 
 # ******************************************************
@@ -1158,8 +1170,8 @@ def _setup_conf(job, fname, template, data, overwrite=False):
 # ******************************************************
 # ******************************************************
 if __name__ == "__main__":
-    pr = Project()
-    pr.main()
+pr = Project()
+pr.main()
 # ******************************************************
 # ******************************************************
 # signac end code (end)
