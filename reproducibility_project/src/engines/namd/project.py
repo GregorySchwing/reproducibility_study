@@ -85,9 +85,9 @@ equilb_design_ensemble_max_number = 3
 ff_filename_str = "in_FF"
 
 min_steps = 500
-nvt_eq_steps = 7000
-npt_eq_steps = 1000
-production_steps = 5000
+nvt_eq_steps = 500
+npt_eq_steps = 500
+production_steps = 500
 single_production_run_steps = 500
 """
 min_steps = 10000
@@ -797,9 +797,9 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
                 "parameters" : job.fn("in_FF.inp"),
-                "binary_coordinates" : job.fn("em.restart.coor"),
-                "binary_boxsize" : job.fn("em.restart.xsc"),
-                "binary_velocities" : job.fn("em.restart.vel"),
+                "binary_coordinates" : job.fn("nvt_eq.restart.coor"),
+                "binary_boxsize" : job.fn("nvt_eq.restart.xsc"),
+                "binary_velocities" : job.fn("nvt_eq.restart.vel"),
                 "outputname" : "npt_eq",
                 "cutoff": job.sp.r_cut*10,
                 "switchdist": job.sp.r_cut*10 - 2,
@@ -1038,6 +1038,7 @@ def run_equilb_NVT_gomc_command(job):
     }
 )
 @flow.with_job
+@flow.cmd
 def run_equilb_NPT_gomc_command(job):
     """Run the gomc equilb_NPT simulation."""
     print("#**********************")
