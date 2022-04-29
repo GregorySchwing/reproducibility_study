@@ -84,11 +84,18 @@ equilb_design_ensemble_max_number = 3
 # Note: do not add extensions
 ff_filename_str = "in_FF"
 
+min_steps = 20
+nvt_eq_steps = 500
+npt_eq_steps = 1000
+production_steps = 5000
+single_production_run_steps = 500
+"""
 min_steps = 10000
 nvt_eq_steps = 250000
 npt_eq_steps = 1000000
 production_steps = 5000000
 single_production_run_steps = 500000
+"""
 num_cycles = math.ceil(production_steps / single_production_run_steps)
 # initial mosdef structure and coordinates
 # Note: do not add extensions
@@ -445,13 +452,10 @@ def part_2c_equilb_NPT_control_file_written(job):
 def part_2d_production_control_file_written(job):
     """General check that the prod_NPT_control (run temperature) gomc control file is written."""
     cycleList = list(range(0, job.doc.num_cycles))
-    print(cycleList)
     allConfsExist = True
     for cycle in cycleList:
         cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(cycle))
-        print(cycleExists)
         allConfsExist = allConfsExist and cycleExists
-        print(allConfsExist)
     return gomc_control_file_written(job, production_control_file_name_str)
 
 @Project.label
@@ -591,21 +595,18 @@ def gomc_sim_completed_properly(job, control_filename_str):
     job_run_properly_bool = False
     output_log_file = "out_{}.dat".format(control_filename_str)
     if job.isfile(output_log_file):
-        # with open(f"workspace/{job.id}/{output_log_file}", "r") as fp:
-        with open(f"{output_log_file}", "r") as fp:
-            out_gomc = fp.readlines()
-            for i, line in enumerate(out_gomc):
-                if "Move" in line:
-                    split_move_line = line.split()
-                    if (
-                        split_move_line[0] == "Move"
-                        and split_move_line[1] == "Type"
-                        and split_move_line[2] == "Mol."
-                        and split_move_line[3] == "Kind"
-                    ):
-                        job_run_properly_bool = True
-    else:
-        job_run_properly_bool = False
+        with open(f"{output_log_file}", 'rb') as f:
+            try:  # catch OSError in case of a one line file 
+                f.seek(-2, os.SEEK_END)
+                while f.read(1) != b'\n':
+                    f.seek(-2, os.SEEK_CUR)
+            except OSError:
+                f.seek(0)
+            last_line = f.readline().decode()
+            if("End of program" in last_line):
+                job_run_properly_bool = True
+            else:
+                job_run_properly_bool = False
 
     return job_run_properly_bool
 
@@ -788,7 +789,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     mdps = {
         "em": {
             "fname": "em.conf",
-            "template": f"{conf_abs_path}/melt_template.inp.jinja",
+            "template": f"{conf_abs_path}/melt_template_protein.inp.jinja",
             "water-template": f"{conf_abs_path}/melt_template_water.inp.jinja",
             "data": {
                 "is_prod" : False,
@@ -814,14 +815,17 @@ def build_psf_pdb_ff_gomc_conf(job):
         },
         "nvt_eq": {
             "fname": "nvt_eq.conf",
-            "template": f"{conf_abs_path}/melt_template.inp.jinja",
-            "water-template": f"{conf_abs_path}/melt_template_water.inp.jinja",
+            "template": f"{conf_abs_path}/nvt_eq_template_protein.inp.jinja",
+            "water-template": f"{conf_abs_path}/nvt_eq_template_water.inp.jinja",
             "data": {
                 "is_prod" : False,
                 "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
                 "parameters" : job.fn("in_FF.inp"),
+                "binary_coordinates" : job.fn("em.restart.coor"),
+                "binary_boxsize" : job.fn("em.restart.xsc"),
+                "binary_velocities" : job.fn("em.restart.vel"),
                 "outputname" : "nvt_eq",
                 "cutoff": job.sp.r_cut*10,
                 "switchdist": job.sp.r_cut*10 - 2,
@@ -834,7 +838,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         },
         "npt_eq": {
             "fname": "npt_eq.conf",
-            "template": f"{conf_abs_path}/npt_template.inp.jinja",
+            "template": f"{conf_abs_path}/npt_template_protein_prod.inp.jinja",
             "water-template": f"{conf_abs_path}/npt_template_water.inp.jinja",
             "data": {
                 "is_prod" : False,
@@ -902,7 +906,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     _setup_conf(
                         job,
                         fname=mdp["fname"] + str(job.doc.cycle)+".conf",
-                        template=mdp["template"],
+                        template=mdp["water-template"],
                         data=mdp["data"],
                         overwrite=True,
                     )
@@ -915,7 +919,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 _setup_conf(
                     job,
                     fname=mdp["fname"],
-                    template=mdp["template"],
+                    template=mdp["water-template"],
                     data=mdp["data"],
                     overwrite=True,
                 )
