@@ -84,6 +84,12 @@ equilb_design_ensemble_max_number = 3
 # Note: do not add extensions
 ff_filename_str = "in_FF"
 
+min_steps = 10000
+nvt_eq_steps = 250000
+npt_eq_steps = 1000000
+production_steps = 5000000
+single_production_run_steps = 500000
+num_cycles = production_steps / single_production_run_steps
 # initial mosdef structure and coordinates
 # Note: do not add extensions
 mosdef_structure_box_0_name_str = "mosdef_box_0"
@@ -196,6 +202,8 @@ def part_1a_initial_data_input_to_json(job):
 @flow.with_job
 def initial_parameters(job):
     """Set the initial job parameters into the jobs doc json file."""
+    job.doc.cycle = 0
+    job.doc.num_cycles = num_cycles
     # select
     job.doc.ngpu = ff_info_dict.get(job.sp.forcefield_name).get("ngpu")
     if job.doc.ngpu == 0:
@@ -808,6 +816,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             "template": f"{conf_abs_path}/melt_template.inp.jinja",
             "water-template": f"{conf_abs_path}/melt_template_water.inp.jinja",
             "data": {
+                "is_prod" : False,
+                "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
                 "parameters" : job.fn("in_FF.inp"),
@@ -824,8 +834,27 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "temp": job.sp.temperature,
                 "replica": job.sp.replica,
                 "lrc": lrcs[job.sp.long_range_correction],
-                "minimize_steps" : 10000,
-                "run_steps" : 125000,
+                "minimize_steps" : min_steps,
+            },
+        },
+        "nvt_eq": {
+            "fname": "nvt_eq.conf",
+            "template": f"{conf_abs_path}/melt_template.inp.jinja",
+            "water-template": f"{conf_abs_path}/melt_template_water.inp.jinja",
+            "data": {
+                "is_prod" : False,
+                "cycle" : job.doc.cycle,
+                "structure" : job.fn("mosdef_box_0.psf"),
+                "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "parameters" : job.fn("in_FF.inp"),
+                "outputname" : "nvt_eq",
+                "cutoff": job.sp.r_cut*10,
+                "switchdist": job.sp.r_cut*10 - 2,
+                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
+                "temp": job.sp.temperature,
+                "replica": job.sp.replica,
+                "lrc": lrcs[job.sp.long_range_correction],
+                "run_steps" : nvt_eq_steps,
             },
         },
         "npt_eq": {
@@ -833,6 +862,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             "template": f"{conf_abs_path}/npt_template.inp.jinja",
             "water-template": f"{conf_abs_path}/npt_template_water.inp.jinja",
             "data": {
+                "is_prod" : False,
+                "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
                 "parameters" : job.fn("in_FF.inp"),
@@ -846,28 +877,30 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "temp": job.sp.temperature,
                 "replica": job.sp.replica,
                 "lrc": lrcs[job.sp.long_range_correction],
-                "run_steps" : 125000,
+                "run_steps" : npt_eq_steps,
             },
         },
         "npt_prod": {
-            "fname": "npt_prod.conf",
+            "fname": "npt_prod_",
             "template": f"{conf_abs_path}/npt_template.inp.jinja",
             "water-template": f"{conf_abs_path}/npt_template_water.inp.jinja",
             "data": {
+                "is_prod" : True,
+                "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
                 "parameters" : job.fn("in_FF.inp"),
                 "binary_coordinates" : job.fn("npt_eq.restart.coor"),
                 "binary_boxsize" : job.fn("npt_eq.restart.xsc"),
                 "binary_velocities" : job.fn("npt_eq.restart.vel"),
-                "outputname" : "npt_prod",
+                "outputname" : "npt_prod_"+str(job.doc.cycle),
                 "cutoff": job.sp.r_cut*10,
                 "switchdist": job.sp.r_cut*10 - 2,
                 "cutoff_style": cutoff_styles[job.sp.cutoff_style],
                 "temp": job.sp.temperature,
                 "replica": job.sp.replica,
                 "lrc": lrcs[job.sp.long_range_correction],
-                "run_steps" : 125000,
+                "run_steps" : single_production_run_steps,
             }
         }
     }
@@ -875,18 +908,43 @@ def build_psf_pdb_ff_gomc_conf(job):
     for op, mdp in mdps.items():
         if job.sp.molecule == "waterSPCE":
             _setup_conf(
+                job,
                 fname=mdp["fname"],
                 template=mdp["water-template"],
                 data=mdp["data"],
                 overwrite=True,
             )
         else:
-            _setup_conf(
-                fname=mdp["fname"],
-                template=mdp["template"],
-                data=mdp["data"],
-                overwrite=True,
-            )
+            if (mdp["data"]["is_prod"]):
+                cycle = 0
+                num_cycles = job.doc.num_cycles
+                while(cycle < num_cycles):
+                    if(cycle > 0):
+                        mdp["data"]["binary_coordinates"] = job.fn("npt_prod_"+str(cycle-1)+".restart.coor")
+                        mdp["data"]["binary_boxsize"] = job.fn("npt_prod_"+str(cycle-1)+".restart.xsc")
+                        mdp["data"]["binary_velocities"] = job.fn("npt_prod_"+str(cycle-1)+".restart.vel")
+
+                    _setup_conf(
+                        job,
+                        fname=mdp["fname"] + str(job.doc.cycle)+".conf",
+                        template=mdp["template"],
+                        data=mdp["data"],
+                        overwrite=True,
+                    )
+                    cycle = cycle + 1
+                    job.doc.cycle = cycle
+                    mdp["data"]["cycle"] = cycle
+                    mdp["data"]["outputname"] = "npt_prod_"+str(cycle)
+                job.doc.cycle = 0
+            else:
+                _setup_conf(
+                    job,
+                    fname=mdp["fname"],
+                    template=mdp["template"],
+                    data=mdp["data"],
+                    overwrite=True,
+                )
+
 
 
 
@@ -1393,7 +1451,7 @@ def run_production_run_gomc_command(job):
     return run_command
 
 
-def _setup_conf(fname, template, data, overwrite=False):
+def _setup_conf(job, fname, template, data, overwrite=False):
     """Create conf files based on a template and provided data.
 
     Parameters
