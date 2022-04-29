@@ -66,8 +66,7 @@ pairlistsPerCycle       2;                  # 2 is the default
 
 # Integrator Parameters
 timestep                2.0;                # fs/step
-# optimize geometry
-#rigidBonds              all;                # Bound constraint all bonds involving H are fixed in length
+rigidBonds              all;                # Bound constraint all bonds involving H are fixed in length
 nonbondedFreq           1;                  # nonbonded forces every step
 fullElectFrequency      1;                  # PME every step
 
@@ -83,4 +82,17 @@ PMEGridSpacing          1.0;                # maximum PME grid space / used to c
 # NVT
 
 minimize                {{  minimize_steps  }};  
+
+set freq 20
+
+for {set i 0} {$i <= $temp} {incr i} {
+	if {$i > $temp} {
+		set i $temp
+	}
+	langevinTemp $i
+	reinitvels $i
+	run $freq
+} 
+
+run                     {{  run_steps  }};  
 
