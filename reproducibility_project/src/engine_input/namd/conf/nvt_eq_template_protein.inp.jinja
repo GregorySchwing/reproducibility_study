@@ -87,18 +87,17 @@ conskfile               restraints/prot_posres.ref
 conskcol                B
 constraintScaling       1.0
 
-minimize                {{  minimize_steps  }};  
+set freq [expr {floor( {{  run_steps  }} / $temp )}]
 
-set freq 20
-
-for {set i 0} {$i <= $temp} {incr i} {
+for {set i 1} {$i <= $temp} {incr i} {
 	if {$i > $temp} {
 		set i $temp
 	}
 	langevinTemp $i
 	reinitvels $i
 	run $freq
-}
+} 
 
 run                     {{  run_steps  }};  
+
 
