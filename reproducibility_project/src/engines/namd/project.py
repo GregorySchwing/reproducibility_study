@@ -6,7 +6,7 @@ import subprocess
 
 import flow
 import matplotlib.pyplot as plt
-
+import math
 # from flow.environment import StandardEnvironment
 import mbuild as mb
 import mbuild.formats.charmm_writer as mf_charmm
@@ -89,7 +89,7 @@ nvt_eq_steps = 250000
 npt_eq_steps = 1000000
 production_steps = 5000000
 single_production_run_steps = 500000
-num_cycles = production_steps / single_production_run_steps
+num_cycles = math.ceil(production_steps / single_production_run_steps)
 # initial mosdef structure and coordinates
 # Note: do not add extensions
 mosdef_structure_box_0_name_str = "mosdef_box_0"
@@ -97,21 +97,20 @@ mosdef_structure_box_1_name_str = "mosdef_box_1"
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-melt_equilb_NVT_control_file_name_str = "melt_NVT"
+melt_equilb_NVT_control_file_name_str = "em"
 
 # equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-equilb_NVT_control_file_name_str = "equilb_NVT"
+equilb_NVT_control_file_name_str = "nvt_eq"
 
-# The equilb using the ensemble used for the simulation design, which
-# includes the simulation runs GOMC control file input and simulation outputs
+# equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-equilb_design_ensemble_control_file_name_str = "equilb_design_ensemble"
+equilb_NPT_control_file_name_str = "npt_eq"
 
 # The production run using the ensemble used for the simulation design, which
 # includes the simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-production_control_file_name_str = "production_run"
+production_control_file_name_str = "prod_"
 
 
 path_from_job_to_box_inputs = "../../"
@@ -409,16 +408,7 @@ def gomc_control_file_written(job, control_filename_str):
     file_written_bool = False
     control_file = f"{control_filename_str}.conf"
 
-    if job.isfile(control_file):
-        with open(f"{control_file}", "r") as fp:
-            out_gomc = fp.readlines()
-            for i, line in enumerate(out_gomc):
-                if "OutputName" in line:
-                    split_move_line = line.split()
-                    if split_move_line[0] == "OutputName":
-                        file_written_bool = True
-
-    return file_written_bool
+    return job.isfile(control_file)
 
 
 # checking if the GOMC control file is written for the melt equilb NVT run
@@ -443,20 +433,9 @@ def part_2b_equilb_NVT_control_file_written(job):
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
-def part_2c_equilb_design_ensemble_control_file_written(job):
-    """General check that the equilb_design_ensemble (run temperature) gomc control file is written."""
-    try:
-        if job.doc.equilb_design_ensemble_max_number_under_limit is True:
-            return gomc_control_file_written(
-                job,
-                job.doc.equilb_design_ensemble_dict[
-                    str(job.doc.equilb_design_ensemble_number)
-                ]["output_name_control_file_name"],
-            )
-        elif job.doc.equilb_design_ensemble_max_number_under_limit is False:
-            return True
-    except:
-        return False
+def part_2c_equilb_NPT_control_file_written(job):
+    """General check that the equilb_NPT_control (run temperature) gomc control file is written."""
+    return gomc_control_file_written(job, equilb_NPT_control_file_name_str)
 
 
 # checking if the GOMC control file is written for the production run
@@ -464,20 +443,16 @@ def part_2c_equilb_design_ensemble_control_file_written(job):
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def part_2d_production_control_file_written(job):
-    """General check that the production run (run temperature) gomc control file is written."""
-    try:
-        if job.doc.equilb_design_ensemble_max_number_under_limit is True:
-            return gomc_control_file_written(
-                job,
-                job.doc.production_run_ensemble_dict[
-                    str(job.doc.equilb_design_ensemble_number)
-                ]["input_name_control_file_name"],
-            )
-        elif job.doc.equilb_design_ensemble_max_number_under_limit is False:
-            return True
-    except:
-        return False
-
+    """General check that the prod_NPT_control (run temperature) gomc control file is written."""
+    cycleList = list(range(0, job.doc.num_cycles))
+    print(cycleList)
+    allConfsExist = True
+    for cycle in cycleList:
+        cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(cycle))
+        print(cycleExists)
+        allConfsExist = allConfsExist and cycleExists
+        print(allConfsExist)
+    return gomc_control_file_written(job, production_control_file_name_str)
 
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
@@ -786,7 +761,7 @@ def build_charmm(job, write_files=True):
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.post(part_2a_melt_equilb_NVT_control_file_written)
 @Project.post(part_2b_equilb_NVT_control_file_written)
-@Project.post(part_2c_equilb_design_ensemble_control_file_written)
+@Project.post(part_2c_equilb_NPT_control_file_written)
 @Project.post(part_2d_production_control_file_written)
 @Project.operation.with_directives(
     {
@@ -1309,7 +1284,7 @@ def pymbar_stabilized_equilb_design_ensemble(job):
 @equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
-@Project.pre(part_2c_equilb_design_ensemble_control_file_written)
+@Project.pre(part_2c_equilb_NPT_control_file_written)
 @Project.post(part_3c_output_equilb_design_ensemble_started)
 @Project.post(part_4c_job_equilb_design_ensemble_completed_properly)
 @Project.post(pymbar_stabilized_equilb_design_ensemble)
