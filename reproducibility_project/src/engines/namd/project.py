@@ -84,8 +84,8 @@ equilb_design_ensemble_max_number = 3
 # Note: do not add extensions
 ff_filename_str = "in_FF"
 
-min_steps = 20
-nvt_eq_steps = 500
+min_steps = 500
+nvt_eq_steps = 7000
 npt_eq_steps = 1000
 production_steps = 5000
 single_production_run_steps = 500
