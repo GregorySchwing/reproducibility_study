@@ -85,10 +85,10 @@ equilb_design_ensemble_max_number = 3
 ff_filename_str = "in_FF"
 
 min_steps = 500
-nvt_eq_steps = 500
-npt_eq_steps = 500
-production_steps = 500
-single_production_run_steps = 500
+nvt_eq_steps = 5000
+npt_eq_steps = 5000
+production_steps = 5000
+single_production_run_steps = 5000
 """
 min_steps = 10000
 nvt_eq_steps = 250000
