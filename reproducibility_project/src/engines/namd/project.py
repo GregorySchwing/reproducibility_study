@@ -449,6 +449,7 @@ def part_2c_equilb_NPT_control_file_written(job):
 # checking if the GOMC control file is written for the production run
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_1a_initial_data_input_to_json)
 @flow.with_job
 def part_2d_production_control_file_written(job):
     """General check that the prod_NPT_control (run temperature) gomc control file is written."""
@@ -533,6 +534,7 @@ def part_3c_output_equilb_NPT_started(job):
 # check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_1a_initial_data_input_to_json)
 @flow.with_job
 def part_3d_output_production_run_started(job):
     """Check to see if the production run (set temperature) gomc simulation is started."""
@@ -607,6 +609,7 @@ def part_4c_job_equilb_NPT_completed_properly(job):
 # check if production GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_1a_initial_data_input_to_json)
 @flow.with_job
 def part_4d_job_production_run_completed_properly(job):
     """Check to see if the production run (set temperature) gomc simulation was completed properly."""
@@ -883,7 +886,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # ******************************************************
 @prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
-@Project.pre(part_4d_job_production_run_completed_properly)
+@Project.pre(part_2a_solvated)
 @Project.post(part_2a_solvated)
 @Project.operation
 @flow.with_job
