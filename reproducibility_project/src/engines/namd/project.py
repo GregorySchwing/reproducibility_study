@@ -454,7 +454,7 @@ def part_2d_production_control_file_written(job):
     cycleList = list(range(0, job.doc.num_cycles))
     allConfsExist = True
     for cycle in cycleList:
-        cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(cycle))
+        cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(job.doc.cycle))
         allConfsExist = allConfsExist and cycleExists
     return gomc_control_file_written(job, production_control_file_name_str)
 
@@ -521,48 +521,13 @@ def part_3b_output_equilb_NVT_started(job):
     """Check to see if the equilb_NVT (set temperature) gomc simulation is started."""
     return gomc_simulation_started(job, equilb_NVT_control_file_name_str)
 
-
-# check if equilb_with design ensemble GOMC run is started by seeing if the GOMC consol file and the merged psf exist
+# check if equilb_NVT GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
-def part_3c_output_equilb_design_ensemble_started(job):
-    """Check to see if the equilb_design_ensemble (set temperature) gomc simulation is started."""
-    try:
-        if job.doc.equilb_design_ensemble_max_number_under_limit is True:
-            if job.isfile(
-                "out_{}.dat".format(
-                    job.doc.equilb_design_ensemble_dict[
-                        str(job.doc.equilb_design_ensemble_number)
-                    ]["output_name_control_file_name"]
-                )
-            ):
-                if (
-                    job.doc.equilb_design_ensemble_max_number_under_limit
-                    is True
-                ):
-                    return gomc_simulation_started(
-                        job,
-                        job.doc.equilb_design_ensemble_dict[
-                            str(job.doc.equilb_design_ensemble_number)
-                        ]["output_name_control_file_name"],
-                    )
-                else:
-                    return gomc_simulation_started(
-                        job,
-                        job.doc.equilb_design_ensemble_dict[
-                            str(job.doc.equilb_design_ensemble_max_number - 1)
-                        ]["output_name_control_file_name"],
-                    )
-
-            else:
-                return False
-        elif job.doc.equilb_design_ensemble_max_number_under_limit is False:
-            return True
-
-    except:
-        return False
-
+def part_3c_output_equilb_NPT_started(job):
+    """Check to see if the equilb_NVT (set temperature) gomc simulation is started."""
+    return gomc_simulation_started(job, equilb_NPT_control_file_name_str)
 
 # check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
@@ -571,7 +536,7 @@ def part_3c_output_equilb_design_ensemble_started(job):
 def part_3d_output_production_run_started(job):
     """Check to see if the production run (set temperature) gomc simulation is started."""
     try:
-        return gomc_simulation_started(job, production_control_file_name_str)
+        return gomc_simulation_started(job, production_control_file_name_str+"_"+str(job.doc.cycle))
 
     except:
         return False
@@ -630,30 +595,12 @@ def part_4b_job_equilb_NVT_completed_properly(job):
     """Check to see if the equilb_NVT (set temperature) gomc simulation was completed properly."""
     return gomc_sim_completed_properly(job, equilb_NVT_control_file_name_str)
 
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
-def part_4c_job_equilb_design_ensemble_completed_properly(job):
-    """Check to see if the equilb_design_ensemble (set temperature) gomc simulation was completed properly."""
-    try:
-        if job.doc.equilb_design_ensemble_max_number_under_limit is True:
-            return gomc_sim_completed_properly(
-                job,
-                job.doc.equilb_design_ensemble_dict[
-                    str(job.doc.equilb_design_ensemble_number)
-                ]["output_name_control_file_name"],
-            )
-        else:
-            return gomc_sim_completed_properly(
-                job,
-                job.doc.equilb_design_ensemble_dict[
-                    str(job.doc.equilb_design_ensemble_max_number - 1)
-                ]["output_name_control_file_name"],
-            )
-    except:
-        return False
+def part_4c_job_equilb_NPT_completed_properly(job):
+    """Check to see if the equilb_NVT (set temperature) gomc simulation was completed properly."""
+    return gomc_sim_completed_properly(job, equilb_NPT_control_file_name_str)
 
 
 # check if production GOMC run completed by checking the end of the GOMC consol file
@@ -662,7 +609,7 @@ def part_4c_job_equilb_design_ensemble_completed_properly(job):
 @flow.with_job
 def part_4d_job_production_run_completed_properly(job):
     """Check to see if the production run (set temperature) gomc simulation was completed properly."""
-    return gomc_sim_completed_properly(job, production_control_file_name_str)
+    return gomc_sim_completed_properly(job, production_control_file_name_str+"_"+str(job.doc.cycle))
 
 
 # ******************************************************
@@ -1060,226 +1007,11 @@ def run_equilb_NVT_gomc_command(job):
 
     return run_command
 
-
 # ******************************************************
 # ******************************************************
-# equilb_NVT - starting the GOMC simulation (end)
+# equilb_NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-
-# ******************************************************
-# ******************************************************
-# Use pymbar to evaluate if the system came to equilibrium based on
-# the density (NPT or NVT -> box 0 density, GEMC or GCMC box 1 density) (start)
-# ******************************************************
-# ******************************************************
-def test_pymbar_stabilized_equilb_design_ensemble(job):
-    """Test if the simulation has come to equilibrium via pymbar."""
-    print("#**********************")
-    print("# Started the test_pymbar_stabilized_equilb_design_ensemble")
-    print("#**********************")
-
-    fraction_data_required_for_equilbrium = 0.25  # 0.25 # float
-    data_points_to_skip_for_equilbrium = 1  # int
-    equilb_plot_base_name = "pymbar_equilb_design_ensemble_plot"
-
-    if use_pymbar is True and job.doc.stable_equilb_design_ensemble is False:
-        if gomc_sim_completed_properly(
-            job,
-            job.doc.equilb_design_ensemble_dict[
-                str(job.doc.equilb_design_ensemble_number)
-            ]["output_name_control_file_name"],
-        ):
-
-            box_0_filename = "Blk_{}_BOX_0.dat".format(
-                job.doc.equilb_design_ensemble_dict[
-                    str(job.doc.equilb_design_ensemble_number)
-                ]["output_name_control_file_name"]
-            )
-            box_0_directory_filename = f"{box_0_filename}"
-
-            read_csv_box_0_data = pd.read_csv(
-                box_0_directory_filename,
-                sep="\s+",
-                header=0,
-                na_values="NaN",
-                index_col=0,
-            )
-            read_csv_density_box_0_np_array = np.array(
-                read_csv_box_0_data.loc[:, "TOT_DENS"]
-            )
-            read_csv_total_energy_box_0_np_array = np.array(
-                read_csv_box_0_data.loc[:, "TOT_EN"]
-            )
-
-            [
-                equib_box_0_density_bool,
-                t_box_0_density,
-                g_box_0_density,
-                Neff_box_0_density,
-            ] = is_equilibrated(
-                read_csv_density_box_0_np_array,
-                fraction_data_required_for_equilbrium,
-                data_points_to_skip_for_equilbrium,
-            )
-            [
-                equib_box_0_total_energy_bool,
-                t_box_0_total_energy,
-                g_box_0_total_energy,
-                Neff_box_0_total_energy,
-            ] = is_equilibrated(
-                read_csv_total_energy_box_0_np_array,
-                fraction_data_required_for_equilbrium,
-                data_points_to_skip_for_equilbrium,
-            )
-
-            # needs to be merged before able to use plotting
-            plot_data_with_t0_line(
-                "{}_box_0_density".format(equilb_plot_base_name),
-                read_csv_density_box_0_np_array,
-                title="box 0: density (kg/m$^3$) vs. MC cycles * {}"
-                "".format(output_data_every_X_MC_cycles),
-                overwrite=True,
-            )
-            # needs to be merged before able to use plotting
-            plot_data_with_t0_line(
-                "{}_box_0_total_energy".format(equilb_plot_base_name),
-                read_csv_total_energy_box_0_np_array,
-                title="box 0: total potential energy (K) vs. MC cycles * {}"
-                "".format(output_data_every_X_MC_cycles),
-                overwrite=True,
-            )
-
-            if job.doc.production_ensemble in ["GEMC_NPT", "GEMC_NVT"]:
-                box_1_filename = "Blk_{}_BOX_1.dat".format(
-                    job.doc.equilb_design_ensemble_dict[
-                        str(job.doc.equilb_design_ensemble_number)
-                    ]["output_name_control_file_name"]
-                )
-                # box_1_directory_filename = f"workspace/{job.id}/{box_1_filename}"
-                box_1_directory_filename = f"{box_1_filename}"
-
-                read_csv_box_1_data = pd.read_csv(
-                    box_1_directory_filename,
-                    sep="\s+",
-                    header=0,
-                    na_values="NaN",
-                    index_col=0,
-                )
-                read_csv_density_box_1_np_array = np.array(
-                    read_csv_box_1_data.loc[:, "TOT_DENS"]
-                )
-                read_csv_total_energy_box_1_np_array = np.array(
-                    read_csv_box_0_data.loc[:, "TOT_EN"]
-                )
-                read_csv_total_energy_box_0_and_1_np_array = (
-                    read_csv_total_energy_box_0_np_array
-                    + read_csv_total_energy_box_1_np_array
-                )
-
-                [
-                    equib_box_1_density_bool,
-                    t_box_1_density,
-                    g_box_1_density,
-                    Neff_box_1_density,
-                ] = is_equilibrated(
-                    read_csv_density_box_1_np_array,
-                    fraction_data_required_for_equilbrium,
-                    data_points_to_skip_for_equilbrium,
-                )
-                [
-                    equib_box_1_total_energy_bool,
-                    t_box_1_total_energy,
-                    g_box_1_total_energy,
-                    Neff_box_1_total_energy,
-                ] = is_equilibrated(
-                    read_csv_total_energy_box_1_np_array,
-                    fraction_data_required_for_equilbrium,
-                    data_points_to_skip_for_equilbrium,
-                )
-                [
-                    equib_box_0_and_1_total_energy_bool,
-                    t_box_0_and_1_total_energy,
-                    g_box_0_and_1_total_energy,
-                    Neff_box_0_and_1_total_energy,
-                ] = is_equilibrated(
-                    read_csv_total_energy_box_0_and_1_np_array,
-                    fraction_data_required_for_equilbrium,
-                    data_points_to_skip_for_equilbrium,
-                )
-                # needs to be merged before able to use plotting
-
-                plot_data_with_t0_line(
-                    "{}_box_1_density".format(equilb_plot_base_name),
-                    read_csv_density_box_1_np_array,
-                    title="box 1: density (kg/m$^3$) vs. MC cycles * {}"
-                    "".format(output_data_every_X_MC_cycles),
-                    overwrite=True,
-                )
-                plot_data_with_t0_line(
-                    "{}_box_1_total_energy".format(equilb_plot_base_name),
-                    read_csv_total_energy_box_1_np_array,
-                    title="box 0: total potential energy (K) vs. MC cycles * {}"
-                    "".format(output_data_every_X_MC_cycles),
-                    overwrite=True,
-                )
-                plot_data_with_t0_line(
-                    "{}_sum_of_box_0_and_1_total_energy".format(
-                        equilb_plot_base_name
-                    ),
-                    read_csv_total_energy_box_0_and_1_np_array,
-                    title="box 0 and 1: summed total potential energy (K) vs. MC cycles * {}"
-                    "".format(output_data_every_X_MC_cycles),
-                    overwrite=True,
-                )
-
-            if job.doc.production_ensemble in ["GCMC", "NVT", "NPT"]:
-                if (
-                    equib_box_0_density_bool is True
-                    and equib_box_0_total_energy_bool is True
-                ):
-                    job.doc.stable_equilb_design_ensemble = True
-
-            elif job.doc.production_ensemble in ["GEMC_NPT", "GEMC_NVT"]:
-                if (
-                    equib_box_0_density_bool is True
-                    and equib_box_0_total_energy_bool is True
-                    and equib_box_1_density_bool is True
-                    and equib_box_1_total_energy_bool is True
-                    and equib_box_0_and_1_total_energy_bool is True
-                ):
-                    job.doc.stable_equilb_design_ensemble = True
-
-    elif use_pymbar is False:
-        job.doc.stable_equilb_design_ensemble = True
-
-    print("#**********************")
-    print("# Completed the test_pymbar_stabilized_equilb_design_ensemble.")
-    print("#**********************")
-
-
-@Project.label
-@Project.pre(lambda j: j.sp.engine == "namd")
-@Project.post(part_4c_job_equilb_design_ensemble_completed_properly)
-@flow.with_job
-def pymbar_stabilized_equilb_design_ensemble(job):
-    """Determine if the simulation has come to equilibrium via pymbar and update the doc json file."""
-    print("#**********************")
-    print(
-        "# Running test if the pymbar_stabilized_equilb_design_ensemble is stable."
-    )
-    print("#**********************")
-
-    return job.doc.stable_equilb_design_ensemble
-
-
-# ******************************************************
-# ******************************************************
-# Use pymbar to evaluate if the system came to equilibrium based on
-# the density (NPT or NVT -> box 0 density, GEMC or GCMC box 1 density) (end)
-# ******************************************************
-# ******************************************************
-
 # ******************************************************
 # ******************************************************
 # equilb NPT or GEMC-NVT - starting the GOMC simulation (start)
@@ -1289,9 +1021,8 @@ def pymbar_stabilized_equilb_design_ensemble(job):
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
 @Project.pre(part_2c_equilb_NPT_control_file_written)
-@Project.post(part_3c_output_equilb_design_ensemble_started)
-@Project.post(part_4c_job_equilb_design_ensemble_completed_properly)
-@Project.post(pymbar_stabilized_equilb_design_ensemble)
+@Project.post(part_3c_output_equilb_NPT_started)
+@Project.post(part_4c_job_equilb_NPT_completed_properly)
 @Project.operation.with_directives(
     {
         "np": lambda job: ff_info_dict.get(job.sp.forcefield_name).get("ncpu"),
@@ -1303,66 +1034,24 @@ def pymbar_stabilized_equilb_design_ensemble(job):
     }
 )
 @flow.with_job
-def run_equilb_ensemble_gomc_command(job):
-    """Run the gomc equilb_ensemble simulation."""
-    if (
-        job.doc.equilb_design_ensemble_number
-        >= equilb_design_ensemble_max_number
-    ):
-        job.doc.equilb_design_ensemble_max_number_under_limit = False
-        # after the equilb_design_ensemble_max_number just accept as stable
-        job.doc.stable_equilb_design_ensemble = True
+def run_equilb_NPT_gomc_command(job):
+    """Run the gomc equilb_NPT simulation."""
+    print("#**********************")
+    print("# Started the run_NPT_gomc_command.")
+    print("#**********************")
 
-    for run_equilb_ensemble_i in range(
-        job.doc.equilb_design_ensemble_number, equilb_design_ensemble_max_number
-    ):
-        print("#**********************")
-        print("# Started the run_equilb_ensemble_gomc_command function.")
-        print("#**********************")
+    control_file_name_str = equilb_NPT_control_file_name_str
 
-        if (
-            job.doc.equilb_design_ensemble_number
-            >= equilb_design_ensemble_max_number
-        ):
-            job.doc.equilb_design_ensemble_max_number_under_limit = False
-            # after the equilb_design_ensemble_max_number just accept as stable
-            job.doc.stable_equilb_design_ensemble = True
+    print(f"Running simulation job id {job}")
+    run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+        str(job.doc.namd_binary_path),
+        str(job.doc.equilb_NPT_gomc_binary_file),
+        str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
+        str(control_file_name_str),
+        str(control_file_name_str),
+    )
 
-        elif (
-            job.doc.stable_equilb_design_ensemble is False
-            and job.doc.equilb_design_ensemble_max_number_under_limit is True
-        ):
-
-            control_file_name_str = job.doc.equilb_design_ensemble_dict[
-                str(job.doc.equilb_design_ensemble_number)
-            ]["output_name_control_file_name"]
-
-            print(f"Running simulation job id {job}")
-            run_command = "{}/{} +p{} {}.conf > out_{}.dat" "".format(
-                str(job.doc.namd_binary_path),
-                str(job.doc.equilb_design_ensemble_gomc_binary_file),
-                str(ff_info_dict.get(job.sp.forcefield_name).get("ncpu")),
-                str(control_file_name_str),
-                str(control_file_name_str),
-            )
-
-            exec_run_command = subprocess.Popen(
-                run_command, shell=True, stderr=subprocess.STDOUT
-            )
-            os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
-
-            test_pymbar_stabilized_equilb_design_ensemble(job)
-
-            if job.doc.stable_equilb_design_ensemble is False:
-                # need to add equilb_design_ensemble_number by 1 so it is fixed to run the correct job
-                # so it is rerun if restarted
-                job.doc.equilb_design_ensemble_number += 1
-
-                if (
-                    job.doc.equilb_design_ensemble_number
-                    >= job.doc.equilb_design_ensemble_max_number
-                ):
-                    job.doc.stable_equilb_design_ensemble = True
+    return run_command
 
 
 # ******************************************************
@@ -1377,9 +1066,8 @@ def run_equilb_ensemble_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @equilibrateSolvent
-@Project.pre(part_4c_job_equilb_design_ensemble_completed_properly)
+@Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.pre(part_2d_production_control_file_written)
-@Project.pre(pymbar_stabilized_equilb_design_ensemble)
 @Project.post(part_3d_output_production_run_started)
 @Project.post(part_4d_job_production_run_completed_properly)
 @Project.operation.with_directives(
