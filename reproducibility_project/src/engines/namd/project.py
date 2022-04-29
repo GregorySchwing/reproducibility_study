@@ -1117,45 +1117,47 @@ def run_production_NPT_gomc_command(job):
         )
         os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
 
-        if part_4d_job_production_run_completed_properly(job)
+        if part_4d_job_production_run_completed_properly(job):
             job.doc.cycle += 1
 
 
 def _setup_conf(job, fname, template, data, overwrite=False):
-"""Create conf files based on a template and provided data.
 
-Parameters
-----------
-fname: str
-    Name of the file to be saved out
-template: str, or jinja2.Template
-    Either a jinja2.Template or path to a jinja template
-data: dict
-    Dictionary storing data matched with the fields available in the template
-overwrite: bool, optional, default=False
-    Options to overwrite (or not) existing mdp file of the
+    """Create conf files based on a template and provided data.
 
-Returns
--------
-File saved with names defined by fname
-"""
-from jinja2 import Template
+    Parameters
+    ----------
+    fname: str
+        Name of the file to be saved out
+    template: str, or jinja2.Template
+        Either a jinja2.Template or path to a jinja template
+    data: dict
+        Dictionary storing data matched with the fields available in the template
+    overwrite: bool, optional, default=False
+        Options to overwrite (or not) existing mdp file of the
 
-if isinstance(template, str):
-    with open(template, "r") as f:
-        template = Template(f.read())
+    Returns
+    -------
+    File saved with names defined by fname
+    """
 
-if not overwrite:
-    if os.path.isfile(fname):
-        raise FileExistsError(
-            f"{fname} already exists. Set overwrite=True to write out."
-        )
+    from jinja2 import Template
 
-rendered = template.render(data)
-with open(fname, "w") as f:
-    f.write(rendered)
+    if isinstance(template, str):
+        with open(template, "r") as f:
+            template = Template(f.read())
 
-return None
+    if not overwrite:
+        if os.path.isfile(fname):
+            raise FileExistsError(
+                f"{fname} already exists. Set overwrite=True to write out."
+            )
+
+    rendered = template.render(data)
+    with open(fname, "w") as f:
+        f.write(rendered)
+
+    return None
 
 
 # ******************************************************
@@ -1170,8 +1172,8 @@ return None
 # ******************************************************
 # ******************************************************
 if __name__ == "__main__":
-pr = Project()
-pr.main()
+    pr = Project()
+    pr.main()
 # ******************************************************
 # ******************************************************
 # signac end code (end)
