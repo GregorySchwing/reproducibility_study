@@ -60,12 +60,11 @@ prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
 # If the gomc binary files are callable directly from the terminal without a path,
 # please just enter and empty string (i.e., "" or '')
 # namd_binary_path = "/wsu/home/hf/hf68/hf6839/GOMC_dev_2_22_22/bin"
-namd_binary_path = "/home/greg/Desktop/NAMD_2.12_Linux-x86_64-multicore"
-namd3 = False
-if (namd3):
-    namdbin = f"namd3"
-else:
-    namdbin = f"namd2"
+
+namd_binary_path = os.path.join(os.getcwd(), "bin")
+namd2_binary = "namd2"
+namd3_binary = "namd3"
+
 
 # number of MC cycles
 MC_cycles_melt_equilb_NVT = 5 * 10 ** 3  # set value for paper = 5 * 10 ** 3
@@ -87,7 +86,7 @@ ff_filename_str = "in_FF"
 min_steps = 500
 nvt_eq_steps = 5000
 npt_eq_steps = 5000
-production_steps = 5000
+production_steps = 10000
 single_production_run_steps = 5000
 """
 min_steps = 10000
@@ -301,11 +300,11 @@ def initial_parameters(job):
     job.doc.namd_binary_path = namd_binary_path
 
     if job.doc.production_ensemble in ["NPT", "NVT"]:
-        job.doc.melt_NVT_gomc_binary_file = namdbin
-        job.doc.equilb_NVT_gomc_binary_file = namdbin
-        job.doc.equilb_NPT_gomc_binary_file = namdbin
+        job.doc.melt_NVT_gomc_binary_file = namd2_binary
+        job.doc.equilb_NVT_gomc_binary_file = namd2_binary
+        job.doc.equilb_NPT_gomc_binary_file = namd2_binary
         job.doc.equilb_design_ensemble_gomc_binary_file = (
-            namdbin
+            namd2_binary
         )
     else:
         raise ValueError(
@@ -314,11 +313,11 @@ def initial_parameters(job):
 
     if job.doc.production_ensemble in ["NPT"]:
         job.doc.production_ensemble_gomc_binary_file = (
-            namdbin
+            namd3_binary
         )
     elif job.doc.production_ensemble in ["NVT"]:
         job.doc.production_ensemble_gomc_binary_file = (
-            namdbin
+            namd3_binary
         )
     else:
         raise ValueError(
@@ -755,6 +754,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "waterModel" : job.sp.waterModel,
                 "parameters" : job.fn("in_FF.inp"),
                 "outputname" : "em",
                 "X_DIM_BOX" : job.sp.box_L_liq_x*10,
@@ -781,6 +781,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "waterModel" : job.sp.waterModel,
                 "parameters" : job.fn("in_FF.inp"),
                 "binary_coordinates" : job.fn("em.restart.coor"),
                 "binary_boxsize" : job.fn("em.restart.xsc"),
@@ -804,6 +805,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "waterModel" : job.sp.waterModel,
                 "parameters" : job.fn("in_FF.inp"),
                 "binary_coordinates" : job.fn("nvt_eq.restart.coor"),
                 "binary_boxsize" : job.fn("nvt_eq.restart.xsc"),
@@ -827,6 +829,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "cycle" : job.doc.cycle,
                 "structure" : job.fn("mosdef_box_0.psf"),
                 "coordinates" : job.fn("mosdef_box_0.pdb"),
+                "waterModel" : job.sp.waterModel,
                 "parameters" : job.fn("in_FF.inp"),
                 "binary_coordinates" : job.fn("npt_eq.restart.coor"),
                 "binary_boxsize" : job.fn("npt_eq.restart.xsc"),
