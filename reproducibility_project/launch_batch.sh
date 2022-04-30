@@ -17,6 +17,7 @@
 
 #SBATCH -e errors_%j.err
 source /sw/packages/python-tools/anaconda3/etc/profile.d/conda.sh
+export PYTHONPATH=$PYTHONPATH:/home/udpk5hr/reproducibility_study/reproducibility_project/:/home/udpk5hr/reproducibility_study
 conda activate mamba
 python init.py
 signac view
