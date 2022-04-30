@@ -7,9 +7,9 @@ from reproducibility_project.src.molecules.ethanol_aa import EthanolAA
 from reproducibility_project.src.molecules.methane_ua import MethaneUA
 from reproducibility_project.src.molecules.pentane_ua import PentaneUA
 
-from reproducibility_project.src.molecules.tips3p import tip3p
-from reproducibility_project.src.molecules.tips3p import tip3p_ew_b
-from reproducibility_project.src.molecules.tips3p import tip3p_ew_f
+from reproducibility_project.src.molecules.tip3p import tip3p
+from reproducibility_project.src.molecules.tip3p_ew_b import tip3p_ew_b
+from reproducibility_project.src.molecules.tip3p_ew_f import tip3p_ew_f
 from reproducibility_project.src.molecules.tips3p import tips3p
 from reproducibility_project.src.molecules.opc3 import opc3
 from reproducibility_project.src.molecules.a99SB_disp import a99SB_disp
