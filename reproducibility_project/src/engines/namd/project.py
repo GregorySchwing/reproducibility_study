@@ -82,7 +82,7 @@ equilb_design_ensemble_max_number = 3
 # force field (FF) file for all simulations in that job
 # Note: do not add extensions
 ff_filename_str = "in_FF"
-
+"""
 min_steps = 500
 nvt_eq_steps = 5000
 npt_eq_steps = 5000
@@ -94,7 +94,7 @@ nvt_eq_steps = 250000
 npt_eq_steps = 1000000
 production_steps = 5000000
 single_production_run_steps = 500000
-"""
+
 num_cycles = math.ceil(production_steps / single_production_run_steps)
 # initial mosdef structure and coordinates
 # Note: do not add extensions
