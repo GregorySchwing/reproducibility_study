@@ -157,8 +157,8 @@ ff_info_dict = {
         "VDWGeometricSigma": True,
     },
     "custom": {
-        "ngpu": 0,
-        "ncpu": 1,
+        "ngpu": 1,
+        "ncpu": 10,
         "Ewald": True,
         "ElectroStatic": True,
         "VDWGeometricSigma": False,
@@ -301,8 +301,8 @@ def initial_parameters(job):
 
     if job.doc.production_ensemble in ["NPT", "NVT"]:
         job.doc.melt_NVT_gomc_binary_file = namd2_binary
-        job.doc.equilb_NVT_gomc_binary_file = namd2_binary
-        job.doc.equilb_NPT_gomc_binary_file = namd2_binary
+        job.doc.equilb_NVT_gomc_binary_file = namd3_binary
+        job.doc.equilb_NPT_gomc_binary_file = namd3_binary
         job.doc.equilb_design_ensemble_gomc_binary_file = (
             namd2_binary
         )
