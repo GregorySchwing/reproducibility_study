@@ -2,7 +2,7 @@
 # Example with 28 cores for OpenMP
 #
 # Project/Account
-#SBATCH --qos=gpu
+#SBATCH --partition=gpu
 # Request one node
 #SBATCH -N 1
 # Total number of cores, in this example it will 1 node with 1 core each. 
@@ -10,8 +10,7 @@
 #SBATCH --mem=12G
 #SBATCH --cpus-per-task=2
 # Runtime of this jobs is less then 12 hours.
-#SBATCH --time=7-0:00:00
-#SBATCH --pty /bin/bash
+#SBATCH --time=4:00:00
 #SBATCH --mail-user=go2432@wayne.edu
 
 #SBATCH -o output_%j.out
