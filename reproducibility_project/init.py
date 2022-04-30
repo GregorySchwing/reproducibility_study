@@ -86,8 +86,8 @@ else:
     sideLength = 40.0
     liq_box_lengths = {
         "tip3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
-        "tips3p_ew_b": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
-        "tips3p_ew_f": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tip3p_ew_b": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tip3p_ew_f": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "tips3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "spce": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "opc3": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
