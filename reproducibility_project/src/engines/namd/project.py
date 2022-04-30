@@ -42,13 +42,17 @@ class Project(FlowProject):
     def __init__(self):
         super().__init__()
 
-
+"""
 class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
-    """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
+    #Subclass of DefaultSlurmEnvironment for WSU's Grid cluster.
 
     hostname_pattern = r".*\.grid\.wayne\.edu"
     template = "grid.sh"
+"""
+class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
+    """Subclass of DefaultSlurmEnvironment for RAPLAB cluster."""
 
+    template = "raplab.sh"
 
 equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
 prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
@@ -122,7 +126,7 @@ production_control_file_name_str = "npt_prod"
 path_from_job_to_box_inputs = "../../"
 
 walltime_mosdef_hr = 4
-walltime_gomc_hr = 368
+walltime_gomc_hr = 4
 memory_needed = 16
 
 use_pymbar = True  # True of False
@@ -144,7 +148,7 @@ ff_info_dict = {
     },
     "spce": {
         "ngpu": 1,
-        "ncpu": 1,
+        "ncpu": 4,
         "Ewald": True,
         "ElectroStatic": True,
         "VDWGeometricSigma": False,
@@ -158,7 +162,7 @@ ff_info_dict = {
     },
     "custom": {
         "ngpu": 1,
-        "ncpu": 10,
+        "ncpu": 4,
         "Ewald": True,
         "ElectroStatic": True,
         "VDWGeometricSigma": False,
