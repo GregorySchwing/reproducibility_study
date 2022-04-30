@@ -33,11 +33,9 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
 
 
 molecules = [
-    "tips3p",
-]
-
-"""
-molecules = [
+    "tip3p",
+    "tip3p_ew_b",
+    "tip3p_ew_f",
     "tips3p",
     "spce",
     "opc3",
@@ -47,7 +45,21 @@ molecules = [
     "a99SB_disp",
     "opc",
 ]
-"""
+
+waterModel = {
+    "tip3p": ["tip3"],
+    "tip3p_ew_b": ["tip3"],
+    "tip3p_ew_f": ["tip3"],
+    "tips3p": ["tip3"],
+    "spce": ["tip3"],
+    "opc3": ["tip3"],
+    "tip4p_ew": ["tip4"],
+    "tip4p_2005": ["tip4"],
+    "tip4p_d": ["tip4"],
+    "a99SB_disp": ["tip4"],
+    "opc": ["tip4"],
+}
+
 
 protein = False
 moleculeNameAsXML = True
@@ -73,6 +85,9 @@ if(protein):
 else:
     sideLength = 40.0
     liq_box_lengths = {
+        "tip3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tips3p_ew_b": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
+        "tips3p_ew_f": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "tips3p": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "spce": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
         "opc3": [u.unyt_array([sideLength, sideLength, sideLength], u.angstrom)],
@@ -85,7 +100,7 @@ else:
 
     salt_strengths = [None]
 #replicas = range(16)
-replicas = range(1)
+replicas = range(3)
 simulation_engines = [
     "namd",
 ]
@@ -130,6 +145,9 @@ for key in molecules:
         r_cuts[key] = 10 * u.angstrom
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 masses = {
+    "tip3p": [18.0153] * u.amu,
+    "tip3p_ew_b": [18.0153] * u.amu,
+    "tip3p_ew_f": [18.0153] * u.amu,
     "tips3p": [18.0153] * u.amu,
     "spce": [18.0153] * u.amu,
     "opc3": [18.0153] * u.amu,
@@ -140,6 +158,9 @@ masses = {
     "opc": [18.0153] * u.amu,
 }
 init_density_liq = {
+    "tip3p": [99.8] * g_per_cm3,
+    "tip3p_ew_b": [99.8] * g_per_cm3,
+    "tip3p_ew_f": [99.8] * g_per_cm3,
     "tips3p": [99.8] * g_per_cm3,
     "spce": [99.8] * g_per_cm3,
     "opc3": [99.8] * g_per_cm3,
@@ -150,6 +171,9 @@ init_density_liq = {
     "opc": [99.8] * g_per_cm3,
 }
 init_density_vap = {
+    "tip3p": [None],
+    "tip3p_ew_b": [None],
+    "tip3p_ew_f": [None],
     "tips3p": [None],
     "spce": [None],
     "opc3": [None],
@@ -161,6 +185,9 @@ init_density_vap = {
 }
 # 300  -> 280.0, 300.0, 320.0
 temperatures = {
+    "tip3p": [298.15] * u.K,
+    "tip3p_ew_b": [298.15] * u.K,
+    "tip3p_ew_f": [298.15] * u.K,
     "tips3p": [298.15] * u.K,
     "spce": [298.15] * u.K,
     "opc3": [298.15] * u.K,
@@ -172,6 +199,9 @@ temperatures = {
 }
 # 101.325, 101.325, 101.325
 pressures = {
+    "tip3p": [101.325] * u.kPa,
+    "tip3p_ew_b": [101.325] * u.kPa,
+    "tip3p_ew_f": [101.325] * u.kPa,
     "tips3p": [101.325] * u.kPa,
     "spce": [101.325] * u.kPa,
     "opc3": [101.325] * u.kPa,
@@ -183,6 +213,9 @@ pressures = {
 }
 
 N_liq_molecules = {
+    "tip3p": [2000],
+    "tip3p_ew_b": [2000],
+    "tip3p_ew_f": [2000],
     "tips3p": [2000],
     "spce": [2000],
     "opc3": [2000],
@@ -194,6 +227,9 @@ N_liq_molecules = {
 }
 
 N_vap_molecules = {
+    "tip3p": [None],
+    "tip3p_ew_b": [None],
+    "tip3p_ew_f": [None],
     "spce": [None],
     "tips3p": [None],
     "opc3": [None],
@@ -206,6 +242,9 @@ N_vap_molecules = {
 
 
 vap_box_lengths = {
+    "tip3p": [None],
+    "tip3p_ew_b": [None],
+    "tip3p_ew_f": [None],
     "tips3p": [None],
     "spce": [None],
     "opc3": [None],
@@ -217,6 +256,9 @@ vap_box_lengths = {
 }
 
 ensembles = {
+    "tip3p": ["NPT", None],
+    "tip3p_ew_b": ["NPT", None],
+    "tip3p_ew_f": ["NPT", None],
     "tips3p": ["NPT", None],
     "spce": ["NPT", None],
     "opc3": ["NPT", None],
@@ -254,7 +296,8 @@ if(protein):
                 replica,
                 conc,
                 cat,
-                an
+                an,
+                wm,
             ) in itertools.product(
                 simulation_engines,
                 ensembles[molecule],
@@ -270,10 +313,12 @@ if(protein):
                 replicas,
                 salt_strengths,
                 cations,
-                anions
+                anions,
+                waterModel[molecule]
             ):
                 statepoint = {
                     "molecule": molecule,
+                    "waterModel": wm,
                     "salt_conc": conc,
                     "cat_name": cat[0],
                     "cat_val": cat[1],
@@ -355,6 +400,7 @@ else:
             lrc,
             cutoff_style,
             replica,
+            wm,
         ) in itertools.product(
             simulation_engines,
             ensembles[molecule],
@@ -368,9 +414,11 @@ else:
             long_range_correction,
             cutoff_styles,
             replicas,
+            waterModel[molecule],
         ):
             statepoint = {
                 "molecule": molecule,
+                "waterModel": wm,
                 "salt_conc": None,
                 "pdbid": None,
                 "engine": engine,
