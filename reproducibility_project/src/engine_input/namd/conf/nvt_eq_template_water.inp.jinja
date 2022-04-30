@@ -1,5 +1,6 @@
 structure               {{  structure  }};
 coordinates             {{  coordinates  }};
+waterModel             {{  waterModel  }};
 
 set temp                {{  temp  }};
 
@@ -76,6 +77,18 @@ PME                     yes;
 PMEInterpOrder          6;                  # interpolation order (spline order 6 in charmm)
 PMEGridSpacing          1.0;                # maximum PME grid space / used to calculate grid size
 
+set freq [expr {int($stepspercycle*floor( {{  run_steps  }} / $temp / $stepspercycle))}]
+
+set num_iters [expr {int(ceil( 1000 / $stepspercycle ))}]
+
+for {set i 1} {$i <= $temp} {incr i} {
+	if {$i > $temp} {
+		set i $temp
+	}
+	langevinTemp $i
+	reinitvels $i
+	run $freq
+} 
 
 run                     {{  run_steps  }};  
 
