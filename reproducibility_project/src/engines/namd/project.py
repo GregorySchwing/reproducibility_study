@@ -45,7 +45,7 @@ class Project(FlowProject):
 class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     #Subclass of DefaultSlurmEnvironment for WSU's Grid cluster.
 
-    hostname_pattern = r".*\.grid\.wayne\.edu"
+    hostname_pattern = r"rl-cpu-r82-u02"
     template = "grid.sh"
 
 
