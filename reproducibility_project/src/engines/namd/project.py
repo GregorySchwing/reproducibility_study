@@ -42,17 +42,12 @@ class Project(FlowProject):
     def __init__(self):
         super().__init__()
 
-"""
 class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     #Subclass of DefaultSlurmEnvironment for WSU's Grid cluster.
 
     hostname_pattern = r".*\.grid\.wayne\.edu"
     template = "grid.sh"
-"""
-class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
-    """Subclass of DefaultSlurmEnvironment for RAPLAB cluster."""
 
-    template = "raplab.sh"
 
 equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
 prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")

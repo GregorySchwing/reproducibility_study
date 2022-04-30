@@ -5,12 +5,10 @@
     {{- super () -}}
 
 {% if gpus %}
-#SBATCH -q gpu
+#SBATCH --partition gpu
 #SBATCH --gres gpu:{{ gpus }}
-#SBATCH --constraint=v100
 {%- else %}
-#SBATCH -q primary
-#SBATCH --constraint=intel
+#SBATCH --partition gpu
 {%- endif %}
 
 #SBATCH -N 1
@@ -19,15 +17,9 @@
 
 echo  "Running on host" hostname
 echo  "Time is" date
-source ~/anaconda3/etc/profile.d/conda.sh
-conda activate mosdef-study38
+source /sw/packages/python-tools/anaconda3/etc/profile.d/conda.sh
+conda activate mamba
 
-module load python/3.8
-module swap gnu7 intel/2019
-
-{% if gpus %}
-module load cuda/11.0
-{%- endif %}
 
 {% endblock header %}
 
