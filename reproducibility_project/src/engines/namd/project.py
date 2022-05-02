@@ -18,7 +18,7 @@ import signac
 import unyt as u
 from flow import FlowProject
 from flow.environment import DefaultSlurmEnvironment
-
+from flow.environments.incite import SummitEnvironment
 from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.molecules.system_builder import (
     construct_system,
@@ -47,6 +47,12 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
     hostname_pattern = r"rl-cpu-r82-u02"
     template = "grid.sh"
+
+class Summit(SummitEnvironment):  # Grid(StandardEnvironment):
+    #Subclass of DefaultSlurmEnvironment for Summit cluster.
+
+    hostname_pattern = r"rl-cpu-r82-u02"
+    template = "summit.sh"
 
 
 equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
