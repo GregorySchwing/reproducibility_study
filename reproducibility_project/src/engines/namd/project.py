@@ -624,7 +624,10 @@ def part_4c_job_equilb_NPT_completed_properly(job):
 @flow.with_job
 def part_4d_job_production_run_completed_properly(job):
     """Check to see if the production run (set temperature) gomc simulation was completed properly."""
-    return gomc_sim_completed_properly(job, production_control_file_name_str+"_"+str(job.doc.cycle))
+    try:
+        return gomc_sim_completed_properly(job, production_control_file_name_str+"_"+str(job.doc.cycle))
+    except:
+        return False
 
 # check if production GOMC run completed by checking the end of the GOMC consol file
 @Project.label
