@@ -460,12 +460,16 @@ def part_2c_equilb_NPT_control_file_written(job):
 @flow.with_job
 def part_2d_production_control_file_written(job):
     """General check that the prod_NPT_control (run temperature) gomc control file is written."""
-    cycleList = list(range(0, job.doc.num_cycles))
-    allConfsExist = True
-    for cycle in cycleList:
-        cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(job.doc.cycle))
-        allConfsExist = allConfsExist and cycleExists
-    return allConfsExist
+    try:
+        cycleList = list(range(0, job.doc.num_cycles))
+        allConfsExist = True
+        for cycle in cycleList:
+            cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(job.doc.cycle))
+            allConfsExist = allConfsExist and cycleExists
+        return allConfsExist
+    except:
+        return False
+
 
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
