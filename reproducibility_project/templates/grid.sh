@@ -4,14 +4,18 @@
 {% set gpus = operations|map(attribute='directives.ngpu')|sum %}
     {{- super () -}}
 
+{% set cpus = operations|map(attribute='directives.ncpu')|sum %}
+    {{- super () -}}
+
 {% if gpus %}
-#SBATCH --partition gpu
+#SBATCH -q gpu
 #SBATCH --gres gpu:{{ gpus }}
 {%- else %}
-#SBATCH --partition gpu
+#SBATCH -q primary
+#SBATCH --constraint=intel
 {%- endif %}
 
-#SBATCH -N 1
+#SBATCH -N :{{ cpus }}
 #SBATCH -o output-%j.dat
 #SBATCH -e error-%j.dat
 
