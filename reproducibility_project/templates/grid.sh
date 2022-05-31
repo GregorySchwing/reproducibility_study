@@ -4,7 +4,7 @@
 {% set gpus = operations|map(attribute='directives.ngpu')|sum %}
     {{- super () -}}
 
-{% set cpus = operations|map(attribute='directives.ncpu')|sum %}
+{% set cpus = operations|map(attribute='directives.np')|sum %}
     {{- super () -}}
 
 {% if gpus %}
@@ -16,7 +16,7 @@
 {%- endif %}
 
 #SBATCH -N 1
-#SBATCH --num-tasks {{ np }}
+#SBATCH --num-tasks {{ cpus }}
 #SBATCH -o output-%j.dat
 #SBATCH -e error-%j.dat
 
