@@ -16,7 +16,7 @@
 {%- endif %}
 
 #SBATCH -N 1
-#SBATCH --num-tasks {{ cpus }}
+#SBATCH --ntasks {{ cpus }}
 #SBATCH -o output-%j.dat
 #SBATCH -e error-%j.dat
 
