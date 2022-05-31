@@ -452,6 +452,7 @@ def part_2c_equilb_NPT_control_file_written(job):
 
 
 # checking if the GOMC control file is written for the production run
+@equilibrateSolvent
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_1a_initial_data_input_to_json)
