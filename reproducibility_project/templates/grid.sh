@@ -15,7 +15,8 @@
 #SBATCH --constraint=intel
 {%- endif %}
 
-#SBATCH -N :{{ cpus }}
+#SBATCH -N 1
+#SBATCH --num-tasks {{ np }}
 #SBATCH -o output-%j.dat
 #SBATCH -e error-%j.dat
 
