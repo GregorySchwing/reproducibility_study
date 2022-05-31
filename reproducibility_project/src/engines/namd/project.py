@@ -367,6 +367,7 @@ def part_1b_under_equilb_design_ensemble_run_limit(job):
 # @Project.pre(select_production_ensemble)
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(part_1a_initial_data_input_to_json)
 @flow.with_job
 def mosdef_input_written(job):
     """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
