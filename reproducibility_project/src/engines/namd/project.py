@@ -636,7 +636,10 @@ def part_4d_job_production_run_completed_properly(job):
 @flow.with_job
 def part_4e_job_final_production_run_completed_properly(job):
     """Check to see if the production run (set temperature) gomc simulation was completed properly."""
-    return job.doc.cycle == job.doc.num_cycles
+    try:
+        return job.doc.cycle == job.doc.num_cycles
+    except:
+        return False
 
 # ******************************************************
 # ******************************************************
