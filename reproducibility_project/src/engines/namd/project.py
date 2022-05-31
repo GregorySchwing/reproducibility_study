@@ -373,7 +373,7 @@ def mosdef_input_written(job):
     """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
     file_written_bool = False
 
-    if job.doc.ensemble in ["NPT", "NVT"]:
+    if job.sp.ensemble in ["NPT", "NVT"]:
         if (
             job.isfile(f"{path_from_job_to_box_inputs}/{ff_filename_str}.inp")
             and job.isfile(
@@ -384,7 +384,7 @@ def mosdef_input_written(job):
             )
         ):
             file_written_bool = True
-    elif job.doc.ensemble in ["GCMC", "GEMC_NPT", "GEMC_NPT"]:
+    elif job.sp.ensemble in ["GCMC", "GEMC_NPT", "GEMC_NPT"]:
         if (
             job.isfile(f"{path_from_job_to_box_inputs}/{ff_filename_str}.inp")
             and job.isfile(
