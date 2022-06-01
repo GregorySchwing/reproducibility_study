@@ -49,8 +49,8 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     template = "grid.sh"
 
 
-equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
-prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
+#equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
+#prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
 
 # ******************************************************
 # users typical variables, but not all (start)
@@ -191,7 +191,7 @@ def part_1a_initial_data_input_to_json(job):
 
     return data_written_bool
 
-@equilibrateSolvent
+#@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.post(part_1a_initial_data_input_to_json)
@@ -726,7 +726,7 @@ def build_charmm(job, write_files=True):
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
 # ******************************************************
 # ******************************************************
-@equilibrateSolvent
+#@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
@@ -907,7 +907,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (start)
 # ******************************************************
 # ******************************************************
-@prepareProteinSimulation
+#@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_solvated)
@@ -922,7 +922,7 @@ def solvate_protein(job):
         fix_segment(job)
     else: None,
 
-@prepareProteinSimulation
+#@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_ionized)
@@ -947,7 +947,7 @@ def ionize_protein(job):
 # melt_NVT -starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@equilibrateSolvent
+#@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_2a_min_NVT_control_file_written)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
@@ -997,7 +997,7 @@ def run_min_NVT_gomc_command(job):
 # equilb_NVT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@equilibrateSolvent
+#@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_4a_job_min_NVT_completed_properly)
 @Project.pre(part_2b_equilb_NVT_control_file_written)
@@ -1044,7 +1044,7 @@ def run_equilb_NVT_gomc_command(job):
 # equilb NPT or GEMC-NVT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@equilibrateSolvent
+#@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
 @Project.pre(part_2c_equilb_NPT_control_file_written)
@@ -1093,7 +1093,7 @@ def run_equilb_NPT_gomc_command(job):
 # production run - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@equilibrateSolvent
+#@equilibrateSolvent
 @Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.pre(part_2d_production_control_file_written)
 @Project.post(part_3d_output_production_run_started)
