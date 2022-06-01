@@ -1,8 +1,8 @@
 {% extends "slurm.sh" %}
+{{- super () -}}
 
 {% block header %}
 {% set gpus = operations|map(attribute='directives.ngpu')|sum %}
-
 {% set cpus = operations|map(attribute='directives.np')|sum %}
 
 {% if gpus %}
