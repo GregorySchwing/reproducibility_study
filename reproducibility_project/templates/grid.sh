@@ -2,10 +2,8 @@
 
 {% block header %}
 {% set gpus = operations|map(attribute='directives.ngpu')|sum %}
-    {{- super () -}}
 
 {% set cpus = operations|map(attribute='directives.np')|sum %}
-    {{- super () -}}
 
 {% if gpus %}
 #SBATCH -q gpu
