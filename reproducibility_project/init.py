@@ -33,8 +33,11 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
 
 
 molecules = [
+    "tip3p"
+]
+"""
+molecules = [
     "tip3p",
-    """
     "tip3p_ew_b",
     "tip3p_ew_f",
     "tips3p",
@@ -45,9 +48,8 @@ molecules = [
     "tip4p_d",
     "a99SB_disp",
     "opc",
-    """
 ]
-
+"""
 waterModel = {
     "tip3p": ["tip3"],
     "tip3p_ew_b": ["tip3"],
