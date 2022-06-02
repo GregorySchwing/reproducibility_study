@@ -20,9 +20,8 @@
 
 echo  "Running on host" hostname
 echo  "Time is" date
-source /sw/packages/python-tools/anaconda3/etc/profile.d/conda.sh
-conda activate mamba
-
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate mosdef-study38
 
 {% endblock header %}
 
