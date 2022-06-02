@@ -582,6 +582,7 @@ def gomc_sim_completed_properly(job, control_filename_str):
                 job_run_properly_bool = True
             else:
                 job_run_properly_bool = False
+    print("success?", job_run_properly_bool)
 
     return job_run_properly_bool
 
