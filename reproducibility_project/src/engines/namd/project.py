@@ -571,12 +571,12 @@ def gomc_sim_completed_properly(job, control_filename_str):
     if job.isfile(output_log_file):
         with open(f"{output_log_file}", 'rb') as f:
             try:  # catch OSError in case of a one line file 
-                f.seek(-2, os.SEEK_END)
+                f.seek(-20, os.SEEK_END)
                 # Incase you start on a new line?
-                while f.read(1) == b'\n':
-                    f.seek(-2, os.SEEK_CUR)
-                while f.read(1) != b'\n':
-                    f.seek(-2, os.SEEK_CUR)
+                #while f.read(1) == b'\n':
+                #    f.seek(-2, os.SEEK_CUR)
+                #while f.read(1) != b'\n':
+                #    f.seek(-2, os.SEEK_CUR)
             except OSError:
                 f.seek(0)
             last_line = f.readline().decode()
