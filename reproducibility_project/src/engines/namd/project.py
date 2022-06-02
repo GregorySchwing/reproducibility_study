@@ -576,8 +576,9 @@ def gomc_sim_completed_properly(job, control_filename_str):
                 # Incase you start on a new line?
                 #while f.read(1) == b'\n':
                 #    f.seek(-2, os.SEEK_CUR)
-                #while f.read(1) != b'\n':
-                #    f.seek(-2, os.SEEK_CUR)
+                while f.read(1) != b'\n':
+                    print("step back")
+                    f.seek(-2, os.SEEK_CUR)
             except OSError:
                 f.seek(0)
             last_line = f.readline().decode()
