@@ -567,10 +567,14 @@ def gomc_sim_completed_properly(job, control_filename_str):
     """General check to see if the gomc simulation was completed properly."""
     job_run_properly_bool = False
     output_log_file = "out_{}.dat".format(control_filename_str)
+
     if job.isfile(output_log_file):
         with open(f"{output_log_file}", 'rb') as f:
             try:  # catch OSError in case of a one line file 
                 f.seek(-2, os.SEEK_END)
+                # Incase you start on a new line?
+                while f.read(1) == b'\n':
+                    f.seek(-2, os.SEEK_CUR)
                 while f.read(1) != b'\n':
                     f.seek(-2, os.SEEK_CUR)
             except OSError:
