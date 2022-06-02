@@ -576,7 +576,9 @@ def gomc_sim_completed_properly(job, control_filename_str):
             except OSError:
                 f.seek(0)
             last_line = f.readline().decode()
+            print("Last line: ", last_line)
             if("End of program" in last_line):
+                print(last_line)
                 job_run_properly_bool = True
             else:
                 job_run_properly_bool = False
