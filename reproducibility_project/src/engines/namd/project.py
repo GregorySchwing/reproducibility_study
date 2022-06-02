@@ -573,20 +573,12 @@ def gomc_sim_completed_properly(job, control_filename_str):
             try:  # catch OSError in case of a one line file 
                 print("worked")
                 f.seek(-20, os.SEEK_END)
-                # Incase you start on a new line?
-                #while f.read(1) == b'\n':
-                #    f.seek(-2, os.SEEK_CUR)
                 while f.read(1) != b'\n':
-                    print("step back")
                     f.seek(-2, os.SEEK_CUR)
             except OSError:
                 f.seek(0)
             last_line = f.readline().decode()
-            print("Last line: ", last_line)
-            next_line = f.readline().decode()
-            print("next line: ", next_line)
             if("End of program" in last_line):
-                print(last_line)
                 job_run_properly_bool = True
             else:
                 job_run_properly_bool = False
