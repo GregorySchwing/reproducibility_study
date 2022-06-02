@@ -503,9 +503,7 @@ def part_2a_ionized(job):
 def gomc_simulation_started(job, control_filename_str):
     """General check to see if the gomc simulation is started."""
     output_started_bool = False
-    if job.isfile("out_{}.dat".format(control_filename_str)) and job.isfile(
-        "{}_merged.psf".format(control_filename_str)
-    ):
+    if job.isfile("out_{}.dat".format(control_filename_str)):
         output_started_bool = True
 
     return output_started_bool
@@ -571,7 +569,6 @@ def gomc_sim_completed_properly(job, control_filename_str):
     if job.isfile(output_log_file):
         with open(f"{output_log_file}", 'rb') as f:
             try:  # catch OSError in case of a one line file 
-                print("worked")
                 f.seek(-20, os.SEEK_END)
                 while f.read(1) != b'\n':
                     f.seek(-2, os.SEEK_CUR)
@@ -582,7 +579,6 @@ def gomc_sim_completed_properly(job, control_filename_str):
                 job_run_properly_bool = True
             else:
                 job_run_properly_bool = False
-    print("success?", job_run_properly_bool)
 
     return job_run_properly_bool
 
