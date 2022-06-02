@@ -10,7 +10,6 @@
 #SBATCH --gres gpu:{{ gpus }}
 {%- else %}
 #SBATCH -q primary
-#SBATCH --constraint=intel
 {%- endif %}
 
 #SBATCH -N 1
@@ -22,7 +21,7 @@ echo  "Running on host" hostname
 echo  "Time is" date
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate mosdef-study38
-
+module load gnu
 {% endblock header %}
 
 {% block body %}
