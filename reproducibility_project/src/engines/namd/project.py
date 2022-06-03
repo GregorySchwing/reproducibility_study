@@ -913,7 +913,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 #@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
-@Project.pre(part_2a_solvated)
+@Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.post(part_2a_solvated)
 @Project.operation
 @flow.with_job
@@ -928,6 +928,7 @@ def solvate_protein(job):
 
 #@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_ionized)
 @Project.operation
@@ -1101,6 +1102,8 @@ def run_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 #@equilibrateSolvent
+#This should run the protein system
+"""
 @Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.pre(part_2d_production_control_file_written)
 @Project.post(part_3d_output_production_run_started)
@@ -1142,6 +1145,7 @@ def run_production_NPT_gomc_command(job):
         if part_4d_job_production_run_completed_properly(job):
             job.doc.cycle += 1
 
+"""
 
 def _setup_conf(job, fname, template, data, overwrite=False):
 
