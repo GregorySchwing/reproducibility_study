@@ -3,9 +3,10 @@ import mbuild as mb
 from foyer import Forcefield
 import mbuild.formats.charmm_writer as mf_charmm
 import mbuild.formats.gomc_conf_writer as gomc_control
+from reproducibility_project.src.utils.forcefields import load_ff
 
-FF_file_cation = 'oplsaa'
-FF_file_anion = 'oplsaa'
+FF_file_cation = load_ff("sod", "sod")
+FF_file_anion = load_ff("cla", "cla")
 
 cation = mb.load('[Na]', smiles=True)
 cation.name = 'SOD'
