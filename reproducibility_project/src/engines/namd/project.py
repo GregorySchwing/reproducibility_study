@@ -481,7 +481,7 @@ def part_2a_solvated(job):
     """Check that the initial job data is written to the json files."""
     #find_jobs()
     data_written_bool = False
-    print("statepoint",j.sp)
+    print("statepoint",job.sp)
     if job.isfile(f"{'solvated.pdb'}"):
         data_written_bool = True
 
