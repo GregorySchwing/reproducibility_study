@@ -362,8 +362,6 @@ def part_1b_under_equilb_design_ensemble_run_limit(job):
 # @Project.pre(select_production_ensemble)
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
-@Project.pre(lambda j: j.sp.replica == 0)
-@Project.pre(part_1a_initial_data_input_to_json)
 @flow.with_job
 def mosdef_input_written(job):
     """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
@@ -914,7 +912,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(lambda j: j.sp.salt_conc == None)
-@Project.pre(mosdef_input_written(j))
+@Project.pre(mosdef_input_written)
 #@Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.post(part_2a_solvated)
 @Project.operation.with_directives(
