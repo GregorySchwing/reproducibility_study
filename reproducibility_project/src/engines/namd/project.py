@@ -485,7 +485,13 @@ def part_2a_solvated(job):
     saltless_sp['replica']=0
     #print("statepoint desalted",saltless_sp)
     res = Project.find_jobs(saltless_sp)
-    if res.next().isfile(f"{'solvated.pdb'}"):
+    try:
+        iterable = iter(res)
+    except TypeError:
+        pass
+    else:
+        return list(iterable)
+    if iterable.next().isfile(f"{'solvated.pdb'}"):
         data_written_bool = True
 
     return data_written_bool
