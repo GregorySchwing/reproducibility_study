@@ -476,16 +476,12 @@ def mosdef_input_written(job):
 
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(lambda j: j.sp.salt_conc == None)
 @flow.with_job
 def part_2a_solvated(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
-    saltless_sp = job.statepoint()
-    saltless_sp['salt_conc']=None
-    saltless_sp['replica']=0
-    print("statepoint desalted",saltless_sp)
-    res = Project.find_jobs(saltless_sp)
-    print(res)
     if job.isfile(f"{'solvated.pdb'}"):
         data_written_bool = True
 
@@ -960,6 +956,12 @@ def ionize_protein(job):
     print("#**********************")
     print("# Started the ionization process.")
     print("#**********************")
+    saltless_sp = job.statepoint()
+    saltless_sp['salt_conc']=None
+    saltless_sp['replica']=0
+    print("statepoint desalted",saltless_sp)
+    res = Project.find_jobs(saltless_sp)
+    print(res)
     if job.sp.pdbid:
         ionize(job)
     else: None,
