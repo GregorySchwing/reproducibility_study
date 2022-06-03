@@ -35,7 +35,7 @@ filled_liq_box = mb.fill_box(
 boxes = [filled_liq_box, None]
 
 charmm = mf_charmm.Charmm(filled_liq_box,
-                          'GEMC_NVT_water_ethanol_liq',
+                          'ions',
                           structure_box_1=None,
                           filename_box_1=None,
                           ff_filename="ions",

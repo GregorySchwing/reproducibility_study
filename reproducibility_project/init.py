@@ -146,17 +146,17 @@ masses = {
     "opc": [18.0153] * u.amu,
 }
 init_density_liq = {
-    "tip3p": [998] * g_per_cm3,
-    "tip3p_ew_b": [998] * g_per_cm3,
-    "tip3p_ew_f": [998] * g_per_cm3,
-    "tips3p": [998] * g_per_cm3,
-    "spce": [998] * g_per_cm3,
-    "opc3": [998] * g_per_cm3,
-    "tip4p_ew": [998] * g_per_cm3,
-    "tip4p_2005": [998] * g_per_cm3,
-    "tip4p_d": [998] * g_per_cm3,
-    "a99SB_disp": [998] * g_per_cm3,
-    "opc": [998] * g_per_cm3,
+    "tip3p": [99.8] * g_per_cm3,
+    "tip3p_ew_b": [99.8] * g_per_cm3,
+    "tip3p_ew_f": [99.8] * g_per_cm3,
+    "tips3p": [99.8] * g_per_cm3,
+    "spce": [99.8] * g_per_cm3,
+    "opc3": [99.8] * g_per_cm3,
+    "tip4p_ew": [99.8] * g_per_cm3,
+    "tip4p_2005": [99.8] * g_per_cm3,
+    "tip4p_d": [99.8] * g_per_cm3,
+    "a99SB_disp": [99.8] * g_per_cm3,
+    "opc": [99.8] * g_per_cm3,
 }
 init_density_vap = {
     "tip3p": [None],
