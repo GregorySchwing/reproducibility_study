@@ -481,8 +481,8 @@ def part_2a_solvated(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
     saltless_sp = job.statepoint()
-    saltless_sp.salt_conc=None
-    saltless_sp.replica=0
+    saltless_sp['salt_conc']=None
+    saltless_sp['replica']=0
     print("statepoint desalted",saltless_sp)
     res = Project.find_jobs(saltless_sp)
     print(res)
