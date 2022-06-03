@@ -193,6 +193,7 @@ def part_1a_initial_data_input_to_json(job):
 
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.post(part_1a_initial_data_input_to_json)
 @Project.operation.with_directives(
