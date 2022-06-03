@@ -1120,7 +1120,7 @@ def run_equilb_NPT_gomc_command(job):
 )
 @flow.with_job
 def run_production_NPT_gomc_command(job):
-    """Run the gomc production_run simulation."""
+    #Run the gomc production_run simulation.
     print("#**********************")
     print("# Started the run_production_NPT_gomc_command function.")
     print("#**********************")
