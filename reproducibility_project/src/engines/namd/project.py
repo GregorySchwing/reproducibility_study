@@ -913,6 +913,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 #@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.post(part_2a_solvated)
 @Project.operation
@@ -929,6 +930,7 @@ def solvate_protein(job):
 #@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(lambda j: j.sp.salt_conc != None)
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_ionized)
 @Project.operation
