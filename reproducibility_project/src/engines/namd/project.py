@@ -358,46 +358,6 @@ def part_1b_under_equilb_design_ensemble_run_limit(job):
         return False
 
 
-# check if GOMC-MOSDEF wrote the gomc files
-# @Project.pre(select_production_ensemble)
-@Project.label
-@Project.pre(lambda j: j.sp.engine == "namd")
-@flow.with_job
-def mosdef_input_written(job):
-    """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
-    file_written_bool = False
-    try:
-        if job.sp.ensemble in ["NPT", "NVT"]:
-            if (
-                job.isfile(f"{path_from_job_to_box_inputs}/{ff_filename_str}.inp")
-                and job.isfile(
-                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.psf"
-                )
-                and job.isfile(
-                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.pdb"
-                )
-            ):
-                file_written_bool = True
-        elif job.sp.ensemble in ["GCMC", "GEMC_NPT", "GEMC_NPT"]:
-            if (
-                job.isfile(f"{path_from_job_to_box_inputs}/{ff_filename_str}.inp")
-                and job.isfile(
-                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.psf"
-                )
-                and job.isfile(
-                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.pdb"
-                )
-                and job.isfile(
-                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_1_name_str}.psf"
-                )
-                and job.isfile(
-                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_1_name_str}.pdb"
-                )
-            ):
-                file_written_bool = True
-        return file_written_bool
-    except:
-        return False
 
 
 # ******************************************************
@@ -461,6 +421,47 @@ def part_2d_production_control_file_written(job):
             cycleExists = gomc_control_file_written(job, production_control_file_name_str+"_"+str(job.doc.cycle))
             allConfsExist = allConfsExist and cycleExists
         return allConfsExist
+    except:
+        return False
+
+# check if GOMC-MOSDEF wrote the gomc files
+# @Project.pre(select_production_ensemble)
+@Project.label
+@Project.pre(lambda j: j.sp.engine == "namd")
+@flow.with_job
+def mosdef_input_written(job):
+    """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
+    file_written_bool = False
+    try:
+        if job.sp.ensemble in ["NPT", "NVT"]:
+            if (
+                job.isfile(f"{path_from_job_to_box_inputs}/{ff_filename_str}.inp")
+                and job.isfile(
+                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.psf"
+                )
+                and job.isfile(
+                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.pdb"
+                )
+            ):
+                file_written_bool = True
+        elif job.sp.ensemble in ["GCMC", "GEMC_NPT", "GEMC_NPT"]:
+            if (
+                job.isfile(f"{path_from_job_to_box_inputs}/{ff_filename_str}.inp")
+                and job.isfile(
+                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.psf"
+                )
+                and job.isfile(
+                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_0_name_str}.pdb"
+                )
+                and job.isfile(
+                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_1_name_str}.psf"
+                )
+                and job.isfile(
+                    f"{path_from_job_to_box_inputs}/{mosdef_structure_box_1_name_str}.pdb"
+                )
+            ):
+                file_written_bool = True
+        return file_written_bool
     except:
         return False
 
