@@ -1,6 +1,6 @@
 <ForceField version="0.0.1" name="chloride" combining_rule="geometric">
  <AtomTypes>
-   <Type name="opls-117" class="Cl" element="Cl" mass="15.99940" def="[Cl-]" desc="SPC/E Oxygen" doi="10.1021/j100308a038"/>
+   <Type name="opls-117" class="Cl" element="Cl" mass="15.99940" def="[Cl]" desc="SPC/E Oxygen" doi="10.1021/j100308a038"/>
  </AtomTypes>
  <HarmonicBondForce>
    <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
