@@ -430,7 +430,15 @@ def part_2d_production_control_file_written(job):
 @Project.pre(lambda j: j.sp.engine == "namd")
 @flow.with_job
 def mosdef_input_written(job):
-    """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
+    """Check that the initial job data is written to the json files."""
+    data_written_bool = False
+    if job.isfile(f"{'signac_job_document.json'}"):
+        data_written_bool = True
+
+    return data_written_bool
+
+
+    """Check that the mosdef files (psf, pdb, and force field (FF) files) are written .
     file_written_bool = False
     try:
         if job.sp.ensemble in ["NPT", "NVT"]:
@@ -464,7 +472,7 @@ def mosdef_input_written(job):
         return file_written_bool
     except:
         return False
-
+    """
 
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
