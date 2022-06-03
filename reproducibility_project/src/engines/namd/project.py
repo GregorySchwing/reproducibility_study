@@ -957,6 +957,7 @@ def ionize_protein(job):
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(part_2a_ionized)
 @Project.pre(part_2a_min_NVT_control_file_written)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
 @Project.post(part_4a_job_min_NVT_completed_properly)
@@ -1008,6 +1009,7 @@ def run_min_NVT_gomc_command(job):
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(part_2a_ionized)
 @Project.pre(part_4a_job_min_NVT_completed_properly)
 @Project.pre(part_2b_equilb_NVT_control_file_written)
 @Project.post(part_3b_output_equilb_NVT_started)
@@ -1056,6 +1058,7 @@ def run_equilb_NVT_gomc_command(job):
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(part_2a_ionized)
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
 @Project.pre(part_2c_equilb_NPT_control_file_written)
 @Project.post(part_3c_output_equilb_NPT_started)
