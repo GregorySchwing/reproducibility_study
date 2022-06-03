@@ -919,14 +919,10 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.post(part_2a_solvated)
 @Project.operation.with_directives(
     {
-        "np": lambda job: ff_info_dict.get(job.sp.forcefield_name).get(
-            "ncpu", 1
-        ),
-        "ngpu": lambda job: ff_info_dict.get(job.sp.forcefield_name).get(
-            "ngpu", 0
-        ),
+        "np": 1,
+        "ngpu": 0,
         "memory": memory_needed,
-        "walltime": walltime_gomc_hr,
+        "walltime": walltime_mosdef_hr,
     }
 )
 @flow.with_job
