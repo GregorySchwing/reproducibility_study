@@ -87,7 +87,6 @@ cations = [["SOD", "1"]]
 anions = [["CLA", "-1"]]
 
 
-salt_strengths = [None]
 #replicas = range(16)
 #replicas = range(3)
 replicas = range(1)
