@@ -917,7 +917,18 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(mosdef_input_written)
 #@Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.post(part_2a_solvated)
-@Project.operation
+@Project.operation.with_directives(
+    {
+        "np": lambda job: ff_info_dict.get(job.sp.forcefield_name).get(
+            "ncpu", 1
+        ),
+        "ngpu": lambda job: ff_info_dict.get(job.sp.forcefield_name).get(
+            "ngpu", 0
+        ),
+        "memory": memory_needed,
+        "walltime": walltime_gomc_hr,
+    }
+)
 @flow.with_job
 def solvate_protein(job):
     print("#**********************")
