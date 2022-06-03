@@ -361,6 +361,7 @@ def part_1b_under_equilb_design_ensemble_run_limit(job):
 # @Project.pre(select_production_ensemble)
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_1a_initial_data_input_to_json)
 @flow.with_job
 def mosdef_input_written(job):
@@ -512,6 +513,7 @@ def gomc_simulation_started(job, control_filename_str):
 # check if melt equilb_NVT GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @flow.with_job
 def part_3a_output_melt_equilb_NVT_started(job):
     """Check to see if the melt_equilb_NVT (high temperature) gomc simulation is started."""
@@ -727,6 +729,7 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.post(part_2a_min_NVT_control_file_written)
@@ -908,6 +911,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # ******************************************************
 #@prepareProteinSimulation
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_solvated)
 @Project.operation
@@ -948,6 +952,7 @@ def ionize_protein(job):
 # ******************************************************
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_2a_min_NVT_control_file_written)
 @Project.post(part_3a_output_melt_equilb_NVT_started)
 @Project.post(part_4a_job_min_NVT_completed_properly)
@@ -998,6 +1003,7 @@ def run_min_NVT_gomc_command(job):
 # ******************************************************
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_4a_job_min_NVT_completed_properly)
 @Project.pre(part_2b_equilb_NVT_control_file_written)
 @Project.post(part_3b_output_equilb_NVT_started)
@@ -1045,6 +1051,7 @@ def run_equilb_NVT_gomc_command(job):
 # ******************************************************
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
+@Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(part_4b_job_equilb_NVT_completed_properly)
 @Project.pre(part_2c_equilb_NPT_control_file_written)
 @Project.post(part_3c_output_equilb_NPT_started)
