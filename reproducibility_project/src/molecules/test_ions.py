@@ -7,10 +7,10 @@ import mbuild.formats.gomc_conf_writer as gomc_control
 FF_file_cation = 'oplsaa'
 FF_file_anion = 'oplsaa'
 
-cation = mb.load('Na+', smiles=True)
+cation = mb.load('[Na]', smiles=True)
 cation.name = 'SOD'
 
-anion = mb.load('Cl-', smiles=True)
+anion = mb.load('[Cl-]', smiles=True)
 anion.name = 'CLA'
 
 num_cations = 2
