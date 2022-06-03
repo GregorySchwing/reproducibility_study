@@ -3,7 +3,7 @@ import mbuild as mb
 from foyer import Forcefield
 import mbuild.formats.charmm_writer as mf_charmm
 import mbuild.formats.gomc_conf_writer as gomc_control
-from reproducibility_project.src.utils.forcefields import load_ff
+from reproducibility_project.src.utils.forcefields import get_ff_path_ion
 
 FF_file_cation = get_ff_path_ion("custom", "sod")
 FF_file_anion = get_ff_path_ion("custom", "cla")
