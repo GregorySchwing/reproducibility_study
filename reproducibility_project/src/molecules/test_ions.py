@@ -22,7 +22,7 @@ FF_dict = {cation.name: FF_file_cation, anion.name: FF_file_anion}
 residues_list = [cation.name, anion.name]
 
 #liq_box = mb.Box([sp["box_L_liq_x"] * scale_liq_box, sp["box_L_liq_y"] * scale_liq_box, sp["box_L_liq_z"] * scale_liq_box])
-liq_box = mb.Box([1.0 * scale_liq_box, 1.0 * scale_liq_box, 1.0 * scale_liq_box])
+liq_box = mb.Box([1.0, 1.0, 1.0])
 
 
 filled_liq_box = mb.fill_box(
