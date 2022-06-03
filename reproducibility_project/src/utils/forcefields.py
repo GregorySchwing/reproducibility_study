@@ -44,9 +44,15 @@ def load_ff(
         try:
             return foyer.Forcefield(forcefield_files=ff_path)
         except:
-            raise ValueError(
-                f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+            ff_path = (
+                str(os.path.dirname(os.path.abspath(xmls.__file__))) + "/ions/" + ff_name
             )
+            try:
+                return foyer.Forcefield(forcefield_files=ff_path)
+            except:
+                raise ValueError(
+                    f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+                )
 
 
 def get_ff_path(
