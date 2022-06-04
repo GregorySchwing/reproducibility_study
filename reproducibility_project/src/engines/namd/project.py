@@ -486,7 +486,7 @@ def part_2a_solvated(job):
     pr = Project()
     jobs = list(pr.find_jobs(saltless_sp))
     for job in jobs:
-        job.isfile(f"{'solvated.pdb'}"):
+        if (job.isfile(f"{'solvated.pdb'}")):
             data_written_bool = True
 
     return data_written_bool
