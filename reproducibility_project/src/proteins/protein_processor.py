@@ -331,6 +331,7 @@ def compute_ion_numbers_and_positions(job):
 	with open(job.fn("NUMIONS.txt"), "w") as file:
 		file.write(ions + "\n")
 
+	import re
 	p = re.compile("(\w+?)-ions_(\d+)-(\w+?).pdb")
 
 	from os import listdir
@@ -447,7 +448,6 @@ def merge_ions_and_system(
 	from parmed.formats.registry import load_file
 	import numpy as np
 	import pandas as pd
-	import re
 	import os  
 
 	#Load centered sovent box into Partmed
