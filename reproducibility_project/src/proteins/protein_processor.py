@@ -176,7 +176,7 @@ def get_protein_path(
 def get_ions_path(
     infilename,
 ):	
-	from src import molecules.ions
+	from src.molecules import ions
 	from os.path import join
 	from os.path import abspath
 	from os.path import dirname
