@@ -480,33 +480,16 @@ def mosdef_input_written(job):
 def part_2a_solvated(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
-    print(Project)
-    print(signac.Project.get_id())
-    #signac.Project.find_jobs({'replica': 0}).export_to('foo_0.tar')
-
-    #Project.open_job({'salt_conc': None, 'replica': 0, 'molecule': job.sp.molecule, 'pdbid': job.sp.pdbid}).init()
-
-    """
-    mappingStrign = "'{"
-    for key, val in zip(mapping.keys(), mapping.values()):
-        if (val == None):
-            mappingStrign+= (f'\"{key}\": null,')
-        elif str(val).isnumeric():
-            mappingStrign+= (f'\"{key}\": {val},')
-        else:
-            mappingStrign+= (f'\"{key}\": "{val}",')
-    mappingStrign = mappingStrign[:-1]
-    mappingStrign += "}'"
-    print(mappingStrign)
-    """
-    #with [job.id for job in Project.find_jobs(mappingStrign)]:
-    #    print(job.id.Replicate)
-    #print("statepoint desalted",saltless_sp)
-    #res = Project.find_jobs(mappingStrign)
-    #print(res)
+    saltless_sp = job.statepoint()
+    saltless_sp['salt_conc']=None
+    saltless_sp['replica']=0
+    print("statepoint desalted",saltless_sp)
+    res = Project.find_jobs(saltless_sp)
+    for job in res:
+        print("job id", Project.open_job(job).id)
     #if res.next().isfile(f"{'solvated.pdb'}"):
     #    data_written_bool = True
-    
+
     return data_written_bool
 
 
