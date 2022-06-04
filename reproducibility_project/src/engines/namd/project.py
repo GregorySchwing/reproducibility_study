@@ -429,7 +429,7 @@ def part_2d_production_control_file_written(job):
 def mosdef_input_written(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
-    if job.isfile(f"{'signac_job_document.json'}"):
+    if job.isfile(f"{'mosdef_box_0.pdb'}"):
         data_written_bool = True
 
     return data_written_bool
@@ -927,7 +927,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_4c_job_equilb_NPT_completed_properly)
+#@Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.post(part_2a_solvated)
 @Project.operation.with_directives(
     {
