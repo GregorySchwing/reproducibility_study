@@ -442,8 +442,8 @@ def merge_ions_and_system(
 	# Very important not ro renumber since we need to cross reference with the psf.
 	ionized_system = CharmmPsfFile.from_structure(system + cations + anions)
 
-	systemPSF.write_psf(job.fn("intermediate.psf"))
-	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
+	ionized_system.write_psf(job.fn("intermediate.psf"))
+	ionized_system_pos.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
 	quit()
 
 	parmPosComb.write_pdb(job.fn("combined.pdb"), renumber=False, use_hetatoms=False)
