@@ -953,7 +953,14 @@ def solvate_protein(job):
 @Project.pre(lambda j: j.sp.salt_conc != None)
 @Project.pre(part_2a_solvated)
 @Project.post(part_2a_ionized)
-@Project.operation
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
 @flow.with_job
 def ionize_protein(job):
     print("#**********************")

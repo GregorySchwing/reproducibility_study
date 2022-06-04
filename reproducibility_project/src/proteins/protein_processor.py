@@ -329,10 +329,16 @@ def build_ions_psf(job):
 	FF_file_cation = get_ff_path_ion("custom", job.sp.cat_name)
 	FF_file_anion = get_ff_path_ion("custom", job.sp.an_name)
 
-	cation = mb.load('[Na]', smiles=True)
+	ions_2_smiles = {
+		"SOD": '[Na]',
+		"CLA": '[Cl-]'
+	}
+
+
+	cation = mb.load(ions_2_smiles[job.sp.cat_name], smiles=True)
 	cation.name = job.sp.cat_name
 
-	anion = mb.load('[Cl-]', smiles=True)
+	anion = mb.load(ions_2_smiles[job.sp.an_name], smiles=True)
 	anion.name = job.sp.an_name
 
 	num_cations = job.document["NCATION"]
@@ -394,8 +400,8 @@ def merge_ions_and_system(
 
 	#Load centered sovent box into Partmed
 	print("Loading system")
-	system = CharmmPsfFile(job.fn("solvated.psf"))
-	system_pos = load_file(job.fn("solvated.pdb"))
+	system = CharmmPsfFile(job.doc.path_to_solvated_psf)
+	system_pos = load_file(job.doc.path_to_solvated_pdb)
 	parmPosComb = system_pos
 
 	#Shuift geometric center of solvent box to origin
