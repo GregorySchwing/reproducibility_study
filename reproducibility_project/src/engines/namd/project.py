@@ -481,11 +481,11 @@ def part_2a_solvated(job):
     saltless_sp['salt_conc']=None
     saltless_sp['replica']=0
     jobs = list(project.find_jobs(saltless_sp))
-    for job in jobs:
-        if (job.isfile(f"{'solvated.pdb'}")):
+    for solvated_job in jobs:
+        if (solvated_job.isfile(f"{'solvated.pdb'}")):
             data_written_bool = True
-            job.doc.path_to_solvated_pdb =  job.fn("solvated.pdb")
-            job.doc.path_to_solvated_psf =  job.fn("solvated.psf")
+            job.doc.path_to_solvated_pdb =  solvated_job.fn("solvated.pdb")
+            job.doc.path_to_solvated_psf =  solvated_job.fn("solvated.psf")
 
     return data_written_bool
 
