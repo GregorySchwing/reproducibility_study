@@ -181,7 +181,7 @@ def get_ions_path(
 	from os.path import abspath
 	from os.path import dirname
 	ion_path = (
-		join(str(dirname(abspath(molecules.ions.__file__))), infilename)
+		join(str(dirname(abspath(ions.__file__))), infilename)
 	)
 	return ion_path
 
