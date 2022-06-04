@@ -348,10 +348,10 @@ def build_ions_psf(job):
 
 	# Build charmm object for cations
 	charmm_cations = mf_charmm.Charmm(filled_liq_box,
-							'ions',
+							job.sp.cat_name,
 							structure_box_1=None,
 							filename_box_1=None,
-							ff_filename="ions",
+							ff_filename=job.sp.cat_name,
 							forcefield_selection=FF_file_cation,
 							residues=cation.name,
 							bead_to_atom_name_dict=None,
@@ -378,10 +378,10 @@ def build_ions_psf(job):
 
 	# Build charmm object for anions
 	charmm_anions = mf_charmm.Charmm(filled_anion_box,
-							'ions',
+							job.sp.an_name,
 							structure_box_1=None,
 							filename_box_1=None,
-							ff_filename="ions",
+							ff_filename=job.sp.an_name,
 							forcefield_selection=FF_file_anion,
 							residues=anion.name,
 							bead_to_atom_name_dict=None,
