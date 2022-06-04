@@ -487,7 +487,7 @@ def part_2a_solvated(job):
     for key, val in zip(saltless_sp.keys(), saltless_sp.values()):
         if (val == None):
             mappingStrign+= (f'\"{key}\": null,')
-        else"
+        else:
             mappingStrign+= (f'\"{key}\": {val},')
     mappingStrign += "}"
     print(mappingStrign)
