@@ -173,6 +173,18 @@ def get_protein_path(
 	)
 	return prot_path
 
+def get_ions_path(
+    infilename,
+):	
+	from src import molecules.ions
+	from os.path import join
+	from os.path import abspath
+	from os.path import dirname
+	ion_path = (
+		join(str(dirname(abspath(molecules.ions.__file__))), infilename)
+	)
+	return ion_path
+
 def get_total_charge(
     job,
 ):
@@ -318,18 +330,20 @@ def compute_ion_numbers_and_positions(job):
 	job.document["NANION"] = ionsList[1]
 	with open(job.fn("NUMIONS.txt"), "w") as file:
 		file.write(ions + "\n")
-"""
+
 	ionMaker = get_protein_path("ion_maker_template.tcl")
 	with open(ionMaker, 'r') as file :
 		filedataIon = file.read()
 	filedataIon = filedataIon.replace("PATH_2_IONS_TOPOLOGY", get_protein_path("ions.str"))
+	filedataIon = filedataIon.replace("SINGLE_CATION_PDB", job.fn(job.sp.cat_name))
+	filedataIon = filedataIon.replace("SINGLE_ANION_PDB", job.fn(job.sp.cat_name))
 	filedataIon = filedataIon.replace("CATION_NAME", job.fn(job.sp.cat_name))
 	filedataIon = filedataIon.replace("ANION_NAME", job.fn(job.sp.cat_name))
 	# Write the file out again
 	with open(job.fn("filled_ion_maker_template.tcl"), 'w') as file:
 		file.write(filedataIon)
 	ions = evaltcl("source " + job.fn("filled_ion_maker_template.tcl"))
-"""
+
 
 def build_ions_psf(job):
 	import mbuild as mb
@@ -500,7 +514,7 @@ def ionize(
     job,
 ):	
 	compute_ion_numbers_and_positions(job)
-	build_ions_psf(job)
+	#build_ions_psf(job)
 	merge_ions_and_system(job)
 
 

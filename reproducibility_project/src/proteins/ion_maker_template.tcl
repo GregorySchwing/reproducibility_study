@@ -3,18 +3,24 @@ package require psfgen
 topology PATH_2_IONS_TOPOLOGY
 
 segment CAT {
-    pdb CATION_NAME.pdb
+    pdb SINGLE_CATION_PDB.pdb
     first none
     last none
 }
 
-writepsf ./ANION_NAME.psf
+coordpdb CATION_NAME.pdb CAT
+
+writepsf ANION_NAME.psf
+
+resetpsf
 
 segment ANI {
-    pdb ANION_NAME.pdb
+    pdb SINGLE_ANION_PDB.pdb
     first none
     last none
 }
 
-writepsf ./ANION_NAME.psf
+coordpdb ANION_NAME.pdb ANI
+
+writepsf ANION_NAME.psf
 
