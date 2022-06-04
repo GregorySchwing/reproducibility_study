@@ -486,9 +486,9 @@ def part_2a_solvated(job):
     mapping['molecule']=job.sp.molecule
     mapping['pdbid']=job.sp.pdbid
     print(mapping)
-    """
+    
     mappingStrign = "{"
-    for key, val in zip(saltless_sp.keys(), saltless_sp.values()):
+    for key, val in zip(mapping.keys(), mapping.values()):
         if (val == None):
             mappingStrign+= (f'\"{key}\": null,')
         elif str(val).isnumeric():
