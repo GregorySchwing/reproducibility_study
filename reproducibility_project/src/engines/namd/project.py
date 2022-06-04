@@ -499,10 +499,11 @@ def part_2a_solvated(job):
     mappingStrign += "}'"
     print(mappingStrign)
     
-    with [job.id for job in Project.find_jobs(mappingStrign)]:
-        print(job.id.Replicate)
+    #with [job.id for job in Project.find_jobs(mappingStrign)]:
+    #    print(job.id.Replicate)
     #print("statepoint desalted",saltless_sp)
-    #res = Project.find_jobs(saltless_sp)
+    res = Project.find_jobs(mappingStrign)
+    print(res)
     #if res.next().isfile(f"{'solvated.pdb'}"):
     #    data_written_bool = True
     
