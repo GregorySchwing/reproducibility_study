@@ -409,6 +409,7 @@ def merge_ions_and_system(
 	import numpy as np
 	import pandas as pd
 	import re
+	import os  
 
 	p = re.compile("(\w+?)-ions_(\d+)-(\w+?).pdb")
 
@@ -416,6 +417,11 @@ def merge_ions_and_system(
 	ionFiles = [f for f in listdir(job.ws) if ((job.isfile(f) and p.match(f)))]
 
 	print(ionFiles)
+	for ionFile in ionFiles:
+		if (job.sp.an_name in ionFile):
+			os.rename(ionFile,job.sp.an_name+'.psf')
+		elif (job.sp.cat_name in ionFile):
+			os.rename(ionFile,job.sp.cat_name+'.psf')
 
 	#Load centered sovent box into Partmed
 	print("Loading system")
