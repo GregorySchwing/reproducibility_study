@@ -483,8 +483,10 @@ def part_2a_solvated(job):
     saltless_sp = job.statepoint()
     saltless_sp['salt_conc']=None
     saltless_sp['replica']=0
+    mappingStrign = "{"
     for key, val in zip(saltless_sp.keys(), saltless_sp.values()):
-        print(key, val)
+        mappingStrign+= (f'\"{key}\": {val},')
+    print(mappingStrign)
     #with [job.id for job in Project.find_jobs(saltless_sp)]:
     #    print(job.id.Replicate)
     #print("statepoint desalted",saltless_sp)
