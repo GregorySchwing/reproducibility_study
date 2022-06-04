@@ -484,7 +484,7 @@ def part_2a_solvated(job):
     mapping['salt_conc']=None
     mapping['replica']=0
     mapping['molecule']=job.sp.molecule
-    mapping['pdbid']=job.sp.pdb_id
+    mapping['pdbid']=job.sp.pdbid
     print(mapping)
     """
     mappingStrign = "{"
