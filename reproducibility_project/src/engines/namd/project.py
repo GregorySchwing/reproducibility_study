@@ -483,10 +483,10 @@ def part_2a_solvated(job):
     saltless_sp = job.statepoint()
     saltless_sp['salt_conc']=None
     saltless_sp['replica']=0
+    with [job.id for job in project.find_jobs(saltless_sp)]:
+        print(job.id.Replicate)
     #print("statepoint desalted",saltless_sp)
-    res = Project.find_jobs(saltless_sp)
-    for job in res:
-        print(job)
+    #res = Project.find_jobs(saltless_sp)
     #if res.next().isfile(f"{'solvated.pdb'}"):
     #    data_written_bool = True
 
