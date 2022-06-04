@@ -489,7 +489,7 @@ def part_2a_solvated(job):
             mappingStrign+= (f'\"{key}\": null,')
         elif val.isnumeric():
             mappingStrign+= (f'\"{key}\": {val},')
-        else
+        else:
             mappingStrign+= (f'\"{key}\": "{val}",')
     mappingStrign += "}"
     print(mappingStrign)
