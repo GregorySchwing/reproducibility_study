@@ -484,7 +484,8 @@ def part_2a_solvated(job):
     saltless_sp['salt_conc']=None
     saltless_sp['replica']=0
     #print("statepoint desalted",saltless_sp)
-    print(Project.doc)
+    #print(Project.doc)
+    print(Project.find_jobs())
     #res = Project.find_jobs(saltless_sp)
     #jobs = list(Project.find_jobs(saltless_sp))
     #for job in jobs:
