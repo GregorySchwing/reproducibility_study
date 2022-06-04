@@ -437,36 +437,13 @@ def merge_ions_and_system(
 
 	print("Merging ions with system")
 	ionized_system_pos = system_pos + cations_pos + anions_pos
-	#Combine topolgies in parmed and write intermediate files
+	# Combine topolgies in parmed and write intermediate files
 	# Also note that the protein has to be on the left when merging (prot+solv)
-	# Very important not ro renumber since we need to cross reference with the psf.
+	# Very important not to renumber since we need to cross reference with the psf.
 	ionized_system = CharmmPsfFile.from_structure(system + cations + anions)
 
 	ionized_system.write_psf(job.fn("intermediate.psf"))
 	ionized_system_pos.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
-	quit()
-
-	parmPosComb.write_pdb(job.fn("combined.pdb"), renumber=False, use_hetatoms=False)
-	system.write_psf(job.fn("combined.psf"))
-	quit()
-	#Load centered sovent box into Partmed
-	solvbox2 = CharmmPsfFile(job.fn("mosdef_box_0.psf"))
-	solvbox2_pos = load_file(job.fn("mosdef_box_0_centered.pdb"))
-
-
-	#Load protein structure into Partmed
-	pro2_parm = CharmmPsfFile(get_protein_path(job.sp.pdbid+".psf"))
-
-	pro2_parm_pos = load_file(get_protein_path(job.sp.pdbid+"_aligned.pdb"))
-	parmPosComb = pro2_parm_pos + solvbox2_pos
-
-	print("Superimposing protein and solvent")
-	#Combine topolgies in parmed and write intermediate files
-	# Also note that the protein has to be on the left when merging (prot+solv)
-	# Very important not ro renumber since we need to cross reference with the psf.
-	systemPSF = CharmmPsfFile.from_structure(pro2_parm + solvbox2)
-	systemPSF.write_psf(job.fn("intermediate.psf"))
-	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
 
 	#Load intermediate structure into Partmed
 	systemPSFComb = CharmmPsfFile(job.fn("intermediate.psf"))
@@ -475,8 +452,8 @@ def merge_ions_and_system(
 	df = systemPSFComb_pos.to_dataframe()
 	df2 = systemPSFComb.to_dataframe()
 
-	# Separate protein from solvent using Mosdef's SYS segment ID
-	# Very important not to change this before merging topologies
+	# Separate protein/water from solvent using Mosdef's SYS segment ID
+	# Very important have overridden the SYS from the solvent with WXX segment id's
 	endOfProtein = df2.segid.eq('SYS').idxmax()
 	startOfSolvent = endOfProtein+1
 	endOfSolvent = len(df2.index)
@@ -500,12 +477,12 @@ def merge_ions_and_system(
 	print("Stripping masked solvent")
 	# Strip bad waters from coordinates object
 	splitRes = systemPSFComb.strip(stripInput)
-	systemPSFComb.write_psf(job.fn("solvated.psf"))
+	systemPSFComb.write_psf(job.fn("ionized.psf"))
 
 	print("Writing combined topology/coordinate files")
 	# Strip bad waters from topology object
 	splitRes = systemPSFComb_pos.strip(stripInput)
-	systemPSFComb_pos.write_pdb(job.fn("solvated.pdb"), use_hetatoms=False)
+	systemPSFComb_pos.write_pdb(job.fn("ionized.pdb"), use_hetatoms=False)
 
 def ionize(
     job,
