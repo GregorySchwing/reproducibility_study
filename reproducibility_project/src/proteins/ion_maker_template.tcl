@@ -3,7 +3,7 @@ package require psfgen
 topology PATH_2_IONS_TOPOLOGY
 
 segment CAT {
-    pdb SINGLE_CATION_PDB.pdb
+    pdb CATION_NAME.pdb
     first none
     last none
 }
@@ -15,7 +15,7 @@ writepsf CATION_NAME.psf
 resetpsf
 
 segment ANI {
-    pdb SINGLE_ANION_PDB.pdb
+    pdb ANION_NAME.pdb
     first none
     last none
 }
