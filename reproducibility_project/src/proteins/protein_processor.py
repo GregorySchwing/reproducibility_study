@@ -335,14 +335,15 @@ def compute_ion_numbers_and_positions(job):
 	p = re.compile("(\w+?)-ions_(\d+)-(\w+?).pdb")
 
 	from os import listdir
+	from os import rename
 	ionFiles = [f for f in listdir(job.ws) if ((job.isfile(f) and p.match(f)))]
 
 	print(ionFiles)
 	for ionFile in ionFiles:
 		if (job.sp.an_name in ionFile):
-			os.rename(ionFile,job.sp.an_name+'.pdb')
+			rename(ionFile,job.sp.an_name+'.pdb')
 		elif (job.sp.cat_name in ionFile):
-			os.rename(ionFile,job.sp.cat_name+'.pdb')
+			rename(ionFile,job.sp.cat_name+'.pdb')
 
 	ionMaker = get_protein_path("ion_maker_template.tcl")
 	with open(ionMaker, 'r') as file :
