@@ -498,6 +498,18 @@ def part_2a_ionized(job):
     data_written_bool = False
     if job.isfile(f"{'ionized.pdb'}"):
         data_written_bool = True
+        return data_written_bool
+
+    import shutil
+
+    repl_0_sp = job.statepoint()
+    repl_0_sp['replica']=0
+    jobs = list(project.find_jobs(repl_0_sp))
+    for repl_0_job in jobs:
+        if (repl_0_job.isfile(f"{'ionized.pdb'}")):
+            data_written_bool = True
+            shutil.copy(repl_0_job.fn('ionized.pdb'), job.fn())  # dst can be a folder; use shutil.copy2() to preserve timestamp
+            shutil.copy(repl_0_job.fn('ionized.psf'), job.fn())  # dst can be a folder; use shutil.copy2() to preserve timestamp    
 
     return data_written_bool
 
