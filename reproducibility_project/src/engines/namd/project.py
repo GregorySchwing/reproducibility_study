@@ -927,7 +927,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.replica == 0)
 @Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.pre(mosdef_input_written)
-#@Project.pre(part_4c_job_equilb_NPT_completed_properly)
+@Project.pre(part_4c_job_equilb_NPT_completed_properly)
 @Project.post(part_2a_solvated)
 @Project.operation.with_directives(
     {
