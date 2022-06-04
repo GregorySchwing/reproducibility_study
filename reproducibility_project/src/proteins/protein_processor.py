@@ -326,56 +326,73 @@ def build_ions_psf(job):
 	import mbuild.formats.gomc_conf_writer as gomc_control
 	from reproducibility_project.src.utils.forcefields import get_ff_path_ion
 
-	FF_file_cation = get_ff_path_ion("custom", job.sp.cat_name)
-	FF_file_anion = get_ff_path_ion("custom", job.sp.an_name)
+	liq_box = mb.Box([1.0, 1.0, 1.0])
 
 	ions_2_smiles = {
 		"SOD": '[Na]',
 		"CLA": '[Cl-]'
 	}
 
-
 	cation = mb.load(ions_2_smiles[job.sp.cat_name], smiles=True)
 	cation.name = job.sp.cat_name
-
-	anion = mb.load(ions_2_smiles[job.sp.an_name], smiles=True)
-	anion.name = job.sp.an_name
-
 	num_cations = int(job.document["NCATION"])
-	num_anions = int(job.document["NANION"])
+	FF_file_cation = get_ff_path_ion("custom", job.sp.cat_name)
 
-	FF_dict = {cation.name: FF_file_cation, anion.name: FF_file_anion}
-
-	residues_list = [cation.name, anion.name]
-
-	#liq_box = mb.Box([sp["box_L_liq_x"] * scale_liq_box, sp["box_L_liq_y"] * scale_liq_box, sp["box_L_liq_z"] * scale_liq_box])
-	liq_box = mb.Box([1.0, 1.0, 1.0])
-
-
-	filled_liq_box = mb.fill_box(
-		compound=[cation, anion],
-		n_compounds=[num_cations,num_anions],
+	filled_cation_box = mb.fill_box(
+		compound=[cation],
+		n_compounds=[num_cations],
 		box=liq_box
 	)
 
 	boxes = [filled_liq_box, None]
 
-	charmm = mf_charmm.Charmm(filled_liq_box,
+	# Build charmm object for cations
+	charmm_cations = mf_charmm.Charmm(filled_liq_box,
 							'ions',
 							structure_box_1=None,
 							filename_box_1=None,
 							ff_filename="ions",
-							forcefield_selection=FF_dict,
-							residues=residues_list,
+							forcefield_selection=FF_file_cation,
+							residues=cation.name,
 							bead_to_atom_name_dict=None,
 							fix_residue=None,
 							gomc_fix_bonds_angles=None,
 							reorder_res_in_pdb_psf=True
 							)
 
-	#charmm.write_inp()
-	#charmm.write_pdb()
-	charmm.write_psf()
+	charmm_cations.write_inp()
+	charmm_cations.write_psf()
+
+
+	anion = mb.load(ions_2_smiles[job.sp.an_name], smiles=True)
+	anion.name = job.sp.an_name
+	num_anions = int(job.document["NANION"])
+	FF_file_anion = get_ff_path_ion("custom", job.sp.an_name)
+
+	filled_anion_box = mb.fill_box(
+		compound=[anion],
+		n_compounds=[num_anions],
+		box=liq_box
+	)
+
+
+	# Build charmm object for anions
+	charmm_anions = mf_charmm.Charmm(filled_anion_box,
+							'ions',
+							structure_box_1=None,
+							filename_box_1=None,
+							ff_filename="ions",
+							forcefield_selection=FF_file_anion,
+							residues=anion.name,
+							bead_to_atom_name_dict=None,
+							fix_residue=None,
+							gomc_fix_bonds_angles=None,
+							reorder_res_in_pdb_psf=True
+							)
+
+	charmm_anions.write_inp()
+	charmm_anions.write_psf()
+
 
 def merge_ions_and_system(
     job,
