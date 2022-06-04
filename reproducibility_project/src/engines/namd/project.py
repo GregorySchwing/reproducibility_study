@@ -48,8 +48,6 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     hostname_pattern = r".*\.grid\.wayne\.edu"
     template = "grid.sh"
 
-#pr = Project()
-
 #equilibrateSolvent = Project.make_group(name="equilibrateSolvent")
 #prepareProteinSimulation = Project.make_group(name="prepareProteinSimulation")
 
@@ -484,10 +482,13 @@ def part_2a_solvated(job):
     saltless_sp = job.statepoint()
     saltless_sp['salt_conc']=None
     saltless_sp['replica']=0
-    jobs = list(pr.find_jobs(saltless_sp))
+    # test find one
+    jobs = list(project.find_one(saltless_sp))
     for job in jobs:
         if (job.isfile(f"{'solvated.pdb'}")):
             data_written_bool = True
+            job.doc.path_to_solvated_pdb =  job.fn("solvated.pdb")
+            job.doc.path_to_solvated_psf =  job.fn("solvated.psf")
 
     return data_written_bool
 
@@ -1224,8 +1225,8 @@ def _setup_conf(job, fname, template, data, overwrite=False):
 # ******************************************************
 # ******************************************************
 if __name__ == "__main__":
-    pr = Project()
-    pr.main()
+    project = Project()
+    project.main()
 # ******************************************************
 # ******************************************************
 # signac end code (end)
