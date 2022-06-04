@@ -485,7 +485,10 @@ def part_2a_solvated(job):
     saltless_sp['replica']=0
     mappingStrign = "{"
     for key, val in zip(saltless_sp.keys(), saltless_sp.values()):
-        mappingStrign+= (f'\"{key}\": {val},')
+        if (val == None):
+            mappingStrign+= (f'\"{key}\": null,')
+        else"
+            mappingStrign+= (f'\"{key}\": {val},')
     mappingStrign += "}"
     print(mappingStrign)
     #with [job.id for job in Project.find_jobs(saltless_sp)]:
