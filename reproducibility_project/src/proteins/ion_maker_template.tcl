@@ -10,7 +10,7 @@ segment CAT {
 
 coordpdb CATION_NAME.pdb CAT
 
-writepsf ANION_NAME.psf
+writepsf CATION_NAME.psf
 
 resetpsf
 
