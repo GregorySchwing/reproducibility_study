@@ -173,18 +173,6 @@ def get_protein_path(
 	)
 	return prot_path
 
-def get_ions_path(
-    infilename,
-):	
-	from src.molecules import ions
-	from os.path import join
-	from os.path import abspath
-	from os.path import dirname
-	ion_path = (
-		join(str(dirname(abspath(ions.__file__))), infilename)
-	)
-	return ion_path
-
 def get_total_charge(
     job,
 ):
@@ -349,8 +337,6 @@ def compute_ion_numbers_and_positions(job):
 	with open(ionMaker, 'r') as file :
 		filedataIon = file.read()
 	filedataIon = filedataIon.replace("PATH_2_IONS_TOPOLOGY", get_protein_path("ions.str"))
-	filedataIon = filedataIon.replace("SINGLE_CATION_PDB", get_ions_path(job.sp.cat_name))
-	filedataIon = filedataIon.replace("SINGLE_ANION_PDB", get_ions_path(job.sp.an_name))
 	filedataIon = filedataIon.replace("CATION_NAME", job.fn(job.sp.cat_name))
 	filedataIon = filedataIon.replace("ANION_NAME", job.fn(job.sp.an_name))
 	# Write the file out again
