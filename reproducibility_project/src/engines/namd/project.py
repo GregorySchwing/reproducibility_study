@@ -486,7 +486,7 @@ def part_2a_solvated(job):
     #print("statepoint desalted",saltless_sp)
     #print(Project.doc)
     pr = Project()
-    print(pr.find_jobs())
+    print(pr.find_jobs(saltless_sp))
     #res = Project.find_jobs(saltless_sp)
     #jobs = list(Project.find_jobs(saltless_sp))
     #for job in jobs:
