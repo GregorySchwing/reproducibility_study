@@ -742,6 +742,7 @@ def build_charmm(job, write_files=True):
 #@equilibrateSolvent
 @Project.pre(lambda j: j.sp.engine == "namd")
 @Project.pre(lambda j: j.sp.replica == 0)
+@Project.pre(lambda j: j.sp.salt_conc == None)
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.post(part_2a_min_NVT_control_file_written)
