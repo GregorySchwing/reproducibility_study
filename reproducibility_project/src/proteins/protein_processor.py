@@ -298,8 +298,8 @@ def compute_ion_numbers_and_positions(job):
 	filedata = filedata.replace("HELPER_METHODS", helperMethods)
 	filedata = filedata.replace("PATH_2_PROT_PSF", get_protein_path(job.sp.pdbid+".psf"))
 	filedata = filedata.replace("PATH_2_PROT_PDB", get_protein_path(job.sp.pdbid+"_aligned.pdb"))
-	filedata = filedata.replace("PATH_2_SOLVATED_PSF", job.fn("solvated.psf"))
-	filedata = filedata.replace("PATH_2_SOLVATED_PDB", job.fn("solvated.pdb"))
+	filedata = filedata.replace("PATH_2_SOLVATED_PSF", job.doc.path_to_solvated_psf)
+	filedata = filedata.replace("PATH_2_SOLVATED_PDB", job.doc.path_to_solvated_pdb)
 	filedata = filedata.replace("CATION_NAME", job.sp.cat_name)
 	filedata = filedata.replace("CATION_VAL", str(job.sp.cat_val))
 	filedata = filedata.replace("ANION_NAME", job.sp.an_name)
@@ -320,9 +320,56 @@ def compute_ion_numbers_and_positions(job):
 		file.write(ions + "\n")
 
 def build_ions_psf(job):
-	import os
-	import glob
-	return 
+	import mbuild as mb
+	from foyer import Forcefield
+	import mbuild.formats.charmm_writer as mf_charmm
+	import mbuild.formats.gomc_conf_writer as gomc_control
+	from reproducibility_project.src.utils.forcefields import get_ff_path_ion
+
+	FF_file_cation = get_ff_path_ion("custom", job.sp.cat_name)
+	FF_file_anion = get_ff_path_ion("custom", job.sp.an_name)
+
+	cation = mb.load('[Na]', smiles=True)
+	cation.name = job.sp.cat_name
+
+	anion = mb.load('[Cl-]', smiles=True)
+	anion.name = job.sp.an_name
+
+	num_cations = job.document["NCATION"]
+	num_anions = job.document["NANION"]
+
+	FF_dict = {cation.name: FF_file_cation, anion.name: FF_file_anion}
+
+	residues_list = [cation.name, anion.name]
+
+	#liq_box = mb.Box([sp["box_L_liq_x"] * scale_liq_box, sp["box_L_liq_y"] * scale_liq_box, sp["box_L_liq_z"] * scale_liq_box])
+	liq_box = mb.Box([1.0, 1.0, 1.0])
+
+
+	filled_liq_box = mb.fill_box(
+		compound=[cation, anion],
+		n_compounds=[num_cations,num_anions],
+		box=liq_box
+	)
+
+	boxes = [filled_liq_box, None]
+
+	charmm = mf_charmm.Charmm(filled_liq_box,
+							'ions',
+							structure_box_1=None,
+							filename_box_1=None,
+							ff_filename="ions",
+							forcefield_selection=FF_dict,
+							residues=residues_list,
+							bead_to_atom_name_dict=None,
+							fix_residue=None,
+							gomc_fix_bonds_angles=None,
+							reorder_res_in_pdb_psf=True
+							)
+
+	#charmm.write_inp()
+	#charmm.write_pdb()
+	charmm.write_psf()
 
 def merge_ions_and_system(
     job,
@@ -423,6 +470,7 @@ def ionize(
     job,
 ):	
 	compute_ion_numbers_and_positions(job)
+	build_ions_psf(job)
 	merge_ions_and_system(job)
 
 

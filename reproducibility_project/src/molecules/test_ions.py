@@ -47,11 +47,10 @@ charmm = mf_charmm.Charmm(filled_liq_box,
                           reorder_res_in_pdb_psf=True
                           )
 
-charmm.write_inp()
-
+#charmm.write_inp()
+#charmm.write_pdb()
 charmm.write_psf()
 
-charmm.write_pdb()
 
 
 
