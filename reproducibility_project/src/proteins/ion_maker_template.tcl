@@ -1,6 +1,6 @@
 package require psfgen
 
-topology ./ions.str
+topology PATH_2_IONS_TOPOLOGY
 
 segment CATION_NAME {
     pdb CATION_NAME.pdb

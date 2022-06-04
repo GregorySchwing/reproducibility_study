@@ -322,6 +322,7 @@ def compute_ion_numbers_and_positions(job):
 	ionMaker = get_protein_path("ion_maker_template.tcl")
 	with open(ionMaker, 'r') as file :
 		filedataIon = file.read()
+	filedataIon = filedataIon.replace("PATH_2_IONS_TOPOLOGY", get_protein_path("ions.str"))
 	filedataIon = filedataIon.replace("CATION_NAME", job.sp.cat_name)
 	filedataIon = filedataIon.replace("ANION_NAME", job.sp.an_name)
 	# Write the file out again
