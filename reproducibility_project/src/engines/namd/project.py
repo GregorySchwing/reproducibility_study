@@ -495,16 +495,17 @@ def part_2a_solvated(job):
             mappingStrign+= (f'\"{key}\": {val},')
         else:
             mappingStrign+= (f'\"{key}\": "{val}",')
+    mappingStrign = mappingStrign[:-1]
     mappingStrign += "}"
     print(mappingStrign)
-    """
-    #with [job.id for job in Project.find_jobs(saltless_sp)]:
-    #    print(job.id.Replicate)
+    
+    with [job.id for job in Project.find_jobs(saltless_sp)]:
+        print(job.id.Replicate)
     #print("statepoint desalted",saltless_sp)
     #res = Project.find_jobs(saltless_sp)
     #if res.next().isfile(f"{'solvated.pdb'}"):
     #    data_written_bool = True
-    """
+    
     return data_written_bool
 
 
