@@ -480,7 +480,7 @@ def mosdef_input_written(job):
 def part_2a_solvated(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
-    Project.find_jobs({'salt_conc': null}).export_to('foo_0.tar')
+    Project.find_jobs({'replica': 0}).export_to('foo_0.tar')
 
     #Project.open_job({'salt_conc': None, 'replica': 0, 'molecule': job.sp.molecule, 'pdbid': job.sp.pdbid}).init()
 
