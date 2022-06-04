@@ -504,7 +504,7 @@ def part_2a_solvated(job):
     #res = Project.find_jobs(saltless_sp)
     #if res.next().isfile(f"{'solvated.pdb'}"):
     #    data_written_bool = True
-
+    """
     return data_written_bool
 
 
