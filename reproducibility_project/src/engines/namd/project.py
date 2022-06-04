@@ -485,7 +485,7 @@ def part_2a_solvated(job):
     saltless_sp['replica']=0
     print("statepoint desalted",saltless_sp)
     #res = Project.find_jobs(saltless_sp)
-    jobs = list(project.find_jobs(saltless_sp))
+    jobs = list(Project.find_jobs(saltless_sp))
     for job in jobs:
         print(job.fn("solvated.pdb"))
     #print(res)
