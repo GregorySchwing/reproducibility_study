@@ -487,8 +487,10 @@ def part_2a_solvated(job):
     for key, val in zip(saltless_sp.keys(), saltless_sp.values()):
         if (val == None):
             mappingStrign+= (f'\"{key}\": null,')
-        else:
+        elif val.isnumeric():
             mappingStrign+= (f'\"{key}\": {val},')
+        else
+            mappingStrign+= (f'\"{key}\": "{val}",')
     mappingStrign += "}"
     print(mappingStrign)
     #with [job.id for job in Project.find_jobs(saltless_sp)]:
