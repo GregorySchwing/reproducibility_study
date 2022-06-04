@@ -486,11 +486,9 @@ def part_2a_solvated(job):
     #print("statepoint desalted",saltless_sp)
     #print(Project.doc)
     pr = Project()
-    print(pr.find_jobs(saltless_sp))
-    #res = Project.find_jobs(saltless_sp)
-    #jobs = list(Project.find_jobs(saltless_sp))
-    #for job in jobs:
-    #    print(job.fn("solvated.pdb"))
+    jobs = list(pr.find_jobs(saltless_sp))
+    for job in jobs:
+        print(job.fn("solvated.pdb"))
     #print(res)
     #for job in res:
     #    print("job id", Project.open_job(job).id)
