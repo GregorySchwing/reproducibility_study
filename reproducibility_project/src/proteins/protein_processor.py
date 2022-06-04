@@ -427,14 +427,24 @@ def merge_ions_and_system(
 	print("Loading system")
 	system = CharmmPsfFile(job.doc.path_to_solvated_psf)
 	system_pos = load_file(job.doc.path_to_solvated_pdb)
-	parmPosComb = system_pos
 
-	#Shuift geometric center of solvent box to origin
+	print("Loading ions")
+	cations = CharmmPsfFile(job.fn(job.sp.cat_name+'.psf'))
+	cations_pos = load_file(job.fn(job.sp.cat_name+'.pdb'))
+
+	anions = CharmmPsfFile(job.fn(job.sp.an_name+'.psf'))
+	anions_pos = load_file(job.fn(job.sp.an_name+'.pdb'))
+
 	print("Merging ions with system")
-	for f in ionFiles:
-		ions = load_file(job.fn(f))
-		parmPosComb = parmPosComb + ions
-		system = system + ions
+	ionized_system_pos = system_pos + cations_pos + anions_pos
+	#Combine topolgies in parmed and write intermediate files
+	# Also note that the protein has to be on the left when merging (prot+solv)
+	# Very important not ro renumber since we need to cross reference with the psf.
+	ionized_system = CharmmPsfFile.from_structure(system + cations + anions)
+
+	systemPSF.write_psf(job.fn("intermediate.psf"))
+	parmPosComb.write_pdb(job.fn("intermediate.pdb"), renumber=False, use_hetatoms=False)
+	quit()
 
 	parmPosComb.write_pdb(job.fn("combined.pdb"), renumber=False, use_hetatoms=False)
 	system.write_psf(job.fn("combined.psf"))
