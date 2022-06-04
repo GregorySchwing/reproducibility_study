@@ -487,7 +487,7 @@ def part_2a_solvated(job):
     mapping['pdbid']=job.sp.pdbid
     print(mapping)
     
-    mappingStrign = "{"
+    mappingStrign = "'{"
     for key, val in zip(mapping.keys(), mapping.values()):
         if (val == None):
             mappingStrign+= (f'\"{key}\": null,')
@@ -496,10 +496,10 @@ def part_2a_solvated(job):
         else:
             mappingStrign+= (f'\"{key}\": "{val}",')
     mappingStrign = mappingStrign[:-1]
-    mappingStrign += "}"
+    mappingStrign += "}'"
     print(mappingStrign)
     
-    with [job.id for job in Project.find_jobs(saltless_sp)]:
+    with [job.id for job in Project.find_jobs(mappingStrign)]:
         print(job.id.Replicate)
     #print("statepoint desalted",saltless_sp)
     #res = Project.find_jobs(saltless_sp)
