@@ -344,10 +344,8 @@ def build_ions_psf(job):
 		box=liq_box
 	)
 
-	boxes = [filled_liq_box, None]
-
 	# Build charmm object for cations
-	charmm_cations = mf_charmm.Charmm(filled_liq_box,
+	charmm_cations = mf_charmm.Charmm(filled_cation_box,
 							job.sp.cat_name,
 							structure_box_1=None,
 							filename_box_1=None,
