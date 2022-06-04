@@ -336,7 +336,7 @@ def compute_ion_numbers_and_positions(job):
 		filedataIon = file.read()
 	filedataIon = filedataIon.replace("PATH_2_IONS_TOPOLOGY", get_protein_path("ions.str"))
 	filedataIon = filedataIon.replace("SINGLE_CATION_PDB", get_ions_path(job.sp.cat_name))
-	filedataIon = filedataIon.replace("SINGLE_ANION_PDB", get_ions_path(job.sp.cat_name))
+	filedataIon = filedataIon.replace("SINGLE_ANION_PDB", get_ions_path(job.sp.an_name))
 	filedataIon = filedataIon.replace("CATION_NAME", job.fn(job.sp.cat_name))
 	filedataIon = filedataIon.replace("ANION_NAME", job.fn(job.sp.cat_name))
 	# Write the file out again
