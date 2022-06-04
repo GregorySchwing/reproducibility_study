@@ -379,7 +379,7 @@ def build_ions_psf(job):
 	anion = mb.load(ions_2_smiles[job.sp.an_name], smiles=True)
 	anion.name = job.sp.an_name
 	num_anions = int(job.document["NANION"])
-	FF_file_anion = get_ff_path_ion("custom", job.sp.an_name)
+	FF_file_anion = get_ff_path_ion("custom", "waters_ions_spc")
 
 	filled_anion_box = mb.fill_box(
 		compound=[anion],
