@@ -419,9 +419,9 @@ def merge_ions_and_system(
 	print(ionFiles)
 	for ionFile in ionFiles:
 		if (job.sp.an_name in ionFile):
-			os.rename(ionFile,job.sp.an_name+'.psf')
+			os.rename(ionFile,job.sp.an_name+'.pdb')
 		elif (job.sp.cat_name in ionFile):
-			os.rename(ionFile,job.sp.cat_name+'.psf')
+			os.rename(ionFile,job.sp.cat_name+'.pdb')
 
 	#Load centered sovent box into Partmed
 	print("Loading system")
