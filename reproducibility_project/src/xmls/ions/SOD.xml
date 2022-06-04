@@ -1,49 +1,17 @@
 <ForceField version="0.0.1" name="sodium" combining_rule="geometric">
-  <HarmonicBondForce>
-  </HarmonicBondForce>
-  <HarmonicAngleForce>
-  </HarmonicAngleForce>
-  <!--Urey-Bradley terms-->
-  <AmoebaUreyBradleyForce/>
-  <NonbondedForce coulomb14scale="1.0" lj14scale="1.0">
-    <UseAttributeFromResidue name="charge"/>
-    <Atom class="HT" sigma="1.0" epsilon="0.0"/>
-    <Atom class="HX" sigma="1.0" epsilon="0.0"/>
-    <Atom class="OT" sigma="1.0" epsilon="0.0"/>
-    <Atom class="OX" sigma="1.0" epsilon="0.0"/>
-    <Atom class="LIT" sigma="1.0" epsilon="0.0"/>
-    <Atom class="SOD" sigma="1.0" epsilon="0.0"/>
-    <Atom class="MG" sigma="1.0" epsilon="0.0"/>
-    <Atom class="POT" sigma="1.0" epsilon="0.0"/>
-    <Atom class="CAL" sigma="1.0" epsilon="0.0"/>
-    <Atom class="RUB" sigma="1.0" epsilon="0.0"/>
-    <Atom class="CES" sigma="1.0" epsilon="0.0"/>
-    <Atom class="BAR" sigma="1.0" epsilon="0.0"/>
-    <Atom class="ZN" sigma="1.0" epsilon="0.0"/>
-    <Atom class="CAD" sigma="1.0" epsilon="0.0"/>
-    <Atom class="CLA" sigma="1.0" epsilon="0.0"/>
-  </NonbondedForce>
-  <LennardJonesForce lj14scale="1.0">
-    <Atom class="HT" sigma="1.7817974362806786e-05" epsilon="4.184e-06"/>
-    <Atom class="HX" sigma="0.04000135244450124" epsilon="0.192464"/>
-    <Atom class="OT" sigma="0.31410006292063597" epsilon="0.64973336"/>
-    <Atom class="OX" sigma="0.30290556416771536" epsilon="0.50208"/>
-    <Atom class="LIT" sigma="0.23118821735741807" epsilon="0.00974872"/>
-    <Atom class="SOD" sigma="0.2513670733232967" epsilon="0.1962296"/>
-    <Atom class="MG" sigma="0.2111429961992604" epsilon="0.06276"/>
-    <Atom class="POT" sigma="0.3142645228240047" epsilon="0.364008"/>
-    <Atom class="CAL" sigma="0.24357170953956878" epsilon="0.50208"/>
-    <Atom class="RUB" sigma="0.3385415128933289" epsilon="0.6276"/>
-    <Atom class="CES" sigma="0.37417746161894255" epsilon="0.79496"/>
-    <Atom class="BAR" sigma="0.33675971545704825" epsilon="0.6276"/>
-    <Atom class="ZN" sigma="0.194215920554594" epsilon="1.046"/>
-    <Atom class="CAD" sigma="0.2417899121032881" epsilon="0.50208"/>
-    <Atom class="CLA" sigma="0.4044680180357141" epsilon="0.6276"/>
-    <NBFixPair class1="CLA" class2="SOD" sigma="0.3323943117381606" epsilon="0.35093300000000005"/>
-    <NBFixPair class1="CLA" class2="POT" sigma="0.3635757668730725" epsilon="0.477963424"/>
-    <NBFixPair class1="OC" class2="SOD" sigma="0.28419669108676826" epsilon="0.31388368000000005"/>
-    <NBFixPair class1="OCL" class2="SOD" sigma="0.28419669108676826" epsilon="0.31388368000000005"/>
-    <NBFixPair class1="OC2D2" class2="SOD" sigma="0.28419669108676826" epsilon="0.31388368000000005"/>
-    <NBFixPair class1="OG2D2" class2="SOD" sigma="0.28419669108676826" epsilon="0.31388368000000005"/>
-  </LennardJonesForce>
+ <AtomTypes>
+   <Type name="opls-116" class="Na" element="Na" mass="15.99940" def="[Na]" desc="SPC/E Oxygen" doi="10.1021/j100308a038"/>
+ </AtomTypes>
+ <HarmonicBondForce>
+   <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
+ </HarmonicBondForce>
+ <HarmonicAngleForce>
+   <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
+   <!-- numpy.deg2rad(109.47).round(8) -->
+   <!-- numpy.__version__ 1.21.1 -->
+ </HarmonicAngleForce>
+ <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+   <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
+  <Atom type="opls-116" charge="-0.8476" sigma="0.316557" epsilon="0.650194"/>
+ </NonbondedForce>
 </ForceField>
