@@ -352,7 +352,7 @@ def compute_ion_numbers_and_positions(job):
 	filedataIon = filedataIon.replace("SINGLE_CATION_PDB", get_ions_path(job.sp.cat_name))
 	filedataIon = filedataIon.replace("SINGLE_ANION_PDB", get_ions_path(job.sp.an_name))
 	filedataIon = filedataIon.replace("CATION_NAME", job.fn(job.sp.cat_name))
-	filedataIon = filedataIon.replace("ANION_NAME", job.fn(job.sp.cat_name))
+	filedataIon = filedataIon.replace("ANION_NAME", job.fn(job.sp.an_name))
 	# Write the file out again
 	with open(job.fn("filled_ion_maker_template.tcl"), 'w') as file:
 		file.write(filedataIon)
