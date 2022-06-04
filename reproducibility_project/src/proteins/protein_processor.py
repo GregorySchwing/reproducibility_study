@@ -499,7 +499,7 @@ def ionize(
     job,
 ):	
 	compute_ion_numbers_and_positions(job)
-	build_ions_psf(job)
+	#build_ions_psf(job)
 	merge_ions_and_system(job)
 
 
