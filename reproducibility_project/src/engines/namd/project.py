@@ -480,13 +480,11 @@ def mosdef_input_written(job):
 def part_2a_solvated(job):
     """Check that the initial job data is written to the json files."""
     data_written_bool = False
-    mapping = dict()
-    mapping['salt_conc']=None
-    mapping['replica']=0
-    mapping['molecule']=job.sp.molecule
-    mapping['pdbid']=job.sp.pdbid
-    print(mapping)
-    
+    project.open_job({'salt_conc': None, 'replica': 0, 'molecule': job.sp.molecule, 'pdbid': job.sp.pdbid}).init()
+    for key, value in project.build_job_statepoint_index():
+        print(key)
+        pprint.pprint(value)
+    """
     mappingStrign = "'{"
     for key, val in zip(mapping.keys(), mapping.values()):
         if (val == None):
@@ -498,7 +496,7 @@ def part_2a_solvated(job):
     mappingStrign = mappingStrign[:-1]
     mappingStrign += "}'"
     print(mappingStrign)
-    
+    """
     #with [job.id for job in Project.find_jobs(mappingStrign)]:
     #    print(job.id.Replicate)
     #print("statepoint desalted",saltless_sp)
