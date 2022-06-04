@@ -341,8 +341,8 @@ def build_ions_psf(job):
 	anion = mb.load(ions_2_smiles[job.sp.an_name], smiles=True)
 	anion.name = job.sp.an_name
 
-	num_cations = job.document["NCATION"]
-	num_anions = job.document["NANION"]
+	num_cations = int(job.document["NCATION"])
+	num_anions = int(job.document["NANION"])
 
 	FF_dict = {cation.name: FF_file_cation, anion.name: FF_file_anion}
 
