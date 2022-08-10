@@ -1,6 +1,3 @@
 [submodule "reproducibility_project/src/proteinffs/C36IDPSFF"]
 	path = reproducibility_project/src/proteinffs/C36IDPSFF
 	url = https://github.com/chaohao2010/C36IDPSFF.git
-[submodule "reproducibility_project/src/proteinffs/Force-Fields"]
-	path = reproducibility_project/src/proteinffs/Force-Fields
-	url = https://github.com/GregorySchwing/Force-Fields.git
