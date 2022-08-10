@@ -26,7 +26,6 @@ class Rahman(DefaultPBSEnvironment):
 
     @classmethod
     def add_args(cls, parser):
-        """Add command line arguments to the submit call."""
         parser.add_argument(
             "--walltime",
             type=float,
