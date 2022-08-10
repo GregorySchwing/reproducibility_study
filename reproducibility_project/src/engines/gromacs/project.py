@@ -92,38 +92,6 @@ def init_job(job):
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF 1 1".format(job.doc.prot_pdb)
     print(pdb2gmxCommand)
 
-    #print("Downloading 6G6J") # 2 Dimers of Myc-Max
-    #os.system('pdb_fetch 6G6J > 6G6J.pdb')  # 2.25 Å Resolution
-    #print("6G6J Done")
-    print("Downloading {}".format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
-    os.system("pdb_fetch {} > {}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
-    print("{} Done".format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
-    #print("Downloading 6G6L") # 4 Dimers of Myc-Max
-    #os.system('pdb_fetch 6G6L > 6G6L.pdb')  # 2.20 Å Resolution
-    #print("6G6L Done")
-
-    #1-1-build
-    print("Building clean_{} (Stripping Non-protein atoms)".format(job.sp.pdbid))
-    os.system("pdb_delhetatm {}.pdb > clean_{}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution)  # 2.25 Å Resolution
-    print("clean_{} (Stripping Non-protein atoms) Done".format(job.sp.pdbid))
-    # A,C - Myc ; B,D - Max
-    # Dimer 1 - A,B
-    # Dimer 2 - C,D
-    if (job.sp.sim_type == "dimer"):
-        job.doc.prot_pdb = "myc_max_1.35_a_out.pdb"
-        os.system('pdb_delchain -C,D clean_mycmax_1.35.pdb > myc_max_1.35_a_out.pdb')  # 2.25 Å Resolution
-        print("myc_max_1.35 (Single Dimer) Done")
-    elif (job.sp.sim_type == "myc_mono"):
-        job.doc.prot_pdb = "myc_1.35_a_out.pdb"
-        os.system('pdb_delchain -B,C,D clean_mycmax_1.35.pdb > myc_1.35_a_out.pdb')  # 2.25 Å Resolution
-        print("myc_1.35 (Single Monomer) Done")
-    elif (job.sp.sim_type == "max_mono"):
-        job.doc.prot_pdb = "max_1.35_a_out.pdb"
-        os.system('pdb_delchain -A,C,D clean_mycmax_1.35.pdb > max_1.35_a_out.pdb')  # 2.25 Å Resolution
-        print("max_1.35 (Single Monomer) Done")
-    else:
-        print("Error: bad sim_type")
-
     ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     """
     pdb2gmx = gmx.commandline_operation('gmx', 'pdb2gmx',
