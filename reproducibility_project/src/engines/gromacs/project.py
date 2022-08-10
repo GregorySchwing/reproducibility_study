@@ -34,6 +34,12 @@ class Rahman(DefaultPBSEnvironment):
             help="Walltime for this submission",
         )
 
+class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
+    """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
+
+    hostname_pattern = r".*\.grid\.wayne\.edu"
+    template = "grid.sh"
+
 import os
 import subprocess
 import sys
