@@ -19,6 +19,7 @@ class Project(flow.FlowProject):
         super().__init__()
 
 
+"""
 class Rahman(DefaultPBSEnvironment):
     """Subclass of DefaultPBSEnvironment for VU's Rahman cluster."""
 
@@ -33,6 +34,7 @@ class Rahman(DefaultPBSEnvironment):
             default=96,
             help="Walltime for this submission",
         )
+ """       
 
 class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
