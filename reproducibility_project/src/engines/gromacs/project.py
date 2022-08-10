@@ -21,7 +21,6 @@ class Project(flow.FlowProject):
 
 """
 class Rahman(DefaultPBSEnvironment):
-    #Subclass of DefaultPBSEnvironment for VU's Rahman cluster.
 
     template = "rahman_gmx.sh"
 
