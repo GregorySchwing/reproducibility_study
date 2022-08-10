@@ -90,7 +90,7 @@ for prot in proteins:
         (temp, press),
         liq_box_L,
         mass,
-        r_cut,
+        rcut,
         lrc,
         cutoff_style,
         replica,
@@ -154,8 +154,8 @@ for prot in proteins:
             "forcefield_name": ff,
             "cutoff_style": cutoff_style,
             "long_range_correction": lrc,
-            "r_cut": np.round(
-                r_cut.to_value("nm"),
+            "rcut": np.round(
+                rcut.to_value("nm"),
                 decimals=3,
             ).item(),
         }
