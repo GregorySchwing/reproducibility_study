@@ -34,6 +34,9 @@ class Rahman(DefaultPBSEnvironment):
             help="Walltime for this submission",
         )
 
+import os
+import subprocess
+import sys
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
@@ -47,20 +50,121 @@ class Rahman(DefaultPBSEnvironment):
 def init_job(job):
     """Initialize individual job workspace, including mdp and molecular init files."""
     from reproducibility_project.src.engine_input.gromacs import mdp
-    from reproducibility_project.src.molecules.system_builder import (
-        construct_system,
-    )
+    #print("Downloading 6G6J") # 2 Dimers of Myc-Max
+    #os.system('pdb_fetch 6G6J > 6G6J.pdb')  # 2.25 Å Resolution
+    #print("6G6J Done")
+    print("Downloading 6G6K") # 2 Dimers of Myc-Max
+    os.system('pdb_fetch 6G6K > 6G6K.pdb')  # 1.35 Å Resolution
+    print("6G6K Done")
+    #print("Downloading 6G6L") # 4 Dimers of Myc-Max
+    #os.system('pdb_fetch 6G6L > 6G6L.pdb')  # 2.20 Å Resolution
+    #print("6G6L Done")
 
-    # Create a Compound and save to gro and top files
-    system = construct_system(job.sp)
-    system[0].save(filename="init.gro", overwrite=True)
-    ff = load_ff(job.sp.forcefield_name)
-    param_system = ff.apply(system[0])
-    param_system.save(
-        "init.top",
-        overwrite=True,
-    )
+    #1-1-build
+    print("Building clean_mycmax_1.35 (Stripping Non-protein atoms)")
+    os.system('pdb_delhetatm 6G6K.pdb > clean_mycmax_1.35_a_out.pdb')  # 2.25 Å Resolution
+    print("clean_mycmax_1.35 (Stripping Non-protein atoms) Done")
+    print("Building myc_max_1.35 (Single Dimer) Done")
+    # A,C - Myc ; B,D - Max
+    # Dimer 1 - A,B
+    # Dimer 2 - C,D
+    if (job.sp.solute == "myc_max_dimer"):
+        job.doc.prot_pdb = "myc_max_1.35_a_out.pdb"
+        os.system('pdb_delchain -C,D clean_mycmax_1.35.pdb > myc_max_1.35_a_out.pdb')  # 2.25 Å Resolution
+        print("myc_max_1.35 (Single Dimer) Done")
+    elif (job.sp.solute == "myc_monomer"):
+        job.doc.prot_pdb = "myc_1.35_a_out.pdb"
+        os.system('pdb_delchain -B,C,D clean_mycmax_1.35.pdb > myc_1.35_a_out.pdb')  # 2.25 Å Resolution
+        print("myc_1.35 (Single Monomer) Done")
+    elif (job.sp.solute == "max_monomer"):
+        job.doc.prot_pdb = "max_1.35_a_out.pdb"
+        os.system('pdb_delchain -A,C,D clean_mycmax_1.35.pdb > max_1.35_a_out.pdb')  # 2.25 Å Resolution
+        print("max_1.35 (Single Monomer) Done")
+    else:
+        print("Error: bad solute")
+        
+    pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF 1 1".format(job.doc.prot_pdb)
+    print(pdb2gmxCommand)
 
+        #print("Downloading 6G6J") # 2 Dimers of Myc-Max
+    #os.system('pdb_fetch 6G6J > 6G6J.pdb')  # 2.25 Å Resolution
+    #print("6G6J Done")
+    print("Downloading 6G6K") # 2 Dimers of Myc-Max
+    os.system('pdb_fetch 6G6K > 6G6K.pdb')  # 1.35 Å Resolution
+    print("6G6K Done")
+    #print("Downloading 6G6L") # 4 Dimers of Myc-Max
+    #os.system('pdb_fetch 6G6L > 6G6L.pdb')  # 2.20 Å Resolution
+    #print("6G6L Done")
+
+    #1-1-build
+    print("Building clean_mycmax_1.35 (Stripping Non-protein atoms)")
+    os.system('pdb_delhetatm 6G6K.pdb > clean_mycmax_1.35_a_out.pdb')  # 2.25 Å Resolution
+    print("clean_mycmax_1.35 (Stripping Non-protein atoms) Done")
+    print("Building myc_max_1.35 (Single Dimer) Done")
+    # A,C - Myc ; B,D - Max
+    # Dimer 1 - A,B
+    # Dimer 2 - C,D
+    if (job.sp.solute == "myc_max_dimer"):
+        job.doc.prot_pdb = "myc_max_1.35_a_out.pdb"
+        os.system('pdb_delchain -C,D clean_mycmax_1.35.pdb > myc_max_1.35_a_out.pdb')  # 2.25 Å Resolution
+        print("myc_max_1.35 (Single Dimer) Done")
+    elif (job.sp.solute == "myc_monomer"):
+        job.doc.prot_pdb = "myc_1.35_a_out.pdb"
+        os.system('pdb_delchain -B,C,D clean_mycmax_1.35.pdb > myc_1.35_a_out.pdb')  # 2.25 Å Resolution
+        print("myc_1.35 (Single Monomer) Done")
+    elif (job.sp.solute == "max_monomer"):
+        job.doc.prot_pdb = "max_1.35_a_out.pdb"
+        os.system('pdb_delchain -A,C,D clean_mycmax_1.35.pdb > max_1.35_a_out.pdb')  # 2.25 Å Resolution
+        print("max_1.35 (Single Monomer) Done")
+    else:
+        print("Error: bad solute")
+
+    ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
+    """
+    pdb2gmx = gmx.commandline_operation('gmx', 'pdb2gmx',
+                                   input_files={
+                                       '-f': job.doc.prot_pdb,
+                                   },
+                                   output_files={'-o': processed.gro})
+    """
+    pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF 1 1".format(job.doc.prot_pdb)
+    print(pdb2gmxCommand)
+
+    ####Prepare a simulaton box. For IDP, box dimension need to be large enough to prevent any periodic image interaction.
+    """
+    editconf = gmx.commandline_operation('gmx', 'editconf',
+                                   input_files={
+                                       '-f': pdb2gmx.output.file['-o'],
+                                       '-d': 2.0,
+                                       '-c': "",
+                                       '-bt': cubic,
+                                   },
+                                   output_files={'-o': newbox.gro})    
+
+    ####Solvating a simulation box.
+    solvate = gmx.commandline_operation('gmx',
+                                    arguments=['solvate', '-box', '5', '5', '5'],
+                                    input_files={'-cs': structurefile,
+                                                 '-cp': editconf.output.file['-o']},
+                                    output_files={'-p': topfile,
+                                                  '-o': structurefile,
+                                                  }
+
+    structurefile = solvate.output.file['-o'].result()
+    if solvate.output.returncode.result() != 0:
+        print(solvate.output.erroroutput.result())
+
+    grompp = gmx.commandline_operation('gmx', 'grompp',
+                                   input_files={
+                                       '-f': mdpfile,
+                                       '-p': solvate.output.file['-p'],
+                                       '-c': solvate.output.file['-o'],
+                                       '-po': mdout_mdp,
+                                       '-maxwarn': 1
+                                   },
+                                   output_files={'-o': tprfile})
+
+    """
     # Modify mdp files according to job statepoint parameters
     cutoff_styles = {"hard": "None", "shift": "Potential-shift"}
     lrcs = {"None": "no", "energy_pressure": "EnerPres"}
