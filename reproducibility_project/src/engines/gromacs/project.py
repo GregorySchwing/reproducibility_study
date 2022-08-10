@@ -75,20 +75,20 @@ def init_job(job):
     # A,C - Myc ; B,D - Max
     # Dimer 1 - A,B
     # Dimer 2 - C,D
-    if (job.sp.solute == "myc_max_dimer"):
+    if (job.sp.pdbid == "myc_max_dimer"):
         job.doc.prot_pdb = "myc_max_1.35_a_out.pdb"
         os.system('pdb_delchain -C,D clean_mycmax_1.35.pdb > myc_max_1.35_a_out.pdb')  # 2.25 Å Resolution
         print("myc_max_1.35 (Single Dimer) Done")
-    elif (job.sp.solute == "myc_monomer"):
+    elif (job.sp.pdbid == "myc_monomer"):
         job.doc.prot_pdb = "myc_1.35_a_out.pdb"
         os.system('pdb_delchain -B,C,D clean_mycmax_1.35.pdb > myc_1.35_a_out.pdb')  # 2.25 Å Resolution
         print("myc_1.35 (Single Monomer) Done")
-    elif (job.sp.solute == "max_monomer"):
+    elif (job.sp.pdbid == "max_monomer"):
         job.doc.prot_pdb = "max_1.35_a_out.pdb"
         os.system('pdb_delchain -A,C,D clean_mycmax_1.35.pdb > max_1.35_a_out.pdb')  # 2.25 Å Resolution
         print("max_1.35 (Single Monomer) Done")
     else:
-        print("Error: bad solute")
+        print("Error: bad pdbid")
         
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF 1 1".format(job.doc.prot_pdb)
     print(pdb2gmxCommand)
@@ -111,20 +111,20 @@ def init_job(job):
     # A,C - Myc ; B,D - Max
     # Dimer 1 - A,B
     # Dimer 2 - C,D
-    if (job.sp.solute == "myc_max_dimer"):
+    if (job.sp.pdbid == "myc_max_dimer"):
         job.doc.prot_pdb = "myc_max_1.35_a_out.pdb"
         os.system('pdb_delchain -C,D clean_mycmax_1.35.pdb > myc_max_1.35_a_out.pdb')  # 2.25 Å Resolution
         print("myc_max_1.35 (Single Dimer) Done")
-    elif (job.sp.solute == "myc_monomer"):
+    elif (job.sp.pdbid == "myc_monomer"):
         job.doc.prot_pdb = "myc_1.35_a_out.pdb"
         os.system('pdb_delchain -B,C,D clean_mycmax_1.35.pdb > myc_1.35_a_out.pdb')  # 2.25 Å Resolution
         print("myc_1.35 (Single Monomer) Done")
-    elif (job.sp.solute == "max_monomer"):
+    elif (job.sp.pdbid == "max_monomer"):
         job.doc.prot_pdb = "max_1.35_a_out.pdb"
         os.system('pdb_delchain -A,C,D clean_mycmax_1.35.pdb > max_1.35_a_out.pdb')  # 2.25 Å Resolution
         print("max_1.35 (Single Monomer) Done")
     else:
-        print("Error: bad solute")
+        print("Error: bad pdbid")
 
     ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     """
