@@ -6,7 +6,8 @@ import sys
 import flow
 import panedr
 import unyt as u
-from flow.environment import DefaultPBSEnvironment
+from flow.environment import DefaultSlurmEnvironment
+
 
 from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.utils.forcefields import load_ff
