@@ -42,7 +42,9 @@ salt_strengths = [0.300, None]
 proteins = [
     "6g6k",
 ]
-
+sim_types = [
+    "dimer", "myc_mono", "max_mono"
+]
 proteinpaths = dict()
 proteinalignedpaths = dict()
 boundingBoxSizes = dict()
@@ -98,7 +100,8 @@ for prot in proteins:
         cat,
         an,
         wm,
-        ff
+        ff,
+        sim_type
     ) in itertools.product(
         md_engines,
         zip(temperatures, pressures),
@@ -112,7 +115,8 @@ for prot in proteins:
         cations,
         anions,
         waterModel,
-        forcefields
+        forcefields,
+        sim_types
     ):
         statepoint = {
             "waterModel": wm,
@@ -158,6 +162,7 @@ for prot in proteins:
                 rcut.to_value("nm"),
                 decimals=3,
             ).item(),
+            "sim_type" : sim_type
         }
         total_statepoints.append(statepoint)
 
