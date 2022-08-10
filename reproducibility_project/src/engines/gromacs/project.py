@@ -68,24 +68,23 @@ def init_job(job):
     #print("6G6L Done")
 
     #1-1-build
-    print("Building clean_mycmax_1.35 (Stripping Non-protein atoms)")
-    os.system('pdb_delhetatm {}.pdb > clean_mycmax_1.35_a_out.pdb').format(job.sp.pdbid)  # 2.25 Å Resolution
-    print("clean_mycmax_1.35 (Stripping Non-protein atoms) Done")
-    print("Building myc_max_1.35 (Single Dimer) Done")
+    print("Building clean_{} (Stripping Non-protein atoms)".format(job.sp.pdbid))
+    os.system("pdb_delhetatm {}.pdb > clean_{}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution)  # 2.25 Å Resolution
+    print("clean_{} (Stripping Non-protein atoms) Done".format(job.sp.pdbid))
     # A,C - Myc ; B,D - Max
     # Dimer 1 - A,B
     # Dimer 2 - C,D
     if (job.sp.sim_type == "dimer"):
-        job.doc.prot_pdb = "myc_max_1.35_a_out.pdb"
-        os.system('pdb_delchain -C,D clean_mycmax_1.35.pdb > myc_max_1.35_a_out.pdb')  # 2.25 Å Resolution
+        job.doc.prot_pdb = "myc_max.pdb"
+        os.system("pdb_delchain -C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("myc_max_1.35 (Single Dimer) Done")
     elif (job.sp.sim_type == "myc_mono"):
         job.doc.prot_pdb = "myc_1.35_a_out.pdb"
-        os.system('pdb_delchain -B,C,D clean_mycmax_1.35.pdb > myc_1.35_a_out.pdb')  # 2.25 Å Resolution
+        os.system("pdb_delchain -B,C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("myc_1.35 (Single Monomer) Done")
     elif (job.sp.sim_type == "max_mono"):
         job.doc.prot_pdb = "max_1.35_a_out.pdb"
-        os.system('pdb_delchain -A,C,D clean_mycmax_1.35.pdb > max_1.35_a_out.pdb')  # 2.25 Å Resolution
+        os.system("pdb_delchain -A,C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("max_1.35 (Single Monomer) Done")
     else:
         print("Error: bad sim_type")
@@ -104,10 +103,9 @@ def init_job(job):
     #print("6G6L Done")
 
     #1-1-build
-    print("Building clean_mycmax_1.35 (Stripping Non-protein atoms)")
-    os.system('pdb_delhetatm 6G6K.pdb > clean_mycmax_1.35_a_out.pdb')  # 2.25 Å Resolution
-    print("clean_mycmax_1.35 (Stripping Non-protein atoms) Done")
-    print("Building myc_max_1.35 (Single Dimer) Done")
+    print("Building clean_{} (Stripping Non-protein atoms)".format(job.sp.pdbid))
+    os.system("pdb_delhetatm {}.pdb > clean_{}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution)  # 2.25 Å Resolution
+    print("clean_{} (Stripping Non-protein atoms) Done".format(job.sp.pdbid))
     # A,C - Myc ; B,D - Max
     # Dimer 1 - A,B
     # Dimer 2 - C,D
