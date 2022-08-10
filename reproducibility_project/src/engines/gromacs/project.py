@@ -11,6 +11,7 @@ from flow.environment import DefaultSlurmEnvironment
 
 from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.utils.forcefields import load_ff
+from reproducibility_project.src.proteinffs.Best_FF import a99SBdisp
 
 
 class Project(flow.FlowProject):
