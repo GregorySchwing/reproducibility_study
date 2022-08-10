@@ -90,7 +90,7 @@ for prot in proteins:
         (temp, press),
         liq_box_L,
         mass,
-        rcut,
+        r_cut,
         lrc,
         cutoff_style,
         replica,
