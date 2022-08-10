@@ -100,8 +100,6 @@ def init_job(job):
                                    },
                                    output_files={'-o': processed.gro})
     """
-    pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF 1 1".format(job.doc.prot_pdb)
-    print(pdb2gmxCommand)
 
     ####Prepare a simulaton box. For IDP, box dimension need to be large enough to prevent any periodic image interaction.
     """
@@ -198,7 +196,7 @@ def init_job(job):
             },
         },
     }
-
+    """
     for op, mdp in mdps.items():
         if job.sp.molecule == "waterSPCE":
             _setup_mdp(
@@ -214,7 +212,7 @@ def init_job(job):
                 data=mdp["data"],
                 overwrite=True,
             )
-
+    """
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
