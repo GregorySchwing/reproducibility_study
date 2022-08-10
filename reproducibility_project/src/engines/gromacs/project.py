@@ -61,7 +61,7 @@ def init_job(job):
     #os.system('pdb_fetch 6G6J > 6G6J.pdb')  # 2.25 Å Resolution
     #print("6G6J Done")
     print("Downloading {}".format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
-    os.system('pdb_fetch {} > {}.pdb'.format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
+    os.system("pdb_fetch {} > {}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
     print("{} Done".format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
     #print("Downloading 6G6L") # 4 Dimers of Myc-Max
     #os.system('pdb_fetch 6G6L > 6G6L.pdb')  # 2.20 Å Resolution
@@ -97,7 +97,7 @@ def init_job(job):
     #os.system('pdb_fetch 6G6J > 6G6J.pdb')  # 2.25 Å Resolution
     #print("6G6J Done")
     print("Downloading {}".format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
-    os.system('pdb_fetch {} > {}.pdb'.format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
+    os.system("pdb_fetch {} > {}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
     print("{} Done".format(job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution
     #print("Downloading 6G6L") # 4 Dimers of Myc-Max
     #os.system('pdb_fetch 6G6L > 6G6L.pdb')  # 2.20 Å Resolution
