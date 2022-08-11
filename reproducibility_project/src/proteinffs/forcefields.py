@@ -15,7 +15,7 @@ def get_ff_path(
     name : str, default=None, optional
         Forcefield name to load.
     """
-    if name == "a99SB-disp":
+    if name == "a99SBdisp":
         ff_path = (
             str(os.path.abspath(a99SBdisp.__file__)) + ".ff"
         )
