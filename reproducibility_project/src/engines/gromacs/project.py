@@ -127,12 +127,12 @@ def init_job(job):
     os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
     os.system(genionCommand)  # 2.25 Å Resolution
     
-    # Modify mdp files according to job statepoint parameters
-    cutoff_styles = {"hard": "None", "shift": "Potential-shift"}
-    lrcs = {"None": "no", "energy_pressure": "EnerPres"}
 
     pressure = job.sp.pressure * u.kPa
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
+
+    
+
     mdps = {
         "em": {
             "fname": "em.mdp",
