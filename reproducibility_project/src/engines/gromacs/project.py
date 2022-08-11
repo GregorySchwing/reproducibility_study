@@ -100,8 +100,14 @@ def init_job(job):
     print(linkWaterModelCommand)
     print(pdb2gmxCommand)
 
-    os.symlink(get_ff_path(job.sp.forcefield_name), ".")
-    os.symlink(get_wm_path(job.sp.forcefield_name), ".")
+    try:
+        os.symlink(get_ff_path(job.sp.forcefield_name), ".")
+        os.symlink(get_wm_path(job.sp.forcefield_name), ".")
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            print('Directory not created.')
+        else:
+            raise
     os.system(pdb2gmxCommand)  # 2.25 Å Resolution
 
 
