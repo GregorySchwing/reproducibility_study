@@ -92,7 +92,8 @@ def init_job(job):
         print("max_1.35 (Single Monomer) Done")
     else:
         print("Error: bad sim_type")
-        
+    
+    propPKACommand = "propka3 -f {} --pH {}".format(job.doc.prot_pdb, job.doc.pH)
 
     linkProtFFCommand = "ln -s {} {}".format(get_ff_path(job.sp.forcefield_name), get_ff_name(job.sp.forcefield_name))
     linkWaterModelCommand = "ln -s {} .".format(get_wm_path(job.sp.forcefield_name))

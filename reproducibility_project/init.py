@@ -37,6 +37,7 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
 
 salt_strengths = [0.300]
 #salt_strengths = [0.000, 0.075, 0.150, 0.225, 0.300, None]
+pHs = [7.1]
 proteins = [
     "6g6k",
 ]
@@ -101,6 +102,7 @@ for prot in proteins:
         cutoff_style,
         replica,
         conc,
+        pH,
         cat,
         an,
         ff,
@@ -116,6 +118,7 @@ for prot in proteins:
         cutoff_styles,
         replicas,
         salt_strengths,
+        pHs,
         cations,
         anions,
         forcefields,
@@ -124,6 +127,7 @@ for prot in proteins:
     ):
         statepoint = {
             "salt_conc": conc,
+            "pH": pH,
             "cat_name": cat[0],
             "cat_val": cat[1],
             "an_name": an[0],
