@@ -121,9 +121,9 @@ def init_job(job):
     ####Adding counter ions to neutralize the box. Replace "SOL" while adding ions.
     grommpPreGenionCommand = "gmx grompp -f {}/ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 1".format(os.path.dirname(os.path.abspath(mdp.__file__)))
     if (job.sp.salt_conc == "None"):
-        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -nname {} -neutral -seed {}".format(job.sp.cat_name, job.sp.an_name, job.sp.genion_seed)
+        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -pq {} -nname {} -nq {} -neutral -seed {}".format(job.sp.cat_name, job.sp.cat_val, job.sp.an_name, job.sp.an_val, job.sp.genion_seed)
     else:
-        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -nname {} -conc {} -seed {}".format(job.sp.cat_name, job.sp.an_name, job.sp.salt_conc, job.sp.genion_seed)
+        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -pq {} -nname {} -nq {} -conc {} -seed {}".format(job.sp.cat_name, job.sp.cat_val, job.sp.an_name, job.sp.an_val, job.sp.salt_conc, job.sp.genion_seed)
     os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
     os.system(genionCommand)  # 2.25 Å Resolution
     """
