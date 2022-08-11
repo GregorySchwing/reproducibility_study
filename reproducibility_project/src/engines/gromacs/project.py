@@ -126,32 +126,7 @@ def init_job(job):
         genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -pq {} -nname {} -nq {} -conc {} -seed {}".format(job.sp.cat_name, job.sp.cat_val, job.sp.an_name, job.sp.an_val, job.sp.salt_conc, job.sp.genion_seed)
     os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
     os.system(genionCommand)  # 2.25 Å Resolution
-    """
-
-    ####Solvating a simulation box.
-    solvate = gmx.commandline_operation('gmx',
-                                    arguments=['solvate', '-box', '5', '5', '5'],
-                                    input_files={'-cs': structurefile,
-                                                 '-cp': editconf.output.file['-o']},
-                                    output_files={'-p': topfile,
-                                                  '-o': structurefile,
-                                                  }
-
-    structurefile = solvate.output.file['-o'].result()
-    if solvate.output.returncode.result() != 0:
-        print(solvate.output.erroroutput.result())
-
-    grompp = gmx.commandline_operation('gmx', 'grompp',
-                                   input_files={
-                                       '-f': mdpfile,
-                                       '-p': solvate.output.file['-p'],
-                                       '-c': solvate.output.file['-o'],
-                                       '-po': mdout_mdp,
-                                       '-maxwarn': 1
-                                   },
-                                   output_files={'-o': tprfile})
-
-    """
+    
     # Modify mdp files according to job statepoint parameters
     cutoff_styles = {"hard": "None", "shift": "Potential-shift"}
     lrcs = {"None": "no", "energy_pressure": "EnerPres"}
