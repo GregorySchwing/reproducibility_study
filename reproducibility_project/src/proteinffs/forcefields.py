@@ -68,7 +68,7 @@ def get_wm_name(
         return wm_name
     elif name == "ff03ws":
         wm_name = (
-            "ff03ws_water.gro""
+            "ff03ws_water.gro"
         )
         return wm_name
     else:
