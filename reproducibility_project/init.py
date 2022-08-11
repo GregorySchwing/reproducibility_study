@@ -165,7 +165,8 @@ for prot in proteins:
                 rcut.to_value("nm"),
                 decimals=3,
             ).item(),
-            "sim_type" : sim_type
+            "sim_type" : sim_type,
+            "genion_seed" : genion_seed
         }
         total_statepoints.append(statepoint)
 
