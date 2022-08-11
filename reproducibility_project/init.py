@@ -32,10 +32,6 @@ def prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding):
           liq_box_lengths[prot] = [u.unyt_array(boundingBoxSizes[prot]+2*box_padding, u.angstrom)]
 
 
-waterModel = ["tip3"]
-
-moleculeNameAsXML = True
-
 # None is used as the statepoint to equilibrate the solvent
 #salt_strengths = [0.300, None]
 

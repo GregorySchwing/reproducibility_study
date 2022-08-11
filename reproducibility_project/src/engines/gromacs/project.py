@@ -118,6 +118,12 @@ def init_job(job):
     solvateCommand = "gmx solvate -cp newbox.gro -cs {} -o solv.gro -p topol.top".format(get_wm_name(job.sp.forcefield_name))
     os.system(solvateCommand)  # 2.25 Å Resolution
 
+    ####Adding counter ions to neutralize the box. Replace "SOL" while adding ions.
+    grommpPreGenionCommand = "gmx grompp -f mdp/ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 1"
+    genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname NA -nname CL -neutral"
+
+    os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
+    os.system(genionCommand)  # 2.25 Å Resolution
     """
 
     ####Solvating a simulation box.
