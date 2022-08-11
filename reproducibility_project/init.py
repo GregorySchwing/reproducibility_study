@@ -41,8 +41,13 @@ proteins = [
     "6g6k",
 ]
 sim_types = [
+    "dimer"
+]
+"""
+sim_types = [
     "dimer", "myc_mono", "max_mono"
 ]
+"""
 proteinpaths = dict()
 proteinalignedpaths = dict()
 boundingBoxSizes = dict()
@@ -52,8 +57,8 @@ box_padding = 15
 empty_space = 2
 prep_pdbs(proteinpaths, proteinalignedpaths, boundingBoxSizes, box_padding+empty_space)
 
-cations = [["SOD", "1"]]
-anions = [["CLA", "-1"]]
+cations = [["NA", "1"]]
+anions = [["CL", "-1"]]
 
 
 #replicas = range(16)
@@ -70,6 +75,7 @@ cutoff_styles = ["hard"]
 long_range_correction = ["energy_pressure"]
 
 masses = [18.0153] * u.amu
+genion_seeds = [18]
 
 
 # 300  -> 280.0, 300.0, 320.0
@@ -97,9 +103,9 @@ for prot in proteins:
         conc,
         cat,
         an,
-        wm,
         ff,
-        sim_type
+        sim_type,
+        gen_ion_seed
     ) in itertools.product(
         md_engines,
         zip(temperatures, pressures),
@@ -112,12 +118,11 @@ for prot in proteins:
         salt_strengths,
         cations,
         anions,
-        waterModel,
         forcefields,
-        sim_types
+        sim_types,
+        genion_seeds
     ):
         statepoint = {
-            "waterModel": wm,
             "salt_conc": conc,
             "cat_name": cat[0],
             "cat_val": cat[1],
