@@ -93,7 +93,7 @@ def init_job(job):
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
     print(pdb2gmxCommand)
 
-    print(get_ff_path(job.sp.ff))
+    print(get_ff_path(job.sp.forcefield_name))
 
     ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     """
