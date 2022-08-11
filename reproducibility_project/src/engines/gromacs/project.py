@@ -93,7 +93,7 @@ def init_job(job):
         print("Error: bad sim_type")
         
 
-    linkProtFFCommand = "ln -s {} .".format(get_ff_path(job.sp.forcefield_name))
+    linkProtFFCommand = "ln -s {} {}".format(get_ff_path(job.sp.forcefield_name), job.sp.forcefield_name + ".ff")
     linkWaterModelCommand = "ln -s {} .".format(get_wm_path(job.sp.forcefield_name))
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
 
