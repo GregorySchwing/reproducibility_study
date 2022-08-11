@@ -1,6 +1,6 @@
 """Utilities to load forcefields based on forcefield names."""
 import os
-from reproducibility_project.src.proteinffs import Best_FF
+from reproducibility_project.src.proteinffs.Best_FF import a99SBdisp
 
 def get_ff_path(
     name: str = None,
@@ -17,7 +17,7 @@ def get_ff_path(
     """
     if name == "a99SB-disp":
         ff_path = (
-            str(os.path.abspath(Best_FF.__file__)) + "/a99SBdisp.ff"
+            str(os.path.abspath(a99SBdisp.__file__)) + ".ff"
         )
         return ff_path
     elif name == "ff03ws":
