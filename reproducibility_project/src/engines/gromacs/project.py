@@ -119,7 +119,7 @@ def init_job(job):
     os.system(solvateCommand)  # 2.25 Å Resolution
 
     ####Adding counter ions to neutralize the box. Replace "SOL" while adding ions.
-    grommpPreGenionCommand = "gmx grompp -f mdp/ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 1"
+    grommpPreGenionCommand = "gmx grompp -f {}/ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 1".format(os.path.dirname(os.path.abspath(mdp.__file__)))
     genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname NA -nname CL -neutral"
 
     os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
