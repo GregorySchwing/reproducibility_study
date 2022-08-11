@@ -105,7 +105,7 @@ for prot in proteins:
         an,
         ff,
         sim_type,
-        gen_ion_seed
+        genion_seed
     ) in itertools.product(
         md_engines,
         zip(temperatures, pressures),
