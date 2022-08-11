@@ -17,7 +17,7 @@ def get_ff_path(
     """
     if name == "a99SB-disp":
         ff_path = (
-            str(os.path.dirname(os.path.abspath(Best_FF))) + "/a99SBdisp.ff"
+            str(os.path.abspath(Best_FF.__file__)) + "/a99SBdisp.ff"
         )
         return ff_path
     elif name == "ff03ws":
