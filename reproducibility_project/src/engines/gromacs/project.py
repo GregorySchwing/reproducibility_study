@@ -13,7 +13,8 @@ from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.utils.forcefields import load_ff
 from reproducibility_project.src.proteinffs.forcefields import get_ff_path
 from reproducibility_project.src.proteinffs.forcefields import get_wm_path
-
+from reproducibility_project.src.proteinffs.forcefields import get_ff_name
+from reproducibility_project.src.proteinffs.forcefields import get_wm_name
 
 class Project(flow.FlowProject):
     """Subclass of FlowProject to provide custom methods and attributes."""
@@ -93,7 +94,7 @@ def init_job(job):
         print("Error: bad sim_type")
         
 
-    linkProtFFCommand = "ln -s {} {}".format(get_ff_path(job.sp.forcefield_name), job.sp.forcefield_name + ".ff")
+    linkProtFFCommand = "ln -s {} {}".format(get_ff_path(job.sp.forcefield_name), get_ff_name(job.sp.forcefield_name))
     linkWaterModelCommand = "ln -s {} .".format(get_wm_path(job.sp.forcefield_name))
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
 
@@ -103,30 +104,21 @@ def init_job(job):
 
     os.system(linkProtFFCommand)  # 2.25 Å Resolution
     os.system(linkWaterModelCommand)  # 2.25 Å Resolution
+    ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     os.system(pdb2gmxCommand)  # 2.25 Å Resolution
 
 
-
-
-    ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
-    """
-    pdb2gmx = gmx.commandline_operation('gmx', 'pdb2gmx',
-                                   input_files={
-                                       '-f': job.doc.prot_pdb,
-                                   },
-                                   output_files={'-o': processed.gro})
-    """
-
     ####Prepare a simulaton box. For IDP, box dimension need to be large enough to prevent any periodic image interaction.
+    editconfCommand = "gmx editconf -f processed.gro -o newbox.gro -c -d 2.0 -bt cubic"
+    os.system(editconfCommand)  # 2.25 Å Resolution
+
+
+    ####Make sure to have water structure file (e.g., tip4p2005.gro) in the working directory.
+    ####Solvating a simulation box.
+    solvateCommand = "gmx solvate -cp newbox.gro -cs {} -o solv.gro -p topol.top".format(get_wm_name(job.sp.forcefield_name))
+    os.system(solvateCommand)  # 2.25 Å Resolution
+
     """
-    editconf = gmx.commandline_operation('gmx', 'editconf',
-                                   input_files={
-                                       '-f': pdb2gmx.output.file['-o'],
-                                       '-d': 2.0,
-                                       '-c': "",
-                                       '-bt': cubic,
-                                   },
-                                   output_files={'-o': newbox.gro})    
 
     ####Solvating a simulation box.
     solvate = gmx.commandline_operation('gmx',

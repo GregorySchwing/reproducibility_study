@@ -39,6 +39,43 @@ def get_wm_path(
             f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
         )
 
+def get_ff_name(
+    name: str = None,
+):
+    if name == "a99SBdisp":
+        ff_name = (
+            "a99SBdisp.ff"
+        )
+        return ff_name
+    elif name == "ff03ws":
+        ff_name = (
+            "ff03ws.ff"
+        )
+        return ff_name
+    else:
+        raise ValueError(
+            f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+        )
+
+def get_wm_name(
+    name: str = None,
+):
+
+    if name == "a99SBdisp":
+        wm_name = (
+            "a99SBdisp_water.gro"
+        )
+        return wm_name
+    elif name == "ff03ws":
+        wm_name = (
+            "ff03ws_water.gro""
+        )
+        return wm_name
+    else:
+        raise ValueError(
+            f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+        )
+
 def get_ff_path_ion(
     name: str = None,
     molname: str = None,
