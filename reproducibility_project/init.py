@@ -37,7 +37,9 @@ waterModel = ["tip3"]
 moleculeNameAsXML = True
 
 # None is used as the statepoint to equilibrate the solvent
-salt_strengths = [0.300, None]
+#salt_strengths = [0.300, None]
+
+salt_strengths = [0.300]
 #salt_strengths = [0.000, 0.075, 0.150, 0.225, 0.300, None]
 proteins = [
     "6g6k",
@@ -60,7 +62,7 @@ anions = [["CLA", "-1"]]
 
 #replicas = range(16)
 #replicas = range(3)
-replicas = range(3)
+replicas = range(1)
 
 md_engines = ["gromacs",]
 #md_engines = ["namd", "gromacs", "hoomd", "lammps-VU", "lammps-UD"]
