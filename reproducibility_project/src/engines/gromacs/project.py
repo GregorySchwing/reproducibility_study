@@ -44,6 +44,7 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     template = "grid.sh"
 
 import os
+import errno
 import subprocess
 import sys
 
