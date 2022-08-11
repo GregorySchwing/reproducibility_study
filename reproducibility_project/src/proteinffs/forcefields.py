@@ -5,21 +5,30 @@ from reproducibility_project.src.proteinffs.Best_FF import a99SBdisp
 def get_ff_path(
     name: str = None,
 ):
-    """Based on a forcefield name, return a foyer.Forcefield object.
-
-    For the reproducibility project, multiple forcefield types are expected based on the molecule of study at that statepoint.
-    This will return a foyer.Forcefield object based on a naming convention defined in the init.py within the reproducibility_project.
-
-    Parameters
-    ----------
-    name : str, default=None, optional
-        Forcefield name to load.
-    """
     if name == "a99SBdisp":
         ff_path = (
             str(os.path.dirname(os.path.abspath(a99SBdisp.__file__))) + ".ff"
         )
         return ff_path
+    elif name == "ff03ws":
+        ff_path = (
+            str(os.path.dirname(os.path.abspath(Best_FF.__file__))) + "/a99SBdisp.ff"
+        )
+        return ff_path
+    else:
+        raise ValueError(
+            f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
+        )
+
+def get_wm_path(
+    name: str = None,
+):
+
+    if name == "a99SBdisp":
+        ff_path = (
+            str(os.path.dirname(os.path.abspath(a99SBdisp.__file__))) + "/a99SBdisp_water.gro"
+        )
+        return wm_path
     elif name == "ff03ws":
         ff_path = (
             str(os.path.dirname(os.path.abspath(Best_FF.__file__))) + "/a99SBdisp.ff"

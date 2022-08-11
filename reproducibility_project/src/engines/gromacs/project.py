@@ -12,6 +12,7 @@ from flow.environment import DefaultSlurmEnvironment
 from reproducibility_project.src.analysis.equilibration import is_equilibrated
 from reproducibility_project.src.utils.forcefields import load_ff
 from reproducibility_project.src.proteinffs.forcefields import get_ff_path
+from reproducibility_project.src.proteinffs.forcefields import get_wm_path
 
 
 class Project(flow.FlowProject):
@@ -90,10 +91,21 @@ def init_job(job):
     else:
         print("Error: bad sim_type")
         
+
+    linkProtFFCommand = "ln -s {} .".format(get_ff_path(job.sp.forcefield_name))
+    linkWaterModelCommand = "ln -s {} .".format(get_wm_path(job.sp.forcefield_name))
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
+
+    print(linkProtFFCommand)
+    print(linkWaterModelCommand)
     print(pdb2gmxCommand)
 
-    print(get_ff_path(job.sp.forcefield_name))
+    os.symlink(get_ff_path(job.sp.forcefield_name), ".")
+    os.symlink(get_wm_path(job.sp.forcefield_name), ".")
+    os.system(pdb2gmxCommand)  # 2.25 Å Resolution
+
+
+
 
     ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     """
