@@ -123,7 +123,7 @@ def init_job(job):
     if (job.sp.salt_conc == "None"):
         genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -nname {} -neutral -seed {}".format(job.sp.cat_name, job.sp.an_name, job.sp.genion_seed)
     else:
-        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -nname {} -conc {} -seed {}".format(job.sp.cat_name, job.sp.an_name, job.sp.genion_seed)
+        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -nname {} -conc {} -seed {}".format(job.sp.cat_name, job.sp.an_name, job.sp.salt_conc, job.sp.genion_seed)
     os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
     os.system(genionCommand)  # 2.25 Å Resolution
     """
