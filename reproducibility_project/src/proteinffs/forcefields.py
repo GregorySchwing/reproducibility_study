@@ -25,15 +25,15 @@ def get_wm_path(
 ):
 
     if name == "a99SBdisp":
-        ff_path = (
+        wm_path = (
             str(os.path.dirname(os.path.abspath(a99SBdisp.__file__))) + "/a99SBdisp_water.gro"
         )
         return wm_path
     elif name == "ff03ws":
-        ff_path = (
+        wm_path = (
             str(os.path.dirname(os.path.abspath(Best_FF.__file__))) + "/a99SBdisp.ff"
         )
-        return ff_path
+        return wm_path
     else:
         raise ValueError(
             f"Unexpected forcefield name. Forcefield name {name} is not currently supported."
