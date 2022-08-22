@@ -51,8 +51,8 @@ import sys
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
-@Project.post(lambda j: j.isfile("init.gro"))
-@Project.post(lambda j: j.isfile("init.top"))
+@Project.post(lambda j: j.isfile("solv_ions.gro"))
+@Project.post(lambda j: j.isfile("topol.top"))
 @Project.post(lambda j: j.isfile("em.mdp"))
 @Project.post(lambda j: j.isfile("nvt.mdp"))
 @Project.post(lambda j: j.isfile("npt_prod.mdp"))
@@ -92,6 +92,8 @@ def init_job(job):
         print("max_1.35 (Single Monomer) Done")
     else:
         print("Error: bad sim_type")
+
+    job.doc.pH = job.sp.pH
     
     propPKACommand = "propka3 -f {} --pH {}".format(job.doc.prot_pdb, job.doc.pH)
 
@@ -124,10 +126,10 @@ def init_job(job):
     if (job.sp.salt_conc == "None"):
         genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -pq {} -nname {} -nq {} -neutral -seed {}".format(job.sp.cat_name, job.sp.cat_val, job.sp.an_name, job.sp.an_val, job.sp.genion_seed)
     else:
-        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -pq {} -nname {} -nq {} -conc {} -seed {}".format(job.sp.cat_name, job.sp.cat_val, job.sp.an_name, job.sp.an_val, job.sp.salt_conc, job.sp.genion_seed)
+        genionCommand = "echo 13 | gmx genion -s ions.tpr -o solv_ions.gro -p topol.top -pname {} -pq {} -nname {} -nq {} -neutral -conc {} -seed {}".format(job.sp.cat_name, job.sp.cat_val, job.sp.an_name, job.sp.an_val, job.sp.salt_conc, job.sp.genion_seed)
+
     os.system(grommpPreGenionCommand)  # 2.25 Å Resolution
     os.system(genionCommand)  # 2.25 Å Resolution
-    
 
     pressure = job.sp.pressure * u.kPa
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
@@ -140,11 +142,8 @@ def init_job(job):
             "template": f"{mdp_abs_path}/em_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/em_template_water.mdp.jinja",
             "data": {
-                "rcut": job.sp.rcut,
-                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
                 "temp": job.sp.temperature,
                 "replica": job.sp.replica,
-                "lrc": lrcs[job.sp.long_range_correction],
             },
         },
         "nvt": {
@@ -155,9 +154,6 @@ def init_job(job):
                 "nsteps": 2500000,
                 "dt": 0.002,
                 "temp": job.sp.temperature,
-                "rcut": job.sp.rcut,
-                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
-                "lrc": lrcs[job.sp.long_range_correction],
             },
         },
         "npt_prod": {
@@ -169,9 +165,6 @@ def init_job(job):
                 "dt": 0.001,
                 "temp": job.sp.temperature,
                 "refp": pressure.to_value("bar"),
-                "rcut": job.sp.rcut,
-                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
-                "lrc": lrcs[job.sp.long_range_correction],
             },
         },
         "nvt_prod": {
@@ -182,41 +175,30 @@ def init_job(job):
                 "nsteps": 5000000,
                 "dt": 0.001,
                 "temp": job.sp.temperature,
-                "rcut": job.sp.rcut,
-                "cutoff_style": cutoff_styles[job.sp.cutoff_style],
-                "lrc": lrcs[job.sp.long_range_correction],
             },
         },
     }
-    """
+
     for op, mdp in mdps.items():
-        if job.sp.molecule == "waterSPCE":
-            _setup_mdp(
-                fname=mdp["fname"],
-                template=mdp["water-template"],
-                data=mdp["data"],
-                overwrite=True,
-            )
-        else:
-            _setup_mdp(
-                fname=mdp["fname"],
-                template=mdp["template"],
-                data=mdp["data"],
-                overwrite=True,
-            )
-    """
+        _setup_mdp(
+            fname=mdp["fname"],
+            template=mdp["template"],
+            data=mdp["data"],
+            overwrite=True,
+        )
+
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
-@Project.pre(lambda j: j.isfile("init.gro"))
-@Project.pre(lambda j: j.isfile("init.top"))
+@Project.pre(lambda j: j.isfile("solv_ions.gro"))
+@Project.pre(lambda j: j.isfile("topol.top"))
 @Project.post(lambda j: j.isfile("em.gro"))
 @flow.with_job
 @flow.cmd
 def gmx_em(job):
     """Run GROMACS grompp for the energy minimization step."""
     em_mdp_path = "em.mdp"
-    grompp = f"gmx grompp -f {em_mdp_path} -o em.tpr -c init.gro -p init.top --maxwarn 1"
+    grompp = f"gmx grompp -f {em_mdp_path} -o em.tpr -c solv_ions.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("em")
     return f"{grompp} && {mdrun}"
 
@@ -230,7 +212,7 @@ def gmx_em(job):
 def gmx_nvt(job):
     """Run GROMACS grompp for the nvt step."""
     nvt_mdp_path = "nvt.mdp"
-    grompp = f"gmx grompp -f {nvt_mdp_path} -o nvt.tpr -c em.gro -p init.top --maxwarn 1"
+    grompp = f"gmx grompp -f {nvt_mdp_path} -o nvt.tpr -c em.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("nvt")
     return f"{grompp} && {mdrun}"
 
@@ -244,7 +226,7 @@ def gmx_nvt(job):
 def gmx_npt_prod(job):
     """Run GROMACS grompp for the npt step."""
     npt_mdp_path = "npt_prod.mdp"
-    grompp = f"gmx grompp -f {npt_mdp_path} -o npt_prod.tpr -c nvt.gro -p init.top --maxwarn 1"
+    grompp = f"gmx grompp -f {npt_mdp_path} -o npt_prod.tpr -c nvt.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("npt_prod")
     return f"{grompp} && {mdrun}"
 
@@ -277,7 +259,7 @@ def extend_gmx_npt_prod(job):
 def gmx_nvt_prod(job):
     """Run GROMACS grompp for the nvt step."""
     npt_mdp_path = "npt_prod.mdp"
-    grompp = f"gmx grompp -f {npt_mdp_path} -o nvt_prod.tpr -c npt_prod.gro -p init.top --maxwarn 1"
+    grompp = f"gmx grompp -f {npt_mdp_path} -o nvt_prod.tpr -c npt_prod.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("nvt_prod")
     return f"{grompp} && {mdrun}"
 

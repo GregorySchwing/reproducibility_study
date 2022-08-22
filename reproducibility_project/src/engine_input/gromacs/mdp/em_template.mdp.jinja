@@ -13,13 +13,11 @@ cutoff-scheme       = Verlet
 ns_type             = grid
 nstlist             = 10
 
-vdwtype         = Cut-off
-vdw-modifier    = {{  cutoff_style  }}
-rvdw            = {{  r_cut  }}
+vdwtype             = Cut-off
+rvdw		        = 1.2		; Short-range Van der Waals cut-off
 
-coulombtype             = P3M-AD
-coulomb-modifier        = {{  cutoff_style  }}
-rcoulomb                = {{  r_cut }}
+coulombtype         = P3M-AD
+rcoulomb	        = 1.2		; Short-range electrostatic cut-off
 fourierspacing      = 0.1
 ewald-rtol          = 0.00001
 
@@ -32,5 +30,3 @@ tcoupl              = no
 pcoupl              = no
 
 pbc                 = xyz
-
-DispCorr            = {{  lrc  }}
