@@ -41,7 +41,7 @@ def is_equilibrated(
         'equilibrated'.
     nskip : int, optional, default=1
         Since the statistical inefficiency is computed for every time origin
-        in a call to timeseries.detectEquilibration, for larger datasets
+        in a call to timeseries.detect_equilibration, for larger datasets
         (> few hundred), increasing nskip might speed this up, while
         discarding more data.
     """
@@ -58,7 +58,7 @@ def is_equilibrated(
             "1 or greater."
         )
 
-    [t0, g, Neff] = timeseries.detectEquilibration(a_t, nskip=nskip)
+    [t0, g, Neff] = timeseries.detect_equilibration(a_t, nskip=nskip)
     frac_equilibrated = 1.0 - (t0 / np.shape(a_t)[0])
 
     if (frac_equilibrated >= threshold_fraction) and (Neff >= threshold_neff):
@@ -96,7 +96,7 @@ def trim_non_equilibrated(
         Minimum amount of uncorrelated samples.
     nskip : int, optional, default=1
         Since the statistical inefficiency is computed for every time origin
-        in a call to timeseries.detectEquilibration, for larger datasets
+        in a call to timeseries.detect_equilibration, for larger datasets
         (> few hundred), increasing nskip might speed this up, while
         discarding more data.
     """

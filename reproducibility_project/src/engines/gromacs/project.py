@@ -146,8 +146,8 @@ def init_job(job):
                 "replica": job.sp.replica,
             },
         },
-        "nvt": {
-            "fname": "nvt.mdp",
+        "nvt_eq": {
+            "fname": "nvt_eq.mdp",
             "template": f"{mdp_abs_path}/nvt_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/nvt_template_water.mdp.jinja",
             "data": {
@@ -156,9 +156,20 @@ def init_job(job):
                 "temp": job.sp.temperature,
             },
         },
+        "npt_eq": {
+            "fname": "npt_eq.mdp",
+            "template": f"{mdp_abs_path}/npt_template.mdp.jinja",
+            "water-template": f"{mdp_abs_path}/npt_template_water.mdp.jinja",
+            "data": {
+                "nsteps": 5000000,
+                "dt": 0.001,
+                "temp": job.sp.temperature,
+                "refp": pressure.to_value("bar"),
+            },
+        },
         "npt_prod": {
             "fname": "npt_prod.mdp",
-            "template": f"{mdp_abs_path}/npt_template.mdp.jinja",
+            "template": f"{mdp_abs_path}/npt_prod_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/npt_template_water.mdp.jinja",
             "data": {
                 "nsteps": 5000000,
@@ -206,30 +217,43 @@ def gmx_em(job):
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("em.gro"))
-@Project.post(lambda j: j.isfile("nvt.gro"))
+@Project.post(lambda j: j.isfile("nvt_eq.gro"))
 @flow.with_job
 @flow.cmd
-def gmx_nvt(job):
-    """Run GROMACS grompp for the nvt step."""
-    nvt_mdp_path = "nvt.mdp"
-    grompp = f"gmx grompp -f {nvt_mdp_path} -o nvt.tpr -c em.gro -p topol.top --maxwarn 1"
-    mdrun = _mdrun_str("nvt")
+def gmx_nvt_eq(job):
+    """Run GROMACS grompp for the nvt_eq step."""
+    nvt_eq_mdp_path = "nvt_eq.mdp"
+    grompp = f"gmx grompp -f {nvt_eq_mdp_path} -o nvt_eq.tpr -c em.gro -r em.gro -p topol.top --maxwarn 1"
+    mdrun = _mdrun_str("nvt_eq")
     return f"{grompp} && {mdrun}"
 
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
-@Project.pre(lambda j: j.isfile("nvt.gro"))
+@Project.pre(lambda j: j.isfile("nvt_eq.gro"))
+@Project.post(lambda j: j.isfile("npt_eq.gro"))
+@flow.with_job
+@flow.cmd
+def gmx_npt_eq(job):
+    """Run GROMACS grompp for the npt step."""
+    npt_eq_mdp_path = "npt_eq.mdp"
+    grompp = f"gmx grompp -f {npt_eq_mdp_path} -o npt_eq.tpr -c nvt_eq.gro -r nvt_eq.gro -p topol.top --maxwarn 1"
+    mdrun = _mdrun_str("npt_eq")
+    return f"{grompp} && {mdrun}"
+
+
+@Project.operation
+@Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: j.isfile("npt_eq.gro"))
 @Project.post(lambda j: j.isfile("npt_prod.gro"))
 @flow.with_job
 @flow.cmd
 def gmx_npt_prod(job):
     """Run GROMACS grompp for the npt step."""
-    npt_mdp_path = "npt_prod.mdp"
-    grompp = f"gmx grompp -f {npt_mdp_path} -o npt_prod.tpr -c nvt.gro -p topol.top --maxwarn 1"
+    npt_prod_mdp_path = "npt_prod.mdp"
+    grompp = f"gmx grompp -f {npt_prod_mdp_path} -o npt_prod.tpr -c npt_eq.gro -r npt_eq.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("npt_prod")
     return f"{grompp} && {mdrun}"
-
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
