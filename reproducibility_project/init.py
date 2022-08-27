@@ -80,7 +80,8 @@ genion_seeds = [18]
 
 
 # 300  -> 280.0, 300.0, 320.0
-temperatures = [298.15] * u.K
+#temperatures = [298.15] * u.K
+temperatures = [400.00] * u.K
 # 101.325, 101.325, 101.325
 pressures = [101.325] * u.kPa
 

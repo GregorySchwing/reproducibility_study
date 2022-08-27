@@ -1,0 +1,6 @@
+# Activate MOLINFO functionalities
+myc: GROUP NDX_FILE=index.ndx NDX_GROUP=myc
+max: GROUP NDX_FILE=index.ndx NDX_GROUP=max
+
+DUMPATOMS ATOMS=myc FILE=myc.gro 
+DUMPATOMS ATOMS=max FILE=max.gro 

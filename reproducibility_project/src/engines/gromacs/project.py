@@ -80,6 +80,9 @@ def init_job(job):
     # Dimer 2 - C,D
     if (job.sp.sim_type == "dimer"):
         job.doc.prot_pdb = "myc_max.pdb"
+        job.doc.myc_group = "myc.ndx"
+        job.doc.max_group = "max.ndx"
+
         os.system("pdb_delchain -C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("myc_max_1.35 (Single Dimer) Done")
     elif (job.sp.sim_type == "myc_mono"):
@@ -134,7 +137,19 @@ def init_job(job):
     pressure = job.sp.pressure * u.kPa
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
 
-    
+    if (job.sp.sim_type == "dimer"):
+        makeNDX = "gmx make_ndx -f solv_ions.gro -o index.ndx <<EOF\nr 896-984\nname 19 myc\nr 205-280\nname 20 max\nquit\nEOF"
+        #makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain A\nchain B\nquit\nEOF".format(job.doc.prot_pdb)
+
+        os.system(makeNDX)  # 2.25 Å Resolution
+
+    elif (job.sp.sim_type == "myc_mono"):
+        makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain A\nquit\nEOF".format(job.doc.prot_pdb)
+        os.system(makeNDX)  # 2.25 Å Resolution
+
+    elif (job.sp.sim_type == "max_mono"):
+        makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain B\nquit\nEOF".format(job.doc.prot_pdb)
+        os.system(makeNDX)  # 2.25 Å Resolution
 
     mdps = {
         "em": {
@@ -151,7 +166,8 @@ def init_job(job):
             "template": f"{mdp_abs_path}/nvt_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/nvt_template_water.mdp.jinja",
             "data": {
-                "nsteps": 2500000,
+                #"nsteps": 2500000,
+                "nsteps": 250,
                 "dt": 0.002,
                 "temp": job.sp.temperature,
             },
@@ -161,7 +177,8 @@ def init_job(job):
             "template": f"{mdp_abs_path}/npt_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/npt_template_water.mdp.jinja",
             "data": {
-                "nsteps": 5000000,
+                #"nsteps": 5000000,
+                "nsteps": 500,
                 "dt": 0.001,
                 "temp": job.sp.temperature,
                 "refp": pressure.to_value("bar"),
@@ -172,7 +189,8 @@ def init_job(job):
             "template": f"{mdp_abs_path}/npt_prod_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/npt_template_water.mdp.jinja",
             "data": {
-                "nsteps": 5000000,
+                #"nsteps": 5000000,
+                "nsteps": 500,
                 "dt": 0.001,
                 "temp": job.sp.temperature,
                 "refp": pressure.to_value("bar"),
@@ -183,9 +201,22 @@ def init_job(job):
             "template": f"{mdp_abs_path}/nvt_template.mdp.jinja",
             "water-template": f"{mdp_abs_path}/nvt_template_water.mdp.jinja",
             "data": {
-                "nsteps": 5000000,
+                #"nsteps": 5000000,
+                "nsteps": 500,
                 "dt": 0.001,
                 "temp": job.sp.temperature,
+            },
+        },
+        "test_colvars": {
+            "fname": "plumed.dat",
+            "template": f"{mdp_abs_path}/test.dat.jinja",
+            "water-template": f"{mdp_abs_path}/test.dat.mdp.jinja",
+            "data": {
+                #"nsteps": 5000000,
+                #"nsteps": 500,
+                #"dt": 0.001,
+                #"temp": job.sp.temperature,
+                #"refp": pressure.to_value("bar"),
             },
         },
     }
@@ -252,8 +283,10 @@ def gmx_npt_prod(job):
     """Run GROMACS grompp for the npt step."""
     npt_prod_mdp_path = "npt_prod.mdp"
     grompp = f"gmx grompp -f {npt_prod_mdp_path} -o npt_prod.tpr -c npt_eq.gro -r npt_eq.gro -p topol.top --maxwarn 1"
-    mdrun = _mdrun_str("npt_prod")
+    mdrun = _mdrun_plumed_str("npt_prod")
     return f"{grompp} && {mdrun}"
+
+"""
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
@@ -267,11 +300,30 @@ def gmx_npt_prod(job):
 @flow.with_job
 @flow.cmd
 def extend_gmx_npt_prod(job):
-    """Run GROMACS grompp for the npt step."""
+    #Run GROMACS grompp for the npt step.
     # Extend the npt run by 1000 ps (1 ns)
     extend = "gmx convert-tpr -s npt_prod.tpr -extend 1000 -o npt_prod.tpr"
     mdrun = _mdrun_str("npt_prod")
     return f"{extend} && {mdrun}"
+
+@Project.operation
+@Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: j.isfile("npt_prod.gro"))
+@Project.pre(
+    lambda j: not equil_status(j, "npt_prod", "Potential")
+    or not equil_status(j, "npt_prod", "Volume")
+)
+@Project.post(lambda j: equil_status(j, "npt_prod", "Potential"))
+@Project.post(lambda j: equil_status(j, "npt_prod", "Volume"))
+@flow.with_job
+@flow.cmd
+def extend_gmx_npt_prod(job):
+    #Run GROMACS grompp for the npt step.
+    # Extend the npt run by 1000 ps (1 ns)
+    extend = "gmx convert-tpr -s npt_prod.tpr -extend 1000 -o npt_prod.tpr"
+    mdrun = _mdrun_str("npt_prod")
+    return f"{extend} && {mdrun}"
+
 
 
 @Project.operation
@@ -281,7 +333,7 @@ def extend_gmx_npt_prod(job):
 @flow.with_job
 @flow.cmd
 def gmx_nvt_prod(job):
-    """Run GROMACS grompp for the nvt step."""
+    #Run GROMACS grompp for the nvt step.
     npt_mdp_path = "npt_prod.mdp"
     grompp = f"gmx grompp -f {npt_mdp_path} -o nvt_prod.tpr -c npt_prod.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("nvt_prod")
@@ -299,14 +351,69 @@ def gmx_nvt_prod(job):
 @Project.post(lambda j: equil_status(j, "nvt_prod", "Pressure"))
 @flow.with_job
 @flow.cmd
-def extend_gmx_nvt_prod_prod(job):
-    """Run GROMACS grompp for the nvt step."""
-    # Extend the npt run by 1000 ps (1 ns)
+def extend_gmx_nvt_prod(job):
+    # Run GROMACS grompp for the nvt step.
+    # Extend the nvt run by 1000 ps (1 ns)
     extend = "gmx convert-tpr -s nvt_prod.tpr -extend 1000 -o nvt_prod.tpr"
     mdrun = _mdrun_str("nvt_prod")
     return f"{extend} && {mdrun}"
+"""
+
+@Project.operation
+@Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: j.isfile("npt_prod.gro"))
+#@Project.pre(lambda j: equil_status(j, "npt_prod", "Potential"))
+#@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
+@Project.post(lambda j: j.isfile("log-npt.txt"))
+@Project.post(lambda j: j.isfile("trajectory-npt.gsd"))
+@flow.with_job
+def sample_protein_properties(job):
+    """Sample properties of interest from npt edr."""
+    import mdtraj
+    import pandas as pd
+
+    from reproducibility_project.src.analysis.sampler import (
+        get_subsampled_values,
+        sample_job,
+    )
+
+    p = pathlib.Path(job.workspace())
+    data = panedr.edr_to_df(f"{str(p.absolute())}/npt.edr")
+    # Properties of interest
+    poi = {
+        "Potential": "potential_energy",
+        "Kinetic En.": "kinetic_energy",
+        "Pressure": "pressure",
+        "Temperature": "temperature",
+        "Density": "density",
+        "Volume": "volume",
+    }
+
+    tmp_df = pd.DataFrame()
+    for idx, row in data.iterrows():
+        tmp_df = tmp_df.append(row[list(poi.keys())])
+    tmp_df.rename(poi, axis=1, inplace=True)
+    tmp_df.insert(
+        column="time_steps",
+        value=[10000 * i for i in range(len(tmp_df))],
+        loc=1,
+    )
+    tmp_df.to_csv("log-npt.txt", index=False, sep=" ")
+    for prop in poi:
+        sample_job(job, filename="log-npt.txt", variable=poi[prop])
+        get_subsampled_values(
+            job,
+            property=poi[prop],
+            property_filename="log-npt.txt",
+            ensemble="npt",
+        )
+
+    # Convert trr file to gsd with mdtraj
+    traj = mdtraj.load("npt_prod.trr", top="npt_prod.gro")
+    traj.save("trajectory-npt.gsd")
 
 
+"""
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.gro"))
@@ -316,7 +423,7 @@ def extend_gmx_nvt_prod_prod(job):
 @Project.post(lambda j: j.isfile("trajectory-npt.gsd"))
 @flow.with_job
 def sample_npt_properties(job):
-    """Sample properties of interest from npt edr."""
+    #Sample properties of interest from npt edr.
     import mdtraj
     import pandas as pd
 
@@ -370,7 +477,7 @@ def sample_npt_properties(job):
 @Project.post(lambda j: j.isfile("trajectory-nvt.gsd"))
 @flow.with_job
 def sample_nvt_properties(job):
-    """Sample properties of interest from nvt edr."""
+    #Sample properties of interest from nvt edr.
     import mdtraj
     import pandas as pd
 
@@ -412,11 +519,18 @@ def sample_nvt_properties(job):
     # Convert trr file to gsd with mdtraj
     traj = mdtraj.load("nvt_prod.trr", top="nvt_prod.gro")
     traj.save("trajectory-nvt.gsd")
-
+"""
 
 def _mdrun_str(op):
     """Output an mdrun string for arbitrary operation."""
-    msg = f"gmx mdrun -v -deffnm {op} -s {op}.tpr -cpi {op}.cpt -nt 16"
+    #PLUMED 2021.5 is Slow
+    #msg = f"/usr/local/gromacs_2022/bin/gmx mdrun -v -deffnm {op} -s {op}.tpr -cpi {op}.cpt -nt 16"
+    msg = f"/usr/local/gromacs_2022/bin/gmx mdrun -v -deffnm {op} -s {op}.tpr -cpi {op}.cpt -nt 16"
+    return msg
+
+def _mdrun_plumed_str(op):
+    """Output an mdrun string for arbitrary operation."""
+    msg = f"gmx mdrun -plumed plumed.dat -v -deffnm {op} -s {op}.tpr -cpi {op}.cpt -nt 16"
     return msg
 
 
