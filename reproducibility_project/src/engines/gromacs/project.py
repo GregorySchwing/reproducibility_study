@@ -16,6 +16,33 @@ from reproducibility_project.src.proteinffs.forcefields import get_wm_path
 from reproducibility_project.src.proteinffs.forcefields import get_ff_name
 from reproducibility_project.src.proteinffs.forcefields import get_wm_name
 
+import numpy as np
+import matplotlib.pyplot as plt
+import MDAnalysis as mda
+from MDAnalysis.analysis.hydrogenbonds import HydrogenBondAnalysis
+from MDAnalysis.analysis import contacts
+from MDAnalysis.analysis import hbonds
+
+def contacts_within_cutoff(u, group_a, group_b, radius=4.5):
+    timeseries = []
+    for ts in u.trajectory:
+        # calculate distances between group_a and group_b
+        dist = contacts.distance_array(group_a.positions, group_b.positions)
+        # determine which distances <= radius
+        cm = contacts.contact_matrix(dist, radius)
+        plt.subplot(211)
+        plt.imshow(cm)
+        plt.subplot(212)
+        plt.imshow(cm, cmap='Greys',  interpolation='nearest')
+        plt.savefig('blkwht.png')
+        print(cm)
+        n_contacts = cm.sum()
+        timeseries.append([ts.frame, n_contacts])
+    return np.array(timeseries)
+
+
+
+
 class Project(flow.FlowProject):
     """Subclass of FlowProject to provide custom methods and attributes."""
 
@@ -59,6 +86,35 @@ import sys
 @Project.post(lambda j: j.isfile("nvt_prod.mdp"))
 @flow.with_job
 def init_job(job):
+
+    u = mda.Universe(job.fn("npt_eq.tpr"), job.fn("npt_eq.gro"))
+    sel_myc = "resid 1:89"
+    sel_max = "resid 90:165"
+    # reference groups (first frame of the trajectory, but you could also use a
+    # separate PDB, eg crystal structure)
+    myc = u.select_atoms(sel_myc)
+    max = u.select_atoms(sel_max)
+    myc_donors = hbonds.find_hydrogen_donors(myc)
+    max_donors = hbonds.find_hydrogen_donors(max)
+    print(myc_donors)
+    print(max_donors)
+    hbondsa = HydrogenBondAnalysis(universe=u, 
+    between=["protein", "protein"],
+    d_a_cutoff=3.0,
+    d_h_a_angle_cutoff=150,
+    update_selections=False)
+    hbondsa.run(start=None,
+    stop=None,
+    step=None,
+    verbose=True)    
+    print(hbondsa)
+    # We see there are 27 hydrogen bonds in total
+    print(hbondsa.results.hbonds.shape)
+
+
+#cts = contacts_within_cutoff(u, myc, max, 7.0)
+
+    quit()
     """Initialize individual job workspace, including mdp and molecular init files."""
     from reproducibility_project.src.engine_input.gromacs import mdp
     #print("Downloading 6G6J") # 2 Dimers of Myc-Max
@@ -149,9 +205,9 @@ def init_job(job):
     pressure = job.sp.pressure * u.kPa
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
 
-    """
+    
     if (job.sp.sim_type == "dimer"):
-        makeNDX = "gmx make_ndx -f solv_ions.gro -o index.ndx <<EOF\nr 896-984\nname 19 myc\nr 205-280\nname 20 max\nquit\nEOF"
+        makeNDX = "gmx make_ndx -f solv_ions.gro -o index.ndx <<EOF\nr 1-89\nname 19 myc\nr 90-165\nname 20 max\nquit\nEOF"
         #makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain A\nchain B\nquit\nEOF".format(job.doc.prot_pdb)
 
         os.system(makeNDX)  # 2.25 Å Resolution
@@ -163,7 +219,7 @@ def init_job(job):
     elif (job.sp.sim_type == "max_mono"):
         makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain B\nquit\nEOF".format(job.doc.prot_pdb)
         os.system(makeNDX)  # 2.25 Å Resolution
-    """
+    
 
     mdps = {
         "em": {
