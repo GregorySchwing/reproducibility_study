@@ -105,20 +105,25 @@ def init_job(job):
 
     linkProtFFCommand = "ln -s {} {}".format(get_ff_path(job.sp.forcefield_name), get_ff_name(job.sp.forcefield_name))
     linkWaterModelCommand = "ln -s {} .".format(get_wm_path(job.sp.forcefield_name))
-    pdb2gmxCommand = "gmx pdb2gmx -f {} -chainsep id -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
-    pdb2gmxCommandForPLUMED = "gmx pdb2gmx -f {} -chainsep id -o dimer.pdb <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
+    pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
+    pdb2gmxCommandForPLUMED = "gmx pdb2gmx -f {} -o dimer.pdb <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
+
+    fixTerminiForPLUMEDCommand = "find dimer.pdb -type f -exec sed -i 's/OC1/O  /g' {} \;"
+    #"find dimer_bad_termini.pdb -type f -exec sed -i 's/OC2/OXT/g' {} \;"
 
     print(linkProtFFCommand)
     print(linkWaterModelCommand)
     print(reresCommand)
     print(pdb2gmxCommand)
     print(pdb2gmxCommandForPLUMED)
+    print(fixTerminiForPLUMEDCommand)
 
     os.system(linkProtFFCommand)  # 2.25 Å Resolution
     os.system(linkWaterModelCommand)  # 2.25 Å Resolution
     ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     os.system(pdb2gmxCommand)  # 2.25 Å Resolution
     os.system(pdb2gmxCommandForPLUMED)  # 2.25 Å Resolution
+    os.system(fixTerminiForPLUMEDCommand)  # 2.25 Å Resolution
 
 
     ####Prepare a simulaton box. For IDP, box dimension need to be large enough to prevent any periodic image interaction.
@@ -221,8 +226,8 @@ def init_job(job):
             "template": f"{mdp_abs_path}/test.dat.jinja",
             "water-template": f"{mdp_abs_path}/test.dat.mdp.jinja",
             "data": {
-                "myc_res": "1-88",
-                "max_res": "89-163",
+                "myc_res": "1-89",
+                "max_res": "90-165",
                 #"dt": 0.001,
                 #"temp": job.sp.temperature,
                 #"refp": pressure.to_value("bar"),
