@@ -75,7 +75,6 @@ def init_job(job):
     print("Building clean_{} (Stripping Non-protein atoms)".format(job.sp.pdbid))
     os.system("pdb_delhetatm {}.pdb > clean_{}.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution  # 1.35 Å Resolution)  # 2.25 Å Resolution
     print("clean_{} (Stripping Non-protein atoms) Done".format(job.sp.pdbid))
-     
     # A,C - Myc ; B,D - Max
     # Dimer 1 - A,B
     # Dimer 2 - C,D
@@ -84,23 +83,18 @@ def init_job(job):
         job.doc.myc_group = "myc.ndx"
         job.doc.max_group = "max.ndx"
 
-#        os.system("pdb_delchain -C,D clean_{}.pdb > {}_single_copy.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution
-        os.system("pdb_delchain -C,D clean_{}.pdb > {}_single_copy.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution
-
+        os.system("pdb_delchain -C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("myc_max_1.35 (Single Dimer) Done")
     elif (job.sp.sim_type == "myc_mono"):
         job.doc.prot_pdb = "myc_1.35_a_out.pdb"
-        os.system("pdb_delchain -B,C,D clean_{}.pdb > {}_single_copy.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution
+        os.system("pdb_delchain -B,C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("myc_1.35 (Single Monomer) Done")
     elif (job.sp.sim_type == "max_mono"):
         job.doc.prot_pdb = "max_1.35_a_out.pdb"
-        os.system("pdb_delchain -A,C,D clean_{}.pdb > {}_single_copy.pdb".format(job.sp.pdbid, job.sp.pdbid))  # 2.25 Å Resolution
+        os.system("pdb_delchain -A,C,D clean_{}.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution
         print("max_1.35 (Single Monomer) Done")
     else:
         print("Error: bad sim_type")
-
-    # Neccessary for PLUMED's pdb parser.
-    os.system("pdb_reres -1 {}_single_copy.pdb > {}".format(job.sp.pdbid, job.doc.prot_pdb))  # 2.25 Å Resolution  # 1.35 Å Resolution)  # 2.25 Å Resolution
 
     job.doc.pH = job.sp.pH
     
@@ -109,21 +103,15 @@ def init_job(job):
     linkProtFFCommand = "ln -s {} {}".format(get_ff_path(job.sp.forcefield_name), get_ff_name(job.sp.forcefield_name))
     linkWaterModelCommand = "ln -s {} .".format(get_wm_path(job.sp.forcefield_name))
     pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
-    #pdb2gmxCommand = "gmx pdb2gmx -f {} -o processed.gro -chainsep id <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
 
     print(linkProtFFCommand)
     print(linkWaterModelCommand)
     print(pdb2gmxCommand)
 
-    #pdb2gmxCommandForPlumed = "gmx pdb2gmx -f {} -chainsep id -o dimer.pdb <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
-    pdb2gmxCommandForPlumed = "gmx pdb2gmx -f {} -o dimer.pdb <<EOF\n1\n1\nEOF".format(job.doc.prot_pdb)
-
-
     os.system(linkProtFFCommand)  # 2.25 Å Resolution
     os.system(linkWaterModelCommand)  # 2.25 Å Resolution
     ####Make a topology file using structure and force field for simulation. Make sure to have a structure file of a protein (e.g., histatin5.pdb) and a force field directory if one is using a different force field other than the available in the compiled version of the gromacs. pdb2gmx asks to choose a force field and water model. In this example, it will choose the force field and water model listed in option 1. Check and make sure.
     os.system(pdb2gmxCommand)  # 2.25 Å Resolution
-    os.system(pdb2gmxCommandForPlumed)  # 2.25 Å Resolution
 
 
     ####Prepare a simulaton box. For IDP, box dimension need to be large enough to prevent any periodic image interaction.
@@ -149,22 +137,19 @@ def init_job(job):
     pressure = job.sp.pressure * u.kPa
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
 
-
-    """
     if (job.sp.sim_type == "dimer"):
         makeNDX = "gmx make_ndx -f solv_ions.gro -o index.ndx <<EOF\nr 896-984\nname 19 myc\nr 205-280\nname 20 max\nquit\nEOF"
         #makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain A\nchain B\nquit\nEOF".format(job.doc.prot_pdb)
 
-        #os.system(makeNDX)  # 2.25 Å Resolution
+        os.system(makeNDX)  # 2.25 Å Resolution
 
     elif (job.sp.sim_type == "myc_mono"):
         makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain A\nquit\nEOF".format(job.doc.prot_pdb)
-        #os.system(makeNDX)  # 2.25 Å Resolution
+        os.system(makeNDX)  # 2.25 Å Resolution
 
     elif (job.sp.sim_type == "max_mono"):
         makeNDX = "gmx make_ndx -f {} -o index.ndx <<EOF\nchain B\nquit\nEOF".format(job.doc.prot_pdb)
-        #os.system(makeNDX)  # 2.25 Å Resolution
-    """
+        os.system(makeNDX)  # 2.25 Å Resolution
 
     mdps = {
         "em": {
@@ -227,10 +212,8 @@ def init_job(job):
             "template": f"{mdp_abs_path}/test.dat.jinja",
             "water-template": f"{mdp_abs_path}/test.dat.mdp.jinja",
             "data": {
-                #"myc_residues": "896-984",
-                "myc_residues": "1-88",
-                #"max_residues": "205-280",
-                "max_residues": "89-163",
+                #"nsteps": 5000000,
+                #"nsteps": 500,
                 #"dt": 0.001,
                 #"temp": job.sp.temperature,
                 #"refp": pressure.to_value("bar"),
