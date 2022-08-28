@@ -40,6 +40,27 @@ def contacts_within_cutoff(u, group_a, group_b, radius=4.5):
         timeseries.append([ts.frame, n_contacts])
     return np.array(timeseries)
 
+def intermolecular_hbonds(u):
+    hbondsa = HydrogenBondAnalysis(universe=u, 
+    between=["protein", "protein"],
+    d_a_cutoff=5.0,
+    d_h_a_angle_cutoff=150,
+    update_selections=False)
+    hbondsa.run(start=None,
+    stop=None,
+    step=None,
+    verbose=True)    
+    print(hbondsa)
+    # We see there are 27 hydrogen bonds in total
+    print(hbondsa.results.hbonds.shape)
+    #Each row contains a unique hydrogen bond. The four columns correspond to:
+    #the donor atom index
+    #the hydrogen atom index
+    #the acceptor atom index
+    #the total count
+    print(hbondsa.count_by_ids())
+
+    return hbondsa
 
 
 
@@ -88,31 +109,24 @@ import sys
 def init_job(job):
 
     u = mda.Universe(job.fn("npt_eq.tpr"), job.fn("npt_eq.gro"))
-    sel_myc = "resid 1:89"
-    sel_max = "resid 90:165"
+
+    sel_myc = "resid 1:89 and name CA"
+    sel_max = "resid 90:165 and name CA"
     # reference groups (first frame of the trajectory, but you could also use a
     # separate PDB, eg crystal structure)
     myc = u.select_atoms(sel_myc)
     max = u.select_atoms(sel_max)
-    myc_donors = hbonds.find_hydrogen_donors(myc)
-    max_donors = hbonds.find_hydrogen_donors(max)
-    print(myc_donors)
-    print(max_donors)
-    hbondsa = HydrogenBondAnalysis(universe=u, 
-    between=["protein", "protein"],
-    d_a_cutoff=3.0,
-    d_h_a_angle_cutoff=150,
-    update_selections=False)
-    hbondsa.run(start=None,
-    stop=None,
-    step=None,
-    verbose=True)    
-    print(hbondsa)
-    # We see there are 27 hydrogen bonds in total
-    print(hbondsa.results.hbonds.shape)
 
 
-#cts = contacts_within_cutoff(u, myc, max, 7.0)
+    """
+    Pg 3 of 1208351-lindorff-larsen.som.pdf
+    For each protein we monitored
+    a set of long-range native Cα–Cα contacts between residues that are separated by at least seven
+    residues in primary sequence and whose Cα atoms are closer than 10 Å for more than 80% of the
+    time in the folded state. We then defined a reaction coordinate, Q(t), that monitors the fraction
+    of these contacts that are formed at each frame interval as the sum:
+    """
+    cts = contacts_within_cutoff(u, myc, max, 10.0)
 
     quit()
     """Initialize individual job workspace, including mdp and molecular init files."""
