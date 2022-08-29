@@ -18,6 +18,8 @@ from reproducibility_project.src.proteinffs.forcefields import get_wm_name
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcol
+import matplotlib.cm as cm
 import MDAnalysis as mda
 from MDAnalysis.analysis.hydrogenbonds import HydrogenBondAnalysis
 from MDAnalysis.analysis import contacts
@@ -35,24 +37,38 @@ of these contacts that are formed at each frame interval as the sum:
 def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.80):
     timeseries = []
     contacts_over_time = []
-    dist = contacts.distance_array(group_a.positions, group_b.positions)
-    cm = contacts.contact_matrix(dist, radius).astype(int)
-    cm.fill(0)
+    avg_dist = contacts.distance_array(group_a.positions, group_b.positions)
+    avg_dist.fill(0)
+    contactmap = contacts.contact_matrix(avg_dist, radius).astype(int)
+    contactmap.fill(0)
     # determine which distances <= radius
     #cm = contacts.contact_matrix(dist, radius).astype(int)
     for ts in u.trajectory:
         # calculate distances between group_a and group_b
         dist = contacts.distance_array(group_a.positions, group_b.positions)
+        avg_dist += dist
         # determine which distances <= radius
-        cm += contacts.contact_matrix(dist, radius).astype(int)
-        n_contacts = cm.sum()
+        contactmap += contacts.contact_matrix(dist, radius).astype(int)
+        n_contacts = contactmap.sum()
         timeseries.append([ts.frame, n_contacts])
 
-    cm = (cm.astype('float64') / len(u.trajectory) >= native_threshold)
-    plt.subplot(211)
-    plt.imshow(cm)
-    plt.subplot(212)
-    plt.imshow(cm, cmap='Greys',  interpolation='nearest')
+    contactmap = (contactmap.astype('float64') / len(u.trajectory) >= native_threshold)
+    avg_dist = avg_dist / len(u.trajectory)
+    avg_dist *= contactmap
+    avg_dist_norm = (avg_dist - np.min(avg_dist.nonzero())) / (np.max(avg_dist) - np.min(avg_dist.nonzero()))
+    avg_dist_norm *= contactmap
+    avg_dist_norm[avg_dist_norm == 0.0] = np.nan
+    # Make a user-defined colormap.
+    cm1 = mcol.LinearSegmentedColormap.from_list("MyCmapName",["r","b"])
+    cnorm = mcol.Normalize(vmin=np.min(avg_dist.nonzero()),vmax=np.max(avg_dist))
+
+    cpick = cm.ScalarMappable(norm=cnorm,cmap=cm1)
+
+    #plt.subplot(211)
+    plt.imshow(avg_dist_norm, cmap=cm1,  interpolation='nearest')
+    #plt.subplot(212)
+    #plt.imshow(avg_dist_norm, cmap='Greys',  interpolation='nearest')
+    plt.colorbar(cpick,label="Native Distance (Å)")
     plt.savefig('native_contacts.png')
     return np.array(timeseries)
 
@@ -117,6 +133,13 @@ import sys
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: not j.isfile("solv_ions.gro"))
+@Project.pre(lambda j: not j.isfile("topol.top"))
+@Project.pre(lambda j: not j.isfile("em.mdp"))
+@Project.pre(lambda j: not j.isfile("nvt.mdp"))
+@Project.pre(lambda j: not j.isfile("npt_prod.mdp"))
+@Project.pre(lambda j: not j.isfile("nvt_prod.mdp"))
+
 @Project.post(lambda j: j.isfile("solv_ions.gro"))
 @Project.post(lambda j: j.isfile("topol.top"))
 @Project.post(lambda j: j.isfile("em.mdp"))
