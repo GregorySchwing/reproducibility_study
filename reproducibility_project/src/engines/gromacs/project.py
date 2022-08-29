@@ -23,21 +23,37 @@ from MDAnalysis.analysis.hydrogenbonds import HydrogenBondAnalysis
 from MDAnalysis.analysis import contacts
 from MDAnalysis.analysis import hbonds
 
-def contacts_within_cutoff(u, group_a, group_b, radius=4.5):
+
+"""
+Pg 3 of 1208351-lindorff-larsen.som.pdf
+For each protein we monitored
+a set of long-range native Cα–Cα contacts between residues that are separated by at least seven
+residues in primary sequence and whose Cα atoms are closer than 10 Å for more than 80% of the
+time in the folded state. We then defined a reaction coordinate, Q(t), that monitors the fraction
+of these contacts that are formed at each frame interval as the sum:
+"""
+def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.80):
     timeseries = []
+    contacts_over_time = []
+    dist = contacts.distance_array(group_a.positions, group_b.positions)
+    cm = contacts.contact_matrix(dist, radius).astype(int)
+    cm.fill(0)
+    # determine which distances <= radius
+    #cm = contacts.contact_matrix(dist, radius).astype(int)
     for ts in u.trajectory:
         # calculate distances between group_a and group_b
         dist = contacts.distance_array(group_a.positions, group_b.positions)
         # determine which distances <= radius
-        cm = contacts.contact_matrix(dist, radius)
-        plt.subplot(211)
-        plt.imshow(cm)
-        plt.subplot(212)
-        plt.imshow(cm, cmap='Greys',  interpolation='nearest')
-        plt.savefig('blkwht.png')
-        print(cm)
+        cm += contacts.contact_matrix(dist, radius).astype(int)
         n_contacts = cm.sum()
         timeseries.append([ts.frame, n_contacts])
+
+    cm = (cm.astype('float64') / len(u.trajectory) >= native_threshold)
+    plt.subplot(211)
+    plt.imshow(cm)
+    plt.subplot(212)
+    plt.imshow(cm, cmap='Greys',  interpolation='nearest')
+    plt.savefig('native_contacts.png')
     return np.array(timeseries)
 
 def intermolecular_hbonds(u):
@@ -96,6 +112,8 @@ import os
 import errno
 import subprocess
 import sys
+
+
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
@@ -283,18 +301,6 @@ def init_job(job):
                 "refp": pressure.to_value("bar"),
             },
         },
-        "test_colvars": {
-            "fname": "plumed.dat",
-            "template": f"{mdp_abs_path}/test.dat.jinja",
-            "water-template": f"{mdp_abs_path}/test.dat.mdp.jinja",
-            "data": {
-                "myc_res": "1-89",
-                "max_res": "90-165",
-                #"dt": 0.001,
-                #"temp": job.sp.temperature,
-                #"refp": pressure.to_value("bar"),
-            },
-        },
     }
 
     for op, mdp in mdps.items():
@@ -360,6 +366,30 @@ def gmx_npt_prod(job):
     grompp = f"gmx grompp -f {npt_prod_mdp_path} -o npt_prod.tpr -c npt_eq.gro -p topol.top --maxwarn 1"
     mdrun = _mdrun_str("npt_prod")
     return f"{grompp} && {mdrun}"
+
+@Project.operation
+@Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: j.isfile("npt_prod.trr"))
+@Project.pre(lambda j: j.isfile("npt_prod.tpr"))
+#@Project.pre(lambda j: equil_status(j, "npt_prod", "Potential"))
+#@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
+@Project.post(lambda j: j.isfile("native_contacts.txt"))
+@flow.with_job
+def determine_native_dimer_contacts(job):
+    u = mda.Universe(job.fn("npt_prod.tpr"), job.fn("npt_prod.trr"))
+
+    sel_myc = "resid 1:89 and name CA"
+    sel_max = "resid 90:165 and name CA"
+    # reference groups (first frame of the trajectory, but you could also use a
+    # separate PDB, eg crystal structure)
+    myc = u.select_atoms(sel_myc)
+    max = u.select_atoms(sel_max)
+
+
+
+    cts = contacts_within_cutoff(u, myc, max)
+    quit()
+
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
@@ -448,35 +478,38 @@ def extend_gmx_nvt_prod(job):
     return f"{extend} && {mdrun}"
 """
 
+
+
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.gro"))
 @Project.pre(lambda j: j.isfile("npt_prod.tpr"))
-#@Project.pre(lambda j: equil_status(j, "npt_prod", "Potential"))
-#@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
-@Project.post(lambda j: j.isfile("log-npt.txt"))
-@Project.post(lambda j: j.isfile("trajectory-npt.gsd"))
+@Project.pre(lambda j: j.isfile("native_contacts.txt"))
 @flow.with_job
-def determine_native_dimer_contacts(job):
-    u = mda.Universe(job.fn("npt_prod.tpr"), job.fn("npt_prod.gro"))
-
-    sel_myc = "resid 1:89 and name CA"
-    sel_max = "resid 90:165 and name CA"
-    # reference groups (first frame of the trajectory, but you could also use a
-    # separate PDB, eg crystal structure)
-    myc = u.select_atoms(sel_myc)
-    max = u.select_atoms(sel_max)
-
-
-    """
-    Pg 3 of 1208351-lindorff-larsen.som.pdf
-    For each protein we monitored
-    a set of long-range native Cα–Cα contacts between residues that are separated by at least seven
-    residues in primary sequence and whose Cα atoms are closer than 10 Å for more than 80% of the
-    time in the folded state. We then defined a reaction coordinate, Q(t), that monitors the fraction
-    of these contacts that are formed at each frame interval as the sum:
-    """
-    cts = contacts_within_cutoff(u, myc, max, 10.0)
+def create_plumed_file(job):
+    mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
+    mdps = {
+        "test_colvars": {
+            "fname": "plumed.dat",
+            "template": f"{mdp_abs_path}/test.dat.jinja",
+            "water-template": f"{mdp_abs_path}/test.dat.mdp.jinja",
+            "data": {
+                "myc_res": "1-89",
+                "max_res": "90-165",
+                #"dt": 0.001,
+                #"temp": job.sp.temperature,
+                #"refp": pressure.to_value("bar"),
+            },
+        },
+    }
+    for op, mdp in mdps.items():
+        _setup_mdp(
+            fname=mdp["fname"],
+            template=mdp["template"],
+            data=mdp["data"],
+            overwrite=True,
+        )
+    
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
