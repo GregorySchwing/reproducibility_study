@@ -108,27 +108,7 @@ import sys
 @flow.with_job
 def init_job(job):
 
-    u = mda.Universe(job.fn("npt_eq.tpr"), job.fn("npt_eq.gro"))
 
-    sel_myc = "resid 1:89 and name CA"
-    sel_max = "resid 90:165 and name CA"
-    # reference groups (first frame of the trajectory, but you could also use a
-    # separate PDB, eg crystal structure)
-    myc = u.select_atoms(sel_myc)
-    max = u.select_atoms(sel_max)
-
-
-    """
-    Pg 3 of 1208351-lindorff-larsen.som.pdf
-    For each protein we monitored
-    a set of long-range native Cα–Cα contacts between residues that are separated by at least seven
-    residues in primary sequence and whose Cα atoms are closer than 10 Å for more than 80% of the
-    time in the folded state. We then defined a reaction coordinate, Q(t), that monitors the fraction
-    of these contacts that are formed at each frame interval as the sum:
-    """
-    cts = contacts_within_cutoff(u, myc, max, 10.0)
-
-    quit()
     """Initialize individual job workspace, including mdp and molecular init files."""
     from reproducibility_project.src.engine_input.gromacs import mdp
     #print("Downloading 6G6J") # 2 Dimers of Myc-Max
@@ -291,6 +271,18 @@ def init_job(job):
                 "temp": job.sp.temperature,
             },
         },
+        "npt_plumed_metadynamics": {
+            "fname": "npt_plumed_metadynamics.mdp",
+            "template": f"{mdp_abs_path}/npt_plumed_metadynamics_template.mdp.jinja",
+            "water-template": f"{mdp_abs_path}/npt_plumed_metadynamics_template_water.mdp.jinja",
+            "data": {
+                #"nsteps": 5000000,
+                "nsteps": 500,
+                "dt": 0.001,
+                "temp": job.sp.temperature,
+                "refp": pressure.to_value("bar"),
+            },
+        },
         "test_colvars": {
             "fname": "plumed.dat",
             "template": f"{mdp_abs_path}/test.dat.jinja",
@@ -356,7 +348,6 @@ def gmx_npt_eq(job):
     mdrun = _mdrun_str("npt_eq")
     return f"{grompp} && {mdrun}"
 
-
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_eq.gro"))
@@ -366,8 +357,22 @@ def gmx_npt_eq(job):
 def gmx_npt_prod(job):
     """Run GROMACS grompp for the npt step."""
     npt_prod_mdp_path = "npt_prod.mdp"
-    grompp = f"gmx grompp -f {npt_prod_mdp_path} -o npt_prod.tpr -c npt_eq.gro -r npt_eq.gro -p topol.top --maxwarn 1"
-    mdrun = _mdrun_plumed_str("npt_prod")
+    grompp = f"gmx grompp -f {npt_prod_mdp_path} -o npt_prod.tpr -c npt_eq.gro -p topol.top --maxwarn 1"
+    mdrun = _mdrun_str("npt_prod")
+    return f"{grompp} && {mdrun}"
+
+@Project.operation
+@Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: j.isfile("npt_prod.gro"))
+@Project.post(lambda j: j.isfile("npt_plumed_metadynamics.gro"))
+
+@flow.with_job
+@flow.cmd
+def gmx_npt_plumed_metadynamics(job):
+    """Run GROMACS grompp for the npt step."""
+    npt_plumed_metadynamics_mdp_path = "npt_plumed_metadynamics.mdp"
+    grompp = f"gmx grompp -f {npt_plumed_metadynamics_mdp_path} -o npt_plumed_metadynamics.tpr -c npt_prod.gro -p topol.top --maxwarn 1"
+    mdrun = _mdrun_plumed_str("npt_plumed_metadynamics")
     return f"{grompp} && {mdrun}"
 
 """
@@ -442,6 +447,36 @@ def extend_gmx_nvt_prod(job):
     mdrun = _mdrun_str("nvt_prod")
     return f"{extend} && {mdrun}"
 """
+
+@Project.operation
+@Project.pre(lambda j: j.sp.engine == "gromacs")
+@Project.pre(lambda j: j.isfile("npt_prod.gro"))
+@Project.pre(lambda j: j.isfile("npt_prod.tpr"))
+#@Project.pre(lambda j: equil_status(j, "npt_prod", "Potential"))
+#@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
+@Project.post(lambda j: j.isfile("log-npt.txt"))
+@Project.post(lambda j: j.isfile("trajectory-npt.gsd"))
+@flow.with_job
+def determine_native_dimer_contacts(job):
+    u = mda.Universe(job.fn("npt_prod.tpr"), job.fn("npt_prod.gro"))
+
+    sel_myc = "resid 1:89 and name CA"
+    sel_max = "resid 90:165 and name CA"
+    # reference groups (first frame of the trajectory, but you could also use a
+    # separate PDB, eg crystal structure)
+    myc = u.select_atoms(sel_myc)
+    max = u.select_atoms(sel_max)
+
+
+    """
+    Pg 3 of 1208351-lindorff-larsen.som.pdf
+    For each protein we monitored
+    a set of long-range native Cα–Cα contacts between residues that are separated by at least seven
+    residues in primary sequence and whose Cα atoms are closer than 10 Å for more than 80% of the
+    time in the folded state. We then defined a reaction coordinate, Q(t), that monitors the fraction
+    of these contacts that are formed at each frame interval as the sum:
+    """
+    cts = contacts_within_cutoff(u, myc, max, 10.0)
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
