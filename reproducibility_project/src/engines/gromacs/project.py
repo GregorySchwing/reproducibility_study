@@ -418,9 +418,9 @@ def gmx_npt_prod(job):
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.trr"))
 @Project.pre(lambda j: j.isfile("npt_prod.tpr"))
-#@Project.pre(lambda j: equil_status(j, "npt_prod", "Potential"))
+@Project.pre(lambda j: "native_contact_list" not in j.doc)
 #@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
-@Project.post(lambda j: j.isfile("native_contacts.txt"))
+@Project.post(lambda j: "native_contact_list" in j.doc)
 @flow.with_job
 def determine_native_dimer_contacts(job):
     u = mda.Universe(job.fn("npt_prod.tpr"), job.fn("npt_prod.trr"))
@@ -443,6 +443,7 @@ def determine_native_dimer_contacts(job):
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.gro"))
+@Project.pre(lambda j: j.isfile("plumed.dat"))
 @Project.post(lambda j: j.isfile("npt_plumed_metadynamics.gro"))
 
 @flow.with_job
@@ -533,7 +534,9 @@ def extend_gmx_nvt_prod(job):
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.gro"))
 @Project.pre(lambda j: j.isfile("npt_prod.tpr"))
-@Project.pre(lambda j: j.isfile("native_contacts.txt"))
+@Project.pre(lambda j: "native_contact_list" in j.doc)
+@Project.pre(lambda j: "native_contact_average_distances" in j.doc)
+
 @flow.with_job
 def create_plumed_file(job):
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
