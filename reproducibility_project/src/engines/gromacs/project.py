@@ -48,8 +48,9 @@ def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.
         dist = contacts.distance_array(group_a.positions, group_b.positions)
         avg_dist += dist
         # determine which distances <= radius
-        contactmap += contacts.contact_matrix(dist, radius).astype(int)
-        n_contacts = contactmap.sum()
+        this_frame_contactmap = contacts.contact_matrix(dist, radius).astype(int)
+        contactmap += this_frame_contactmap
+        n_contacts = this_frame_contactmap.sum()
         timeseries.append([ts.frame, n_contacts])
 
     contactmap = (contactmap.astype('float64') / len(u.trajectory) >= native_threshold)
@@ -65,12 +66,31 @@ def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.
     cpick = cm.ScalarMappable(norm=cnorm,cmap=cm1)
 
     #plt.subplot(211)
+    
     plt.imshow(avg_dist_norm, cmap=cm1,  interpolation='nearest')
     #plt.subplot(212)
     #plt.imshow(avg_dist_norm, cmap='Greys',  interpolation='nearest')
     plt.colorbar(cpick,label="Native Distance (Å)")
     plt.savefig('native_contacts.png')
-    return np.array(timeseries)
+
+
+    from itertools import product
+    atomPairMatrix = np.array(list(product(group_a.atoms.ix_array, group_b.atoms.ix_array)))
+    #Flatten 2D contact map rowwise.
+    contactmap_flat = contactmap.flatten(order='C')
+    from itertools import compress
+    # Filter product of c-alpha contacts by flattened contact map
+    nativeContacts = list(compress(atomPairMatrix, contactmap_flat))
+    #print(nativeContacts)
+    plt.clf()
+    timeseries_np = np.array(timeseries)
+    print(timeseries_np)
+    x, y = zip(*timeseries_np)
+    plt.plot(x,y)
+    plt.savefig('native_contacts_timeseries.png')
+
+    #
+    return nativeContacts
 
 def intermolecular_hbonds(u):
     hbondsa = HydrogenBondAnalysis(universe=u, 
@@ -407,7 +427,6 @@ def determine_native_dimer_contacts(job):
     # separate PDB, eg crystal structure)
     myc = u.select_atoms(sel_myc)
     max = u.select_atoms(sel_max)
-
 
 
     cts = contacts_within_cutoff(u, myc, max)
