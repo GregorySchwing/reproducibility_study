@@ -81,16 +81,20 @@ def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.
     from itertools import compress
     # Filter product of c-alpha contacts by flattened contact map
     nativeContacts = list(compress(atomPairMatrix, contactmap_flat))
+
+    # set nonnative contact distances as nan for clarity and checking
+    avg_dist[avg_dist == 0.0] = np.nan
+    avg_dist_flat = avg_dist.flatten(order='C')
+    nativeContactsDistances = list(compress(avg_dist_flat, contactmap_flat))
+
     #print(nativeContacts)
     plt.clf()
     timeseries_np = np.array(timeseries)
-    print(timeseries_np)
     x, y = zip(*timeseries_np)
     plt.plot(x,y)
     plt.savefig('native_contacts_timeseries.png')
 
-    #
-    return nativeContacts
+    return (nativeContacts, nativeContactsDistances)
 
 def intermolecular_hbonds(u):
     hbondsa = HydrogenBondAnalysis(universe=u, 
@@ -430,6 +434,9 @@ def determine_native_dimer_contacts(job):
 
 
     cts = contacts_within_cutoff(u, myc, max)
+    job.doc.native_contact_list = cts[0]
+    job.doc.native_contact_average_distances = cts[1]
+
     quit()
 
 
