@@ -6,10 +6,17 @@ max: GROUP NDX_FILE=index.ndx NDX_GROUP=max
 myc_alpha: ALPHARMSD RESIDUES={{ myc_res }}
 max_alpha: ALPHARMSD RESIDUES={{ max_res }}
 
+cmap: CONTACTMAP ...
+
+   {{ cmstring }}
+
+   SUM
+ 
+...
+
 DUMPATOMS ATOMS=myc FILE=myc.gro 
 DUMPATOMS ATOMS=max FILE=max.gro 
 
 # Print both collective variables on COLVAR file every 10 steps
-PRINT ARG=myc_alpha,max_alpha FILE=COLVAR STRIDE=10
+PRINT ARG=myc_alpha,max_alpha,cmap FILE=COLVAR STRIDE=10
 #PRINT ARG=myc_alpha FILE=COLVAR STRIDE=10
-

@@ -536,6 +536,8 @@ def extend_gmx_nvt_prod(job):
 @Project.pre(lambda j: j.isfile("npt_prod.tpr"))
 @Project.pre(lambda j: "native_contact_list" in j.doc)
 @Project.pre(lambda j: "native_contact_average_distances" in j.doc)
+@Project.pre(lambda j: not j.isfile("plumed.dat"))
+@Project.post(lambda j: j.isfile("plumed.dat"))
 
 @flow.with_job
 def create_plumed_file(job):
@@ -554,7 +556,7 @@ def create_plumed_file(job):
     mdps = {
         "plumed": {
             "fname": "plumed.dat",
-            "template": f"{mdp_abs_path}/plumed.dat.jinja",
+            "template": f"{mdp_abs_path}/test.dat.jinja",
             "water-template": f"{mdp_abs_path}/plumed.dat.mdp.jinja",
             "data": {
                 "myc_res": "1-89",
@@ -576,7 +578,7 @@ def create_plumed_file(job):
 
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
-@Project.pre(lambda j: j.isfile("npt_prod.gro"))
+@Project.pre(lambda j: j.isfile("npt_plumed_metadynamics.gro"))
 #@Project.pre(lambda j: equil_status(j, "npt_prod", "Potential"))
 #@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
 @Project.post(lambda j: j.isfile("log-npt.txt"))
