@@ -419,7 +419,8 @@ This method currently requires a trr of the structure, since native and crystal
 likely differ.  Though https://pubs.acs.org/action/showCitFormats?doi=10.1021/jacs.0c03217&ref=pdf
 used the crystal to define the natives.
 while the more robust https://www.jstor.org/stable/41351322
-defined natives as < 10 A on average of 80% of the conformations. 
+defined natives as < 10 A on average of 80% of the conformations.
+
 """
 
 @Project.operation
@@ -534,7 +535,9 @@ def extend_gmx_nvt_prod(job):
 """
 
 
-
+"""
+R_0  might need to be adjusted since robustelli said 5 Ang is considered a formed contact
+"""
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.gro"))
