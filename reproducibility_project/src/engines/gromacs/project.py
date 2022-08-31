@@ -539,16 +539,27 @@ def extend_gmx_nvt_prod(job):
 
 @flow.with_job
 def create_plumed_file(job):
+    from reproducibility_project.src.engine_input.gromacs import mdp
+    from string import Template
+    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH1={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=$dist}  WEIGHT1=$weight\n")
+    contact_map_string = ""
+    counter = 1
+    weight = 1/len(job.doc.native_contact_average_distances)
+    for f, b in zip(job.doc.native_contact_list, job.doc.native_contact_average_distances):
+        string_template = t.substitute(id=counter,atom1=f[0],atom2=f[1], dist=b, weight=weight)
+        contact_map_string += string_template
+        counter = counter + 1
+    #print(contact_map_string)
     mdp_abs_path = os.path.dirname(os.path.abspath(mdp.__file__))
     mdps = {
-        "test_colvars": {
+        "plumed": {
             "fname": "plumed.dat",
-            "template": f"{mdp_abs_path}/test.dat.jinja",
-            "water-template": f"{mdp_abs_path}/test.dat.mdp.jinja",
+            "template": f"{mdp_abs_path}/plumed.dat.jinja",
+            "water-template": f"{mdp_abs_path}/plumed.dat.mdp.jinja",
             "data": {
                 "myc_res": "1-89",
                 "max_res": "90-165",
-                #"dt": 0.001,
+                "cmstring": contact_map_string,
                 #"temp": job.sp.temperature,
                 #"refp": pressure.to_value("bar"),
             },

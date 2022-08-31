@@ -1,0 +1,25 @@
+# Activate MOLINFO functionalities
+myc: GROUP NDX_FILE=index.ndx NDX_GROUP=chA
+max: GROUP NDX_FILE=index.ndx NDX_GROUP=chB
+
+DUMPATOMS ATOMS=pro FILE=traj.gro 
+DUMPATOMS ATOMS=pro FILE=traj.gro 
+# Compute the backbone dihedral angle phi, defined by atoms C-N-CA-C
+# you should use MOLINFO shortcuts
+phi: TORSION ATOMS=__FILL__ 
+# Compute the backbone dihedral angle psi, defined by atoms N-CA-C-N
+# here also you should to use MOLINFO shortcuts
+psi: TORSION ATOMS=__FILL__ 
+# Activate well-tempered metadynamics in phi
+metad: __FILL__ ARG=__FILL__ 
+   # Deposit a Gaussian every 500 time steps, with initial height 
+   # equal to 1.2 kJ/mol and bias factor equal to 8 
+   PACE=500 HEIGHT=1.2 BIASFACTOR=8 
+   # Gaussian width (sigma) should be chosen based on the CV fluctuations in unbiased run 
+   # try 1/2 or 1/3 of the estimated fluctuations 
+   SIGMA=__FILL__ 
+   # Gaussians will be written to file and also stored on grid 
+   FILE=HILLS GRID_MIN=-pi GRID_MAX=pi 
+
+# Print both collective variables on COLVAR file every 10 steps
+PRINT ARG=__FILL__ FILE=COLVAR STRIDE=__FILL__ 
