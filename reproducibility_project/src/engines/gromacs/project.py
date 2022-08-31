@@ -543,7 +543,7 @@ def extend_gmx_nvt_prod(job):
 def create_plumed_file(job):
     from reproducibility_project.src.engine_input.gromacs import mdp
     from string import Template
-    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH$id={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=$dist}  WEIGHT1=$weight\n")
+    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH$id={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=$dist}  WEIGHT$id=$weight\n")
     contact_map_string = ""
     counter = 1
     weight = 1/len(job.doc.native_contact_average_distances)
