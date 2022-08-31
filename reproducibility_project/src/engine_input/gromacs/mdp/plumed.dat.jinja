@@ -14,24 +14,27 @@ cmap: CONTACTMAP ...
  
 ...
 
-# Activate well-tempered metadynamics in phi
-metad: __FILL__ ARG=__FILL__ 
+# Activate well-tempered metadynamics
+metad: METAD ...
+
    # Deposit a Gaussian every 500 time steps, with initial height 
    # equal to 1.2 kJ/mol and bias factor equal to 8 
-   PACE=500 HEIGHT=1.2 BIASFACTOR=8 
+   ARG=myc_alpha,max_alpha,cmap  HEIGHT=1.20 BIASFACTOR=5 TEMP=300.0 PACE=500 
+   # the bias factor should be wisely chosen 
    # Gaussian width (sigma) should be chosen based on the CV fluctuations in unbiased run 
-   # try 1/2 or 1/3 of the estimated fluctuations 
-   SIGMA=__FILL__ 
+   # This value is calculated from the short production run to determine native contacts
+   # TODO determine sigma width from unbiased run
+   SIGMA=0.20,0.20,0.20
    # Gaussians will be written to file and also stored on grid 
-   FILE=HILLS GRID_MIN=-pi GRID_MAX=pi 
+   # GRID_MAX for myc_alpha and max_alpha should be maximum value during unbiased run
+   # TODO replace Grid Max 13,13
+   #FILE=HILLS 
+   #GRID_MIN=0,0,0 GRID_MAX=13,13,1 GRID_BIN=150,150,150
+
+
+...
 
 # Print both collective variables on COLVAR file every 10 steps
-PRINT ARG=__FILL__ FILE=COLVAR STRIDE=__FILL__ 
-
-DUMPATOMS ATOMS=myc FILE=myc.gro 
-DUMPATOMS ATOMS=max FILE=max.gro 
-
-# Print both collective variables on COLVAR file every 10 steps
-PRINT ARG=myc_alpha,max_alpha FILE=COLVAR STRIDE=10
+PRINT ARG=myc_alpha,max_alpha,cmap,metad.bias FILE=COLVAR STRIDE=10
 #PRINT ARG=myc_alpha FILE=COLVAR STRIDE=10
 

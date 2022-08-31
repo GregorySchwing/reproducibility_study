@@ -568,7 +568,8 @@ def create_plumed_file(job):
     mdps = {
         "plumed": {
             "fname": "plumed.dat",
-            "template": f"{mdp_abs_path}/test.dat.jinja",
+            "template": f"{mdp_abs_path}/plumed.dat.jinja",
+            #"template": f"{mdp_abs_path}/test.dat.jinja",
             "water-template": f"{mdp_abs_path}/plumed.dat.mdp.jinja",
             "data": {
                 "myc_res": "1-89",
@@ -759,7 +760,9 @@ def _mdrun_str(op):
 
 def _mdrun_plumed_str(op):
     """Output an mdrun string for arbitrary operation."""
-    msg = f"gmx mdrun -plumed plumed.dat -v -deffnm {op} -s {op}.tpr -cpi {op}.cpt -nt 16"
+    #msg = f"gmx mdrun -plumed plumed.dat -v -deffnm {op} -s {op}.tpr -cpi {op}.cpt -nt 16 -nsteps 5000000"
+
+    msg = f"gmx mdrun -plumed plumed.dat -v -deffnm {op} -s {op}.tpr -nt 16 -nsteps 5000000"
     return msg
 
 
