@@ -414,6 +414,14 @@ def gmx_npt_prod(job):
     mdrun = _mdrun_str("npt_prod")
     return f"{grompp} && {mdrun}"
 
+"""
+This method currently requires a trr of the structure, since native and crystal
+likely differ.  Though https://pubs.acs.org/action/showCitFormats?doi=10.1021/jacs.0c03217&ref=pdf
+used the crystal to define the natives.
+while the more robust https://www.jstor.org/stable/41351322
+defined natives as < 10 A on average of 80% of the conformations. 
+"""
+
 @Project.operation
 @Project.pre(lambda j: j.sp.engine == "gromacs")
 @Project.pre(lambda j: j.isfile("npt_prod.trr"))
@@ -432,12 +440,9 @@ def determine_native_dimer_contacts(job):
     myc = u.select_atoms(sel_myc)
     max = u.select_atoms(sel_max)
 
-
     cts = contacts_within_cutoff(u, myc, max)
     job.doc.native_contact_list = cts[0]
     job.doc.native_contact_average_distances = cts[1]
-
-    quit()
 
 
 @Project.operation
@@ -543,12 +548,16 @@ def extend_gmx_nvt_prod(job):
 def create_plumed_file(job):
     from reproducibility_project.src.engine_input.gromacs import mdp
     from string import Template
-    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH$id={Q R_0=0.01 BETA=50.0 LAMBDA=1.5 REF=$dist}  WEIGHT$id=$weight\n")
+    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH$id={$_SWITCHFUNCTION R_0=0.01 BETA=$beta LAMBDA=$_lambda REF=$dist}  WEIGHT$id=$weight\n")
     contact_map_string = ""
     counter = 1
     weight = 1/len(job.doc.native_contact_average_distances)
+    _SWITCHFUNCTION="Q"
+    # Refer to Eq (1) of https://pubs.acs.org/action/showCitFormats?doi=10.1021/jacs.0c03217&ref=pdf
+    beta=10.0
+    _lambda=1.0
     for f, b in zip(job.doc.native_contact_list, job.doc.native_contact_average_distances):
-        string_template = t.substitute(id=counter,atom1=f[0],atom2=f[1], dist=b, weight=weight)
+        string_template = t.substitute(id=counter,atom1=f[0],atom2=f[1], _SWITCHFUNCTION=_SWITCHFUNCTION, beta=beta, _lambda=_lambda, dist=b, weight=weight)
         contact_map_string += string_template
         counter = counter + 1
     #print(contact_map_string)
