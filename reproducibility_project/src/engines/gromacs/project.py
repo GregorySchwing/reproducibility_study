@@ -82,6 +82,8 @@ def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.
     # Filter product of c-alpha contacts by flattened contact map
     nativeContacts = list(compress(atomPairMatrix, contactmap_flat))
 
+    #convert native distances from A to nm
+    avg_dist = avg_dist / 10.0
     # set nonnative contact distances as nan for clarity and checking
     avg_dist[avg_dist == 0.0] = np.nan
     avg_dist_flat = avg_dist.flatten(order='C')
