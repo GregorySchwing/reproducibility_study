@@ -6,12 +6,15 @@ max: GROUP NDX_FILE=index.ndx NDX_GROUP=max
 myc_alpha: ALPHARMSD RESIDUES={{ myc_res }}
 max_alpha: ALPHARMSD RESIDUES={{ max_res }}
 
+# Our definition of a fully native contact map sums to 0.5; not 1.0.
+
+
 cmap: CONTACTMAP ...
 
    {{ cmstring }}
 
    SUM
- 
+   NOPBC 
 ...
 
 # Activate well-tempered metadynamics

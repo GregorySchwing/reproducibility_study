@@ -1,22 +1,39 @@
 # Activate MOLINFO functionalities
 MOLINFO STRUCTURE=dimer.pdb 
-myc: GROUP NDX_FILE=index.ndx NDX_GROUP=myc
-max: GROUP NDX_FILE=index.ndx NDX_GROUP=max
-
-myc_alpha: ALPHARMSD RESIDUES={{ myc_res }}
-max_alpha: ALPHARMSD RESIDUES={{ max_res }}
 
 cmap: CONTACTMAP ...
 
    {{ cmstring }}
 
    SUM
- 
+   NOPBC
+   
 ...
 
-DUMPATOMS ATOMS=myc FILE=myc.gro 
-DUMPATOMS ATOMS=max FILE=max.gro 
+# Activate well-tempered metadynamics
+metad: METAD ...
+
+   # Deposit a Gaussian every 500 time steps, with initial height 
+   # equal to 1.2 kJ/mol and bias factor equal to 8 
+   ARG=cmap  HEIGHT=1.20 BIASFACTOR=5 TEMP=300.0 PACE=500 
+   # the bias factor should be wisely chosen 
+   # Gaussian width (sigma) should be chosen based on the CV fluctuations in unbiased run 
+   # This value is calculated from the short production run to determine native contacts
+   # TODO determine sigma width from unbiased run
+   SIGMA=0.20
+   # Gaussians will be written to file and also stored on grid 
+   # GRID_MAX for myc_alpha and max_alpha should be maximum value during unbiased run
+   # TODO replace Grid Max 13,13
+   #FILE=HILLS 
+   #GRID_MIN=0,0,0 GRID_MAX=13,13,1 GRID_BIN=150,150,150
+
+
+...
+
+#DUMPATOMS ATOMS=myc FILE=myc.gro 
+#DUMPATOMS ATOMS=max FILE=max.gro 
 
 # Print both collective variables on COLVAR file every 10 steps
-PRINT ARG=myc_alpha,max_alpha,cmap FILE=COLVAR STRIDE=10
+PRINT ARG=cmap,metad.bias FILE=COLVAR STRIDE=10
 #PRINT ARG=myc_alpha FILE=COLVAR STRIDE=10
+

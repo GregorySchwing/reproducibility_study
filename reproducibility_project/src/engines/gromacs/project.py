@@ -56,12 +56,16 @@ def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.
     contactmap = (contactmap.astype('float64') / len(u.trajectory) >= native_threshold)
     avg_dist = avg_dist / len(u.trajectory)
     avg_dist *= contactmap
+
     avg_dist_norm = (avg_dist - np.min(avg_dist.nonzero())) / (np.max(avg_dist) - np.min(avg_dist.nonzero()))
     avg_dist_norm *= contactmap
     avg_dist_norm[avg_dist_norm == 0.0] = np.nan
     # Make a user-defined colormap.
     cm1 = mcol.LinearSegmentedColormap.from_list("MyCmapName",["r","b"])
-    cnorm = mcol.Normalize(vmin=np.min(avg_dist.nonzero()),vmax=np.max(avg_dist))
+
+    mindist = avg_dist[avg_dist != 0.].min(axis=0)
+    maxdist = np.max(avg_dist)
+    cnorm = mcol.Normalize(vmin=mindist,vmax=maxdist)
 
     cpick = cm.ScalarMappable(norm=cnorm,cmap=cm1)
 
@@ -76,6 +80,9 @@ def contacts_within_cutoff(u, group_a, group_b, radius=10.0, native_threshold=0.
 
     from itertools import product
     atomPairMatrix = np.array(list(product(group_a.atoms.ix_array, group_b.atoms.ix_array)))
+    atomPairMatrix = atomPairMatrix + 1
+    #print(atomPairMatrix)
+    #print(atomPairMatrixPlus1)
     #Flatten 2D contact map rowwise.
     contactmap_flat = contactmap.flatten(order='C')
     from itertools import compress
@@ -430,20 +437,36 @@ defined natives as < 10 A on average of 80% of the conformations.
 @Project.pre(lambda j: j.isfile("npt_prod.trr"))
 @Project.pre(lambda j: j.isfile("npt_prod.tpr"))
 @Project.pre(lambda j: "native_contact_list" not in j.doc)
-#@Project.pre(lambda j: equil_status(j, "npt_prod", "Volume"))
+@Project.pre(lambda j: not j.isfile("plumed.dat"))
 @Project.post(lambda j: "native_contact_list" in j.doc)
 @flow.with_job
 def determine_native_dimer_contacts(job):
-    u = mda.Universe(job.fn("npt_prod.tpr"), job.fn("npt_prod.trr"))
 
-    sel_myc = "resid 1:89 and name CA"
-    sel_max = "resid 90:165 and name CA"
+    intraContactMethod = False
+    # From www.sciencemag.org/cgi/content/full/334/6055/517/DC1 
+    # Supporting Online Material for How Fast-Folding Proteins Fold
+    # Protein folding requires more native contacts, thus larger radius
+    # Also, native contacts are more loosely defined thus look at a traj
+    if (intraContactMethod):
+        u = mda.Universe(job.fn("npt_prod.tpr"), job.fn("npt_prod.trr"))
+        sel_myc = "resid 1:89 and name CA"
+        sel_max = "resid 90:165 and name CA"
+        radius = 10.0
+    else:
+        # From https://pubs.acs.org/action/showCitFormats?doi=10.1021/jacs.0c03217&ref=pdf
+        # Mechanism of Coupled Folding-upon-Binding of an Intrinsically Disordered Protein
+        # Dimerization is more specific that folding, so use a stricter cutoff distance
+        # Also, use the crystal dimer as the native state.
+        u = mda.Universe(job.fn("em.tpr"), job.fn("solv_ions.gro"))
+        sel_myc = "resid 1:89"
+        sel_max = "resid 90:165"      
+        radius = 5.0  
     # reference groups (first frame of the trajectory, but you could also use a
     # separate PDB, eg crystal structure)
     myc = u.select_atoms(sel_myc)
     max = u.select_atoms(sel_max)
 
-    cts = contacts_within_cutoff(u, myc, max)
+    cts = contacts_within_cutoff(u, myc, max, radius)
     job.doc.native_contact_list = cts[0]
     job.doc.native_contact_average_distances = cts[1]
 
@@ -553,7 +576,7 @@ R_0  might need to be adjusted since robustelli said 5 Ang is considered a forme
 def create_plumed_file(job):
     from reproducibility_project.src.engine_input.gromacs import mdp
     from string import Template
-    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH$id={$_SWITCHFUNCTION R_0=0.01 BETA=$beta LAMBDA=$_lambda REF=$dist}  WEIGHT$id=$weight\n")
+    t = Template("\tATOMS$id=$atom1,$atom2 SWITCH$id={$_SWITCHFUNCTION R_0=$dist BETA=$beta LAMBDA=$_lambda REF=$dist}  WEIGHT$id=$weight\n")
     contact_map_string = ""
     counter = 1
     weight = 1/len(job.doc.native_contact_average_distances)
@@ -570,8 +593,8 @@ def create_plumed_file(job):
     mdps = {
         "plumed": {
             "fname": "plumed.dat",
-            "template": f"{mdp_abs_path}/plumed.dat.jinja",
-            #"template": f"{mdp_abs_path}/test.dat.jinja",
+            #"template": f"{mdp_abs_path}/plumed.dat.jinja",
+            "template": f"{mdp_abs_path}/test.dat.jinja",
             "water-template": f"{mdp_abs_path}/plumed.dat.mdp.jinja",
             "data": {
                 "myc_res": "1-89",
