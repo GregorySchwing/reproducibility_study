@@ -66,6 +66,11 @@ rigidBonds              all;                # Bound constraint all bonds involvi
 nonbondedFreq           1;                  # nonbonded forces every step
 fullElectFrequency      1;                  # PME every step
 
+# Constant Pressure Control (variable volume)
+useGroupPressure      yes ;# needed for rigidBonds
+useFlexibleCell       no
+useConstantArea       no
+
 wrapWater               on;                 # wrap water to central cell
 wrapAll                 on;                 # wrap other molecules too
 wrapNearest             on;                 # use for non-rectangular cells (wrap to the nearest image)
